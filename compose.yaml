@@ -3,5 +3,17 @@ services:
     build: .
     ports:
       - "8080:8080"
-    volumes:
-      - .:/profils
+    develop:
+      watch:
+        - action: sync
+          path: .
+          target: /profils
+          ignore:
+            - __pycache__/
+            - "*.pyc"
+            - .git/
+            - .venv/
+        - action: rebuild
+          path: pyproject.toml
+        - action: rebuild
+          path: uv.lock
