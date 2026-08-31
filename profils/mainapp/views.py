@@ -5,5 +5,8 @@ from django.shortcuts     import render
 
 # Create your views here.
 
-def test_view(request: HttpRequest) -> HttpResponse:
-    return render(request, "test.html")
+def main(request: HttpRequest) -> HttpResponse:
+    return render(request, "main.html")
+
+def register(request: HttpRequest) -> HttpResponse:
+    return render(request, "register.html")
