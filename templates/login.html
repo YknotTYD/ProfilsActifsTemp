@@ -5,12 +5,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Logout</title>
+    <title>Login</title>
     <link rel="stylesheet" href="{% static 'style.css' %}">
 </head>
 <body>
 
-<form method="post" action="/api/register/">
+<form method="post" action="/api/login/">
 {% csrf_token %}
   <label>Nom: 
     <input name="username" autocomplete="name" />

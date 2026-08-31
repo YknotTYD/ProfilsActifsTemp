@@ -9,6 +9,13 @@
     <link rel="stylesheet" href="{% static 'style.css' %}">
 </head>
 <body>
-    <h1>Welcome {{ user.username }}</h1>
+    {% if user.is_authenticated %}
+        <h1>Welcome {{ user.username }}</h1>
+        <a href="/logout">logout</a>
+    {% else %}
+        <h1>Not Logged In</h1>
+        <a href="/register">register</a><br>
+        <a href="/login">login</a><br>
+    {% endif %}
 </body>
 </html>
