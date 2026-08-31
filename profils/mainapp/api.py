@@ -7,20 +7,20 @@ from django.contrib.auth        import authenticate, login as login_
 
 def register(request: HttpRequest) -> HttpResponse:
 
-    if "username" in request.POST and "password" in request.POST:
+    if "username" not in request.POST or "password" not in request.POST:
+        return redirect("/")
 
-        if User.objects.filter(username = request.POST["username"]).first():
-            return redirect("/login")
+    if User.objects.filter(username = request.POST["username"]).first():
+        return redirect("/login")
 
-        user = User.objects.create_user(
-            request.POST["username"],
-            None,
-            request.POST["password"]
-        )
-        user.save()
-        auth_user = authenticate(request, username = request.POST["username"], password = request.POST["password"])
-        login_(request, auth_user)
-
+    user = User.objects.create_user(
+        request.POST["username"],
+        None,
+        request.POST["password"]
+    )
+    user.save()
+    auth_user = authenticate(request, username = request.POST["username"], password = request.POST["password"])
+    login_(request, auth_user)
     return redirect("/")
 
 def login(request: HttpRequest) -> HttpResponse:
