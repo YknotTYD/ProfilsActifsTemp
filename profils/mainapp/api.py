@@ -9,8 +9,8 @@ def register(request: HttpRequest) -> HttpResponse:
 
     if "username" in request.POST and "password" in request.POST:
 
-        if User.objects.get(username = request.POST["username"]):
-            return redirect("/register")
+        if User.objects.filter(username = request.POST["username"]).first():
+            return redirect("/login")
 
         user = User.objects.create_user(
             request.POST["username"],
