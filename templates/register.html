@@ -9,7 +9,17 @@
     <link rel="stylesheet" href="{% static 'style.css' %}">
 </head>
 <body>
-    <p>Register.</p>
-    <a href="/">back</a>
+
+<form method="post" action="/api/register/">
+{% csrf_token %}
+  <label>Nom: 
+    <input name="username" autocomplete="name" />
+  </label>
+  <label>Mot de passe:
+    <input name="password" autocomplete="name" />
+  </label>
+  <button>Sauvegarder</button>
+</form>
+
 </body>
 </html>
