@@ -13,14 +13,18 @@ Site de recherche de mise en relation entre demandeur et recruteur sous forme de
 ## Deploiement
 
 ```bash
-  ./setup run
+  ./setup run [port]
 ```
-
 
 Création d'un utilisateur administrateur
 ```bash
   ./setup shell
   python manage.py createsuperuser
+```
+
+Logs du site
+```bash
+  ./setup logs
 ```
 
 
