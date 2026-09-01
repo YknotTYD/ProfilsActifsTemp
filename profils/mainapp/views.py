@@ -6,6 +6,7 @@ from django.contrib.auth  import logout as logout_
 from .models              import Role, Video
 
 def main(request: HttpRequest) -> HttpResponse:
+
     return render(
         request,
         "main.html",
@@ -13,9 +14,10 @@ def main(request: HttpRequest) -> HttpResponse:
             "user":
                 request.user,
             "role":
-                str(Role.objects.filter(user = request.user).first()) if request.user.is_authenticated else "None",
+                str(Role.objects.filter(user = request.user).first())
+                    if request.user.is_authenticated else "None",
             "videos":
-                [vid.url for vid in Video.objects.all()]
+                [vid for vid in Video.objects.all()]
 
         }
     )
