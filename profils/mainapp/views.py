@@ -1,9 +1,30 @@
-from django.shortcuts     import render
-from django.http.request  import HttpRequest
-from django.http.response import HttpResponse
-from django.shortcuts     import render, redirect
-from django.contrib.auth  import logout as logout_
-from .models              import Role, Video
+from django.shortcuts           import render
+from django.http.request        import HttpRequest
+from django.http.response       import HttpResponse
+from django.shortcuts           import render, redirect
+from django.contrib.auth        import logout as logout_
+from .models                    import Role, Video, Reaction
+
+# TODO: deleting
+
+def get_videos(request: HttpResponse) -> list[tuple[int, int]]:
+
+    videos = [vid for vid in Video.objects.all()]
+    liked_disliked = [(0, 0)] * len(videos)
+
+    if request.user.is_authenticated:        
+
+        reactions = [
+            Reaction.objects.filter(user = request.user, video = vid).first() for vid in videos
+        ]
+        liked_disliked = [
+            (r.reaction == "like", r.reaction == "dislike") if r else (False, False)
+                for r in reactions
+        ]
+
+    videos = [(vid, l, d) for vid, (l, d) in zip(videos, liked_disliked)]
+    return videos
+
 
 def main(request: HttpRequest) -> HttpResponse:
 
@@ -16,8 +37,8 @@ def main(request: HttpRequest) -> HttpResponse:
             "role":
                 str(Role.objects.filter(user = request.user).first())
                     if request.user.is_authenticated else "None",
-            "videos":
-                [vid for vid in Video.objects.all()]
+            "videos_ld":
+                get_videos(request)
 
         }
     )

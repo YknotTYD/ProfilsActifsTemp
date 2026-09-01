@@ -17,7 +17,7 @@ class Role(models.Model):
     user = models.ForeignKey(User, on_delete = models.CASCADE)
     role = strings_to_choice_char_fields(constants.ROLES)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.role
 
 class Video(models.Model):
@@ -29,9 +29,13 @@ class Video(models.Model):
         return f"Video<{self.user};'{self.url}'>"
 
 class Reaction(models.Model):
+
     user     = models.ForeignKey(User,  on_delete = models.CASCADE)
     video    = models.ForeignKey(Video, on_delete = models.CASCADE)
     reaction = strings_to_choice_char_fields(constants.REACTIONS)
+
+    def __str__(self) -> str:
+        return f"{self.reaction} from {self.user} on vid{self.video.id}"
 
 def get_likes(vid: Video):
     return len(Reaction.objects.filter(video = vid, reaction = "like"))

@@ -49,7 +49,13 @@ def login(request: HttpRequest) -> HttpResponse:
 def video_upload(request: HttpRequest) -> HttpResponse:
 
     if request.user.is_authenticated and (url := request.POST.get("url")):
+
         url = "https://" + url.removeprefix("https://")
+
+        if url.startswith("https://www.youtube.com/watch?v="):
+            url = url.removeprefix("https://www.youtube.com/watch?v=")
+            url = "https://www.youtube.com/embed/" + url
+
         Video.objects.create(user = request.user, url = url).save()
 
     return redirect(request.GET.get("camefrom", "/"))
