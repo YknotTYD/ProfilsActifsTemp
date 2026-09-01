@@ -1,13 +1,13 @@
-from django.shortcuts           import render
 from django.http.request        import HttpRequest
 from django.http.response       import HttpResponse
-from django.shortcuts           import render, redirect
+from django.shortcuts           import redirect
 from django.contrib.auth.models import User
 from django.contrib.auth        import authenticate, login as login_
+from .models                    import Role, Video
 
 def register(request: HttpRequest) -> HttpResponse:
 
-    if "username" not in request.POST or "password" not in request.POST:
+    if "username" not in request.POST or "password" not in request.POST or "is_recruiter" not in request.POST:
         return redirect("/")
 
     if User.objects.filter(username = request.POST["username"]).first():
@@ -19,6 +19,12 @@ def register(request: HttpRequest) -> HttpResponse:
         request.POST["password"]
     )
     user.save()
+
+    if request.POST["is_recruiter"] == "1":
+        Role(user = user, role = "Recruiter").save()
+    else:
+        Role(user = user, role = "JobSeeker").save()
+
     auth_user = authenticate(request, username = request.POST["username"], password = request.POST["password"])
     login_(request, auth_user)
     return redirect("/")
@@ -26,7 +32,11 @@ def register(request: HttpRequest) -> HttpResponse:
 def login(request: HttpRequest) -> HttpResponse:
 
     if "username" in request.POST and "password" in request.POST:
-        auth_user = authenticate(request, username = request.POST["username"], password = request.POST["password"])
+        auth_user = authenticate(
+            request,
+            username = request.POST["username"],
+            password = request.POST["password"]
+        )
         if auth_user is None:
             return redirect("/login")
         login_(request, auth_user)
@@ -34,3 +44,11 @@ def login(request: HttpRequest) -> HttpResponse:
         return redirect("/login")
 
     return redirect("/")
+
+def video_upload(request: HttpRequest) -> HttpResponse:
+
+    if request.user.is_authenticated and (url := request.POST.get("url")):
+        url = "https://" + url.removeprefix("https://")
+        Video.objects.create(user = request.user, url = url).save()
+
+    return redirect(request.GET.get("camefrom", "/"))

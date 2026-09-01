@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="{% static 'style.css' %}">
 </head>
 <body>
+
 REGISTER
 
 <form method="post" action="/api/register/">
@@ -17,10 +18,17 @@ REGISTER
     <input name="username" autocomplete="name" />
   </label><br>
   <label>Mot de passe:
-    <input name="password" autocomplete="name" />
+    <input name="password" type="password" autocomplete="new-password" />
+  </label><br>
+  <label>Statut:
+    <select name="is_recruiter">
+      <option value="0">Demandeur d'emploi</option>
+      <option value="1">Recruteur</option>
+    </select>
   </label><br>
   <button>Sauvegarder</button>
 </form>
+
 <br>
 
 <a href="/">back</a>
