@@ -4,12 +4,20 @@
 Site de recherche de mise en relation entre demandeur et recruteur sous forme de réseau social pour la piscine Survivor de Tech 3
 
 
-## Deployment
+## Installation
 
 ```bash
-  docker compose watch
+  ./setup.sh install
 ```
 
+## Deploiement
+
+```bash
+  ./setup start
+```
+
+
+Création d'un utilisateur administrateur
 ```bash
   docker exec -it [id_container] sh
   python manage.py createsuperuser

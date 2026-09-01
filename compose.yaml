@@ -1,5 +1,6 @@
 services:
   web:
+    container_name: profilsactifs
     build: .
     ports:
       - "8080:8080"
