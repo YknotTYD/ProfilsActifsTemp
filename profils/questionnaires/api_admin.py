@@ -21,6 +21,7 @@ from .models      import (
     QuestionnaireAttempt, QuestionnaireResult, QuestionnaireVersion,
 )
 from .permissions import admin_capabilities
+from .porting     import export_questionnaire, import_questionnaire
 from .question_types import catalog
 from .serializers import (
     admin_access_rule, admin_questionnaire, admin_version, attempt_summary, audit_entry,
@@ -228,6 +229,35 @@ def duplicate(request, pk):
     log(request.user, c.AUDIT_DUPLICATE, copy, questionnaire = copy,
         old = {"source": source.pk}, new = {"title": copy.title})
     return ok({"questionnaire": admin_questionnaire(copy, detail = True)}, status = 201)
+
+
+@api(("GET",), perm = c.PERM_VIEW)
+def export(request, pk):
+    """Document JSON portable du questionnaire et d'une de ses versions."""
+    questionnaire = _questionnaire(pk)
+
+    version = None
+    if number := request.GET.get("version"):
+        version = _version(pk, int(number))
+
+    return ok(export_questionnaire(questionnaire, version))
+
+
+@api(("POST",), perm = c.PERM_CREATE)
+def import_(request):
+    """Cree un questionnaire en brouillon a partir d'un document exporte.
+
+    Accepte le document seul, ou enveloppe dans {"document": ..., "title": ...}.
+    """
+    payload  = body(request)
+    document = payload.get("document", payload)
+    title    = payload.get("title") or None
+
+    questionnaire = import_questionnaire(document, actor = request.user, title = title)
+    return ok({
+        "questionnaire": admin_questionnaire(questionnaire, detail = True),
+        "questions":     questionnaire.latest_version().questions.count(),
+    }, status = 201)
 
 
 @api(("POST",), perm = c.PERM_ARCHIVE)

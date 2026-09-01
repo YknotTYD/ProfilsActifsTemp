@@ -7,29 +7,31 @@
 
 const QFields = (() => {
 
-    const CHOICE_SINGLE   = ['single_choice', 'yes_no', 'true_false', 'scale'];
-    const CHOICE_MULTIPLE = ['multiple_choice', 'checkbox'];
-    const DROPDOWN        = ['dropdown'];
-    const MULTI_SELECT    = ['multi_select'];
-    const VOCABULARY      = ['country', 'city', 'month', 'weekday'];
+    /* Le serveur declare le controle a afficher : le client ne devine rien.
+       Un type qui n'en declarerait pas est refuse des l'enregistrement. */
+    const WIDGETS = {
+        choice:     (q, v, on) => (q.multiple ? checkboxes : radios)(q, v, on),
+        dropdown:   (q, v, on) => dropdown(q, v, on, q.multiple),
+        vocabulary: vocabulary,
+        number:     numeric,
+        temporal:   temporal,
+        date_range: dateRange,
+        address:    address,
+    };
 
     /* Construit le champ et notifie `onChange(valeur canonique)`. */
     function build(question, onChange) {
         const value = (question.answer && question.answer.value) || null;
         const lock  = question.answer && question.answer.locked;
 
-        let node;
-        if (CHOICE_SINGLE.includes(question.type))        node = radios(question, value, onChange);
-        else if (CHOICE_MULTIPLE.includes(question.type)) node = checkboxes(question, value, onChange);
-        else if (DROPDOWN.includes(question.type))        node = dropdown(question, value, onChange, false);
-        else if (MULTI_SELECT.includes(question.type))    node = dropdown(question, value, onChange, true);
-        else if (VOCABULARY.includes(question.type))      node = vocabulary(question, value, onChange);
-        else if (question.type === 'date_range')          node = dateRange(question, value, onChange);
-        else if (question.type === 'address')             node = address(question, value, onChange);
-        else if (question.family === 'numeric')           node = numeric(question, value, onChange);
-        else if (question.family === 'temporal')          node = temporal(question, value, onChange);
-        else node = qEl('p', { class: 'q-error', text: `type non gere: ${question.type}` });
+        const render = WIDGETS[question.widget];
+        if (!render) {
+            return qEl('p', { class: 'q-error',
+                text: `Ce type de question ne peut pas etre affiche (${question.type}). `
+                    + `Signalez-le a l'administrateur du questionnaire.` });
+        }
 
+        const node = render(question, value, onChange);
         if (lock) node.querySelectorAll('input, select, textarea').forEach(i => i.disabled = true);
         return node;
     }
@@ -45,7 +47,13 @@ const QFields = (() => {
                 checked: selected.has(option.id),
                 onchange: () => onChange({ option_ids: [option.id] }),
             });
-            wrap.appendChild(qEl('label', { class: 'q-choice' }, [input, option.text]));
+            wrap.appendChild(qEl('label', { class: 'q-choice' }, [
+                input,
+                qEl('span', { class: 'q-choice-text' }, [
+                    option.text,
+                    option.description ? qEl('span', { class: 'q-choice-desc', text: option.description }) : null,
+                ]),
+            ]));
         });
         return wrap;
     }
@@ -63,7 +71,13 @@ const QFields = (() => {
                     onChange({ option_ids: [...selected] });
                 },
             });
-            wrap.appendChild(qEl('label', { class: 'q-choice' }, [input, option.text]));
+            wrap.appendChild(qEl('label', { class: 'q-choice' }, [
+                input,
+                qEl('span', { class: 'q-choice-text' }, [
+                    option.text,
+                    option.description ? qEl('span', { class: 'q-choice-desc', text: option.description }) : null,
+                ]),
+            ]));
         });
         return wrap;
     }
@@ -83,7 +97,7 @@ const QFields = (() => {
                 value: option.id, text: option.text, selected: selected.has(option.id),
             }));
         });
-        return qEl('div', { class: 'q-field' }, [select]);
+        return qEl('div', { class: 'q-inline' }, [select]);
     }
 
     /* --- vocabulaires controles ----------------------------------------- */
@@ -100,7 +114,7 @@ const QFields = (() => {
                 value: entry.code, text: entry.label, selected: String(current) === String(entry.code),
             }));
         });
-        return qEl('div', { class: 'q-field' }, [select]);
+        return qEl('div', { class: 'q-inline' }, [select]);
     }
 
     /* --- numerique ------------------------------------------------------ */
@@ -134,9 +148,9 @@ const QFields = (() => {
                 qEl('option', { value: u, text: u, selected: u === unit })));
             children.push(select);
         } else if (unit) {
-            children.push(qEl('span', { class: 'q-muted', text: unit }));
+            children.push(qEl('span', { class: 'q-unit', text: unit }));
         }
-        return qEl('div', { class: 'q-field' }, children);
+        return qEl('div', { class: 'q-inline' }, children);
     }
 
     /* --- date et heure --------------------------------------------------- */
@@ -158,7 +172,7 @@ const QFields = (() => {
                 onChange(raw ? { [map.key]: raw } : null);
             },
         });
-        return qEl('div', { class: 'q-field' }, [input]);
+        return qEl('div', { class: 'q-inline' }, [input]);
     }
 
     function dateRange(question, value, onChange) {
@@ -174,8 +188,8 @@ const QFields = (() => {
             onchange: (event) => { state.end = event.target.value; emit(); },
         });
         return qEl('div', { class: 'q-field' }, [
-            qEl('span', { class: 'q-muted', text: 'du' }), start,
-            qEl('span', { class: 'q-muted', text: 'au' }), end,
+            qEl('span', { class: 'q-unit', text: 'Du' }), start,
+            qEl('span', { class: 'q-unit', text: 'au' }), end,
         ]);
     }
 
@@ -196,7 +210,7 @@ const QFields = (() => {
                 emit();
             },
         });
-        wrap.appendChild(qEl('label', {}, ['Numero ', number]));
+        wrap.appendChild(QForm.wrap('Numero', number));
 
         if (config.allow_street_text !== false) {
             const street = qEl('input', {
@@ -207,7 +221,7 @@ const QFields = (() => {
                     emit();
                 },
             });
-            wrap.appendChild(qEl('label', {}, ['Voie ', street]));
+            wrap.appendChild(QForm.wrap('Voie', street));
         }
 
         const postal = qEl('input', {
@@ -218,7 +232,7 @@ const QFields = (() => {
                 emit();
             },
         });
-        wrap.appendChild(qEl('label', {}, ['Code postal ', postal]));
+        wrap.appendChild(QForm.wrap('Code postal', postal));
 
         const cities = config.cities || [];
         const city = cities.length
@@ -242,7 +256,7 @@ const QFields = (() => {
                 value: entry.code, text: entry.name, selected: state.city === entry.code,
             })));
         }
-        wrap.appendChild(qEl('label', {}, ['Ville ', city]));
+        wrap.appendChild(QForm.wrap('Ville', city));
 
         const countries = config.countries || [];
         const country = qEl('select', {
@@ -254,7 +268,7 @@ const QFields = (() => {
         country.appendChild(qEl('option', { value: '', text: '—' }));
         (countries.length ? countries : [state.country].filter(Boolean)).forEach(code =>
             country.appendChild(qEl('option', { value: code, text: code, selected: state.country === code })));
-        wrap.appendChild(qEl('label', {}, ['Pays ', country]));
+        wrap.appendChild(QForm.wrap('Pays', country));
 
         return wrap;
     }

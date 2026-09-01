@@ -1,32 +1,9 @@
 {% extends "questionnaires/base.html" %}
-{% load static %}
-{% block title %}Versions - {{ questionnaire.title }}{% endblock %}
-
+{% block title %}Versions{% endblock %}
 {% block content %}
-<div id="q-versions" data-questionnaire="{{ questionnaire.id }}">
-    <h1>Versions — {{ questionnaire.title }}</h1>
-    <p><a href="/questionnaires/manage/{{ questionnaire.id }}/">retour a l'editeur</a></p>
-
-    <table class="q-table" id="q-version-list">
-        <thead>
-            <tr><th>Version</th><th>Statut</th><th>Questions</th><th>Tentatives</th>
-                <th>Creee le</th><th>Par</th><th>Publiee le</th><th>Actions</th></tr>
-        </thead>
-        <tbody></tbody>
-    </table>
-
-    <section class="q-panel">
-        <h2>Comparer deux versions</h2>
-        <div class="q-filters">
-            <label>De <select id="q-diff-from"></select></label>
-            <label>Vers <select id="q-diff-to"></select></label>
-            <button class="q-btn q-primary" id="q-diff-run">Comparer</button>
-        </div>
-        <div id="q-diff"></div>
-    </section>
+<div class="q-panel">
+    <h1>Versions</h1>
+    <p>L'historique des versions est desormais dans l'onglet <b>Versions &amp; historique</b> de l'editeur.</p>
+    <p><a class="q-btn q-primary" href="/questionnaires/manage/{{ questionnaire.id }}/#history">Ouvrir l'editeur</a></p>
 </div>
-{% endblock %}
-
-{% block scripts %}
-<script src="{% static 'questionnaire_versions.js' %}"></script>
 {% endblock %}

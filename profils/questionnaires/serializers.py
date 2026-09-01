@@ -176,6 +176,7 @@ def runner_question(question, answer = None, *, visible: bool = True) -> dict:
         "description": question.description,
         "type":        question.type,
         "family":      handler.family,
+        "widget":      handler.widget,
         "required":    question.required,
         "config":      question.config,
         "uses_options": handler.uses_options,

@@ -79,7 +79,8 @@ def api(methods = ("GET",), *, perm: str = None, login: bool = True):
                     "client_sequence": exc.answer.client_sequence,
                 })
             except AttemptError as exc:
-                return fail(exc.reason, exc.code, exc.status)
+                extra = {"missing": exc.missing} if hasattr(exc, "missing") else {}
+                return fail(exc.reason, exc.code, exc.status, **extra)
             except AccessDenied as exc:
                 return fail(exc.reason, exc.code, exc.status)
             except BadRequest as exc:

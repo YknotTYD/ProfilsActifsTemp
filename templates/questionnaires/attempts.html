@@ -1,33 +1,49 @@
 {% extends "questionnaires/base.html" %}
 {% load static %}
-{% block title %}Tentatives - {{ questionnaire.title }}{% endblock %}
+{% block title %}Tentatives — {{ questionnaire.title }}{% endblock %}
+
+{% block crumbs %}
+<nav class="q-crumbs">
+    <a href="/questionnaires/manage/">Administration</a> <span>/</span>
+    <a href="/questionnaires/manage/{{ questionnaire.id }}/">{{ questionnaire.title }}</a> <span>/</span> Tentatives
+</nav>
+{% endblock %}
 
 {% block content %}
 <div id="q-attempts" data-questionnaire="{{ questionnaire.id }}">
-    <h1>Tentatives &amp; resultats — {{ questionnaire.title }}</h1>
-    <p><a href="/questionnaires/manage/{{ questionnaire.id }}/">retour a l'editeur</a></p>
-
-    <div class="q-filters">
-        <label><input type="checkbox" id="q-include-test"> inclure les tentatives de test</label>
+    <div class="q-pagehead">
+        <div>
+            <h1>Tentatives et resultats</h1>
+            <p class="q-lede">{{ questionnaire.title }}</p>
+        </div>
     </div>
 
-    <div class="q-panel" id="q-stats"></div>
+    <div class="q-stats" id="q-stats"></div>
 
-    <h2>Tentatives</h2>
-    <table class="q-table" id="q-attempt-list">
-        <thead><tr><th>#</th><th>Utilisateur</th><th>Version</th><th>Statut</th><th>Test</th>
-                   <th>Progression</th><th>Score</th><th>Debut</th><th></th></tr></thead>
-        <tbody></tbody>
-    </table>
+    <div class="q-filters" style="margin-top:1.25rem">
+        <label class="q-check"><input type="checkbox" id="q-include-test">
+            <span>Inclure les tentatives de test</span></label>
+    </div>
 
-    <h2>Resultats</h2>
-    <table class="q-table" id="q-result-list">
-        <thead><tr><th>Utilisateur</th><th>Version</th><th>Score</th><th>%</th>
-                   <th>Resultat</th><th>Niveau</th><th>Date</th></tr></thead>
-        <tbody></tbody>
-    </table>
+    <h2 class="q-section-title">Tentatives</h2>
+    <div class="q-tablewrap">
+        <table class="q-table" id="q-attempt-list">
+            <thead><tr><th>Participant</th><th>Version</th><th>Statut</th>
+                       <th>Progression</th><th class="num">Score</th><th>Debut</th><th></th></tr></thead>
+            <tbody></tbody>
+        </table>
+    </div>
 
-    <div class="q-panel" id="q-transcript" hidden></div>
+    <h2 class="q-section-title">Resultats</h2>
+    <div class="q-tablewrap">
+        <table class="q-table" id="q-result-list">
+            <thead><tr><th>Participant</th><th>Version</th><th class="num">Score</th>
+                       <th class="num">Pourcentage</th><th>Resultat</th><th>Date</th></tr></thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <div id="q-transcript" hidden></div>
 </div>
 {% endblock %}
 

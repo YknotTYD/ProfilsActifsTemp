@@ -42,6 +42,11 @@ def register(cls):
     instance = cls()
     if instance.id in _REGISTRY:
         raise RuntimeError(f"type de question deja enregistre: {instance.id}")
+    if not instance.widget:
+        raise RuntimeError(
+            f"le type {instance.id} ne declare aucun widget : le participant "
+            f"n'aurait aucun moyen de repondre"
+        )
     _REGISTRY[instance.id] = instance
     return cls
 
@@ -61,6 +66,26 @@ def type_choices() -> list[tuple[str, str]]:
     return [(t.id, t.label) for t in _REGISTRY.values()]
 
 
+def field(key, label, kind = "text", *, help = "", example = "",
+          choices = None, default = None, unit = None) -> dict:
+    """Descripteur d'un champ de configuration, consomme par l'editeur.
+
+    C'est ce qui permet a l'interface d'administration de construire un vrai
+    formulaire par type de question, avec libelles et exemples, au lieu de
+    demander du JSON a la main.
+    """
+    return {
+        "key":     key,
+        "label":   label,
+        "kind":    kind,            # text | number | int | bool | select | date | time | datetime | cities | countries
+        "help":    help,
+        "example": str(example) if example != "" else "",
+        "choices": choices,
+        "default": default,
+        "unit":    unit,
+    }
+
+
 def catalog() -> list[dict]:
     """Description du catalogue, consommee par l'editeur d'administration."""
     return [
@@ -68,10 +93,18 @@ def catalog() -> list[dict]:
             "id":           t.id,
             "family":       t.family,
             "label":        t.label,
+            "hint":         t.hint,
+            "example":      t.example,
             "uses_options": t.uses_options,
             "multiple":     t.multiple,
-            "config_schema": t.config_schema(),
+            "fixed_options": [label for _, label in getattr(t, "fixed_options", ())],
+            "config_fields": t.config_fields(),
             "expected_kinds": list(t.expected_kinds),
+            "value_input":  t.value_input,
+            "value_choices": t.value_choices(),
+            "expected_help": t.expected_help,
+            "expected_rules": t.expected_rules(),
+            "widget":       t.widget,
         }
         for t in _REGISTRY.values()
     ]
@@ -148,6 +181,16 @@ def evaluate_rules(expected: dict, value) -> float:
     return 1.0 if (all(hits) if match == "all" else any(hits)) else 0.0
 
 
+#: libelle lisible de chaque forme de reponse attendue
+RULE_LABELS = {
+    "exact":  "Exactement cette valeur",
+    "one_of": "L\'une de ces valeurs",
+    "range":  "Comprise entre",
+    "min":    "Superieure ou egale a",
+    "max":    "Inferieure ou egale a",
+}
+
+
 # --------------------------------------------------------------------------- #
 # Classe de base
 # --------------------------------------------------------------------------- #
@@ -157,15 +200,50 @@ class QuestionType:
     id           = ""
     family       = ""
     label        = ""
+    hint         = ""      # a quoi sert ce type, en une ligne
+    example      = ""      # exemple concret de question de ce type
     uses_options = False   # la question porte-t-elle des QuestionOption ?
     multiple     = False   # plusieurs options selectionnables ?
     expected_kinds: tuple = ()   # regles de reponse attendue supportees
+    value_input  = "text"  # type de champ pour saisir une reponse attendue
+    widget       = ""      # controle de saisie a afficher au participant
+    expected_help = ""     # aide affichee au-dessus des reponses attendues
 
     # -- administration ---------------------------------------------------- #
 
-    def config_schema(self) -> dict:
-        """Champs de configuration acceptes, pour l'editeur."""
-        return {}
+    def config_fields(self) -> list[dict]:
+        """Champs de configuration, decrits pour que l'editeur les affiche."""
+        return []
+
+    def expected_rules(self) -> list[dict]:
+        """Formes de reponse attendue proposees, avec les champs a saisir.
+
+        C'est ce qui permet a l'editeur de construire un vrai constructeur de
+        regles : il n'a pas a savoir qu'un intervalle de dates se decrit par un
+        debut et une fin, ni qu'une adresse se decrit composant par composant.
+        """
+        return [
+            {"kind": kind, "label": RULE_LABELS[kind], "fields": self.rule_fields(kind)}
+            for kind in self.expected_kinds if kind != "combination"
+        ]
+
+    def rule_fields(self, kind: str) -> list[dict]:
+        """Champs a saisir pour une forme de regle donnee."""
+        if kind == "one_of":
+            return [{"path": "values", "label": "valeurs acceptees",
+                     "input": self.value_input, "multiple": True}]
+        if kind == "range":
+            return [{"path": "min", "label": "minimum", "input": self.value_input},
+                    {"path": "max", "label": "maximum", "input": self.value_input}]
+        return [{"path": "value", "label": "valeur", "input": self.value_input}]
+
+    def value_choices(self) -> list | None:
+        """Valeurs proposables pour une reponse attendue, si le vocabulaire est fixe.
+
+        Renvoie None quand la saisie est libre dans les bornes du type, ou quand
+        le vocabulaire depend de la configuration de la question (villes).
+        """
+        return None
 
     def validate_config(self, config: dict) -> dict:
         return dict(config or {})
@@ -246,16 +324,29 @@ class ChoiceType(QuestionType):
     uses_options   = True
     expected_kinds = ("combination",)
     min_options    = 2
+    widget         = "choice"
 
-    def config_schema(self) -> dict:
-        schema = {"shuffle_options": "bool"}
+    expected_help = ("Cochez la ou les bonnes reponses directement dans la liste "
+                     "ci-dessus.")
+
+    def config_fields(self) -> list[dict]:
+        fields = [field(
+            "shuffle_options", "Melanger l'ordre des reponses", "bool",
+            help = "Chaque participant voit les propositions dans un ordre different.",
+        )]
         if self.multiple:
-            schema |= {
-                "min_selected":      "int?",
-                "max_selected":      "int?",
-                "penalty_per_wrong": "float",
-            }
-        return schema
+            fields += [
+                field("min_selected", "Minimum de cases a cocher", "int",
+                      help = "Laissez vide pour ne rien imposer.", example = "2"),
+                field("max_selected", "Maximum de cases a cocher", "int",
+                      help = "Laissez vide pour ne rien imposer.", example = "3"),
+                field("penalty_per_wrong", "Penalite par mauvaise case", "number",
+                      default = 1,
+                      help = "1 = une mauvaise coche annule une bonne. 0 = les mauvaises "
+                             "coches sont ignorees. 0.5 = elles comptent a moitie.",
+                      example = "1"),
+            ]
+        return fields
 
     def validate_config(self, config: dict) -> dict:
         config = dict(config or {})
@@ -381,6 +472,8 @@ class ChoiceType(QuestionType):
 class SingleChoice(ChoiceType):
     id    = c.TYPE_SINGLE_CHOICE
     label = "Choix unique"
+    hint    = "Une seule reponse possible parmi plusieurs."
+    example = "Quelle est la capitale de la France ? -> Paris / Lyon / Marseille"
 
 
 @register
@@ -388,6 +481,8 @@ class MultipleChoice(ChoiceType):
     id       = c.TYPE_MULTIPLE_CHOICE
     label    = "Choix multiple"
     multiple = True
+    hint    = "Plusieurs reponses possibles. Le score peut etre partiel."
+    example = "Lesquels de ces langages sont compiles ? -> Java, Rust, Python"
 
 
 @register
@@ -395,19 +490,27 @@ class Checkbox(ChoiceType):
     id       = c.TYPE_CHECKBOX
     label    = "Cases a cocher"
     multiple = True
+    hint    = "Cases a cocher, identique au choix multiple."
+    example = "Quels outils utilisez-vous au quotidien ?"
 
 
 @register
 class Dropdown(ChoiceType):
     id    = c.TYPE_DROPDOWN
     label = "Liste deroulante"
+    widget   = "dropdown"
+    hint    = "Choix unique dans un menu deroulant. Pratique au-dela de 6 propositions."
+    example = "Dans quel departement travaillez-vous ?"
 
 
 @register
 class MultiSelect(ChoiceType):
     id       = c.TYPE_MULTI_SELECT
     label    = "Liste multi-selection"
+    widget   = "dropdown"
     multiple = True
+    hint    = "Choix multiple dans une liste deroulante."
+    example = "Quelles langues parlez-vous ?"
 
 
 class FixedChoiceType(ChoiceType):
@@ -415,8 +518,8 @@ class FixedChoiceType(ChoiceType):
 
     fixed_options: tuple = ()
 
-    def config_schema(self) -> dict:
-        return {}
+    def config_fields(self) -> list[dict]:
+        return []
 
 
 @register
@@ -424,6 +527,8 @@ class YesNo(FixedChoiceType):
     id            = c.TYPE_YES_NO
     label         = "Oui / Non"
     fixed_options = (("yes", "Oui"), ("no", "Non"))
+    hint    = "Oui ou non. Les deux reponses sont creees automatiquement."
+    example = "Avez-vous une voiture ?"
 
 
 @register
@@ -431,6 +536,8 @@ class TrueFalse(FixedChoiceType):
     id            = c.TYPE_TRUE_FALSE
     label         = "Vrai / Faux"
     fixed_options = (("true", "Vrai"), ("false", "Faux"))
+    hint    = "Vrai ou faux. Les deux reponses sont creees automatiquement."
+    example = "Python est un langage compile. -> Vrai / Faux"
 
 
 @register
@@ -445,8 +552,19 @@ class Scale(ChoiceType):
     label          = "Echelle / notation"
     expected_kinds = ("combination", "exact", "one_of", "range", "min", "max")
 
-    def config_schema(self) -> dict:
-        return {"min": "int", "max": "int", "step": "int", "labels": "dict?"}
+    value_input   = "number"
+    expected_help = ("Cochez les echelons corrects, ou definissez une regle "
+                     "numerique (par exemple : entre 4 et 5).")
+    hint    = "Une note sur une echelle, par exemple de 1 a 5."
+    example = "Quel est votre niveau en Python ? -> 1 a 5"
+
+    def config_fields(self) -> list[dict]:
+        return [
+            field("min",  "Premier echelon", "int", default = 1, example = "1"),
+            field("max",  "Dernier echelon", "int", default = 5, example = "5"),
+            field("step", "Pas entre deux echelons", "int", default = 1,
+                  help = "1 = 1, 2, 3, 4, 5. Mettez 2 pour 1, 3, 5.", example = "1"),
+        ]
 
     def validate_config(self, config: dict) -> dict:
         config = dict(config or {})
@@ -504,18 +622,37 @@ class NumericType(QuestionType):
 
     family         = c.FAMILY_NUMERIC
     expected_kinds = ("exact", "one_of", "range", "min", "max")
+    widget         = "number"
     integer_only   = False
     units: tuple   = ()
     default_unit   = None
 
-    def config_schema(self) -> dict:
-        schema = {"min": "number?", "max": "number?"}
+    value_input   = "number"
+    expected_help = "Definissez la valeur exacte attendue, ou une plage acceptee."
+
+    def config_fields(self) -> list[dict]:
+        fields = [
+            field("min", "Valeur minimale acceptee", "number",
+                  help = "Une saisie hors bornes est refusee immediatement. "
+                         "Laissez vide pour ne pas limiter.", example = "0"),
+            field("max", "Valeur maximale acceptee", "number",
+                  help = "Laissez vide pour ne pas limiter.", example = "100"),
+        ]
         if not self.integer_only:
-            schema["decimals"] = "int?"
+            fields.append(field(
+                "decimals", "Nombre de decimales autorisees", "int",
+                help = "2 accepte 1,25 mais refuse 1,256. Laissez vide pour ne rien imposer.",
+                example = "2"))
         if self.units:
-            schema["unit"]       = f"one of {list(self.units)}"
-            schema["allow_unit_choice"] = "bool"
-        return schema
+            fields += [
+                field("unit", "Unite", "select", choices = list(self.units),
+                      default = self.default_unit,
+                      help = "L'unite affichee a cote du champ de saisie."),
+                field("allow_unit_choice", "Laisser le participant choisir l'unite", "bool",
+                      help = "Rarement utile : la comparaison avec la reponse attendue "
+                             "ne convertit pas les unites."),
+            ]
+        return fields
 
     def validate_config(self, config: dict) -> dict:
         config = dict(config or {})
@@ -593,12 +730,16 @@ class IntegerType(NumericType):
     id           = c.TYPE_INTEGER
     label        = "Entier"
     integer_only = True
+    hint    = "Un nombre entier, sans decimale."
+    example = "Combien de collaborateurs dans votre equipe ?"
 
 
 @register
 class DecimalType(NumericType):
     id    = c.TYPE_DECIMAL
     label = "Nombre decimal"
+    hint    = "Un nombre a virgule."
+    example = "Quel est votre coefficient horaire ?"
 
 
 @register
@@ -607,6 +748,8 @@ class PercentageType(NumericType):
     label        = "Pourcentage"
     units        = ("%",)
     default_unit = "%"
+    hint    = "Un pourcentage entre 0 et 100."
+    example = "Quel taux de reussite visez-vous ?"
 
     def validate_config(self, config: dict) -> dict:
         config = dict(config or {})
@@ -621,6 +764,8 @@ class TemperatureType(NumericType):
     label        = "Temperature"
     units        = ("C", "F", "K")
     default_unit = "C"
+    hint    = "Une temperature, avec son unite."
+    example = "Temperature de confort au bureau ? -> entre 18 et 22 C"
 
 
 @register
@@ -629,6 +774,8 @@ class DistanceType(NumericType):
     label        = "Distance"
     units        = ("mm", "cm", "m", "km", "mi")
     default_unit = "m"
+    hint    = "Une distance, avec son unite."
+    example = "A quelle distance habitez-vous du bureau ?"
 
 
 @register
@@ -637,6 +784,8 @@ class WeightType(NumericType):
     label        = "Poids"
     units        = ("g", "kg", "t", "lb")
     default_unit = "kg"
+    hint    = "Un poids, avec son unite."
+    example = "Quelle charge maximale peut porter cet equipement ?"
 
 
 @register
@@ -645,6 +794,8 @@ class HeightType(NumericType):
     label        = "Taille"
     units        = ("cm", "m", "in", "ft")
     default_unit = "cm"
+    hint    = "Une taille, avec son unite."
+    example = "Quelle hauteur de plan de travail preferez-vous ?"
 
 
 @register
@@ -653,6 +804,8 @@ class SpeedType(NumericType):
     label        = "Vitesse"
     units        = ("km/h", "m/s", "mph", "kn")
     default_unit = "km/h"
+    hint    = "Une vitesse, avec son unite."
+    example = "Quelle vitesse maximale sur cette portion ?"
 
 
 @register
@@ -661,6 +814,8 @@ class DurationType(NumericType):
     label        = "Duree"
     units        = ("s", "min", "h", "d")
     default_unit = "min"
+    hint    = "Une duree comme quantite (secondes, minutes, heures, jours)."
+    example = "Combien de temps dure votre trajet ?"
 
 
 # --------------------------------------------------------------------------- #
@@ -672,6 +827,7 @@ class TemporalType(QuestionType):
     family         = c.FAMILY_TEMPORAL
     expected_kinds = ("exact", "one_of", "range", "min", "max")
     key            = "value"
+    widget         = "temporal"
 
     def parse(self, raw: str):
         raise NotImplementedError
@@ -679,8 +835,15 @@ class TemporalType(QuestionType):
     def format(self, parsed) -> str:
         return parsed.isoformat()
 
-    def config_schema(self) -> dict:
-        return {"min": "iso?", "max": "iso?"}
+    expected_help = "Definissez la valeur exacte attendue, ou une plage acceptee."
+
+    def config_fields(self) -> list[dict]:
+        return [
+            field("min", "Pas avant", self.value_input,
+                  help = "Laissez vide pour ne pas limiter."),
+            field("max", "Pas apres", self.value_input,
+                  help = "Laissez vide pour ne pas limiter."),
+        ]
 
     def validate_config(self, config: dict) -> dict:
         config = dict(config or {})
@@ -730,6 +893,9 @@ class DateType(TemporalType):
     id    = c.TYPE_DATE
     label = "Date"
     key   = "date"
+    value_input = "date"
+    hint    = "Une date, sans heure."
+    example = "Quand avez-vous obtenu votre diplome ?"
 
     def parse(self, raw):
         if isinstance(raw, date) and not isinstance(raw, datetime):
@@ -745,6 +911,9 @@ class TimeType(TemporalType):
     id    = c.TYPE_TIME
     label = "Heure"
     key   = "time"
+    value_input = "time"
+    hint    = "Une heure precise, secondes comprises."
+    example = "A quelle heure demarre votre astreinte ?"
 
     def parse(self, raw):
         if isinstance(raw, time):
@@ -760,6 +929,9 @@ class DateTimeType(TemporalType):
     id    = c.TYPE_DATETIME
     label = "Date et heure"
     key   = "datetime"
+    value_input = "datetime"
+    hint    = "Une date et une heure."
+    example = "Quand a eu lieu l'incident ?"
 
     def parse(self, raw):
         if isinstance(raw, datetime):
@@ -775,6 +947,9 @@ class HourMinuteType(TemporalType):
     id    = c.TYPE_HOUR_MINUTE
     label = "Heure / minute"
     key   = "time"
+    value_input = "time"
+    hint    = "Une heure et des minutes, sans les secondes."
+    example = "A quelle heure arrivez-vous le matin ?"
 
     def parse(self, raw):
         if isinstance(raw, time):
@@ -799,10 +974,28 @@ class DateRangeType(QuestionType):
     id             = c.TYPE_DATE_RANGE
     family         = c.FAMILY_TEMPORAL
     label          = "Intervalle de dates"
+    widget         = "date_range"
     expected_kinds = ("exact", "range")
 
-    def config_schema(self) -> dict:
-        return {"min": "iso?", "max": "iso?", "max_days": "int?"}
+    value_input   = "date"
+    expected_help = "La reponse est correcte si l'intervalle donne tombe dans celui attendu."
+
+    def rule_fields(self, kind: str) -> list[dict]:
+        if kind == "exact":
+            return [{"path": "start", "label": "du", "input": "date"},
+                    {"path": "end",   "label": "au", "input": "date"}]
+        return [{"path": "min", "label": "pas avant", "input": "date"},
+                {"path": "max", "label": "pas apres", "input": "date"}]
+    hint    = "Un intervalle entre deux dates."
+    example = "Sur quelle periode etiez-vous en conge ?"
+
+    def config_fields(self) -> list[dict]:
+        return [
+            field("min", "Pas avant", "date", help = "Laissez vide pour ne pas limiter."),
+            field("max", "Pas apres", "date", help = "Laissez vide pour ne pas limiter."),
+            field("max_days", "Duree maximale de l'intervalle (jours)", "int",
+                  help = "Laissez vide pour ne pas limiter.", example = "7"),
+        ]
 
     def _parse(self, raw):
         try:
@@ -880,6 +1073,7 @@ class VocabularyType(QuestionType):
     family         = c.FAMILY_STRUCTURED
     expected_kinds = ("exact", "one_of")
     key            = "value"
+    widget         = "vocabulary"
 
     def vocabulary(self, question) -> dict:
         """{code: libelle} des valeurs acceptees."""
@@ -915,8 +1109,16 @@ class CountryType(VocabularyType):
     label = "Pays"
     key   = "country"
 
-    def config_schema(self) -> dict:
-        return {"allowed": "list of ISO 3166-1 alpha-2 codes (optionnel)"}
+    expected_help = "Choisissez le ou les pays acceptes."
+    hint    = "Un pays, choisi dans la liste officielle ISO."
+    example = "Dans quel pays exercez-vous ?"
+
+    def config_fields(self) -> list[dict]:
+        return [field(
+            "allowed", "Restreindre a certains pays", "countries",
+            help = "Laissez vide pour proposer les 249 pays. Sinon, seuls les pays "
+                   "choisis seront proposes au participant.",
+        )]
 
     def validate_config(self, config: dict) -> dict:
         config  = dict(config or {})
@@ -925,6 +1127,9 @@ class CountryType(VocabularyType):
         if unknown:
             raise ConfigError(f"codes pays inconnus: {unknown}")
         return config
+
+    def value_choices(self) -> list:
+        return [[code, name] for code, name in COUNTRY_NAMES.items()]
 
     def vocabulary(self, question) -> dict:
         allowed = (question.config or {}).get("allowed") or []
@@ -945,8 +1150,17 @@ class CityType(VocabularyType):
     label = "Ville"
     key   = "city"
 
-    def config_schema(self) -> dict:
-        return {"cities": "list of {code, name, country?} (obligatoire)"}
+    expected_help = "Choisissez la ou les villes acceptees."
+    hint    = "Une ville, choisie dans une liste que vous definissez."
+    example = "Sur quel site travaillez-vous ? -> Paris, Lyon, Marseille"
+
+    def config_fields(self) -> list[dict]:
+        return [field(
+            "cities", "Villes proposees", "cities",
+            help = "Obligatoire : il n'y a pas de saisie libre. Le participant choisira "
+                   "dans cette liste.",
+            example = "Paris, Lyon, Marseille",
+        )]
 
     def validate_config(self, config: dict) -> dict:
         config = dict(config or {})
@@ -975,6 +1189,8 @@ class YearType(NumericType):
     family         = c.FAMILY_STRUCTURED
     label          = "Annee"
     integer_only   = True
+    hint    = "Une annee."
+    example = "En quelle annee avez-vous commence ?"
 
     def validate_config(self, config: dict) -> dict:
         config = dict(config or {})
@@ -990,8 +1206,11 @@ class OrdinalType(VocabularyType):
 
     entries: tuple = ()
 
-    def config_schema(self) -> dict:
-        return {}
+    def config_fields(self) -> list[dict]:
+        return []
+
+    def value_choices(self) -> list:
+        return [[str(code), label] for code, label in self.entries]
 
     def vocabulary(self, question) -> dict:
         return {str(code): label for code, label in self.entries}
@@ -1016,6 +1235,8 @@ class MonthType(OrdinalType):
         (5, "Mai"),       (6, "Juin"),     (7, "Juillet"),   (8, "Aout"),
         (9, "Septembre"), (10, "Octobre"), (11, "Novembre"), (12, "Decembre"),
     )
+    hint    = "Un mois de l'annee."
+    example = "Quel mois preferez-vous pour vos conges ?"
 
 
 @register
@@ -1027,6 +1248,8 @@ class WeekdayType(OrdinalType):
         (0, "Lundi"),    (1, "Mardi"),  (2, "Mercredi"), (3, "Jeudi"),
         (4, "Vendredi"), (5, "Samedi"), (6, "Dimanche"),
     )
+    hint    = "Un jour de la semaine."
+    example = "Quel jour de la semaine vous arrange le mieux ?"
 
 
 @register
@@ -1043,21 +1266,42 @@ class AddressType(QuestionType):
     id             = c.TYPE_ADDRESS
     family         = c.FAMILY_STRUCTURED
     label          = "Adresse structuree"
+    widget         = "address"
     expected_kinds = ("exact",)
 
     DEFAULT_STREET_PATTERN = r"^[0-9A-Za-zÀ-ÿ' \-.]{1,120}$"
     DEFAULT_POSTAL_PATTERN = r"^[0-9A-Za-z \-]{2,12}$"
 
-    def config_schema(self) -> dict:
-        return {
-            "countries":        "list of ISO codes (optionnel)",
-            "cities":           "list of {code, name} (optionnel)",
-            "postal_pattern":   "regex",
-            "allow_street_text": "bool",
-            "street_max_length": "int",
-            "street_pattern":    "regex",
-            "required_fields":   "list of field names",
-        }
+    expected_help = "Renseignez l'adresse exacte attendue, champ par champ."
+
+    def rule_fields(self, kind: str) -> list[dict]:
+        return [
+            {"path": "value.street_number", "label": "numero",      "input": "number"},
+            {"path": "value.street",        "label": "voie",        "input": "text"},
+            {"path": "value.postal_code",   "label": "code postal", "input": "text"},
+            {"path": "value.city",          "label": "ville",       "input": "text"},
+            {"path": "value.country",       "label": "pays",        "input": "text"},
+        ]
+    hint    = "Une adresse decomposee en champs valides separement."
+    example = "Quelle est l'adresse du site concerne ?"
+
+    def config_fields(self) -> list[dict]:
+        return [
+            field("countries", "Restreindre a certains pays", "countries",
+                  help = "Laissez vide pour proposer tous les pays."),
+            field("cities", "Villes proposees", "cities",
+                  help = "Si vous renseignez une liste, la ville devient un menu deroulant "
+                         "au lieu d'un champ de saisie."),
+            field("allow_street_text", "Autoriser la saisie du nom de voie", "bool",
+                  default = True,
+                  help = "Decochez pour n'accepter que numero, code postal, ville et pays."),
+            field("street_max_length", "Longueur maximale du nom de voie", "int",
+                  default = 120, example = "120"),
+            field("required_fields", "Champs obligatoires", "select-multi",
+                  choices = ["country", "city", "postal_code", "street_number", "street"],
+                  default = ["country", "city", "postal_code"],
+                  help = "Une adresse incomplete sur ces champs sera refusee."),
+        ]
 
     def validate_config(self, config: dict) -> dict:
         import re

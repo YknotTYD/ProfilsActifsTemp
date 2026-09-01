@@ -2,45 +2,75 @@
 {% load static %}
 {% block title %}{{ questionnaire.title }}{% endblock %}
 
+{% block crumbs %}
+<nav class="q-crumbs">
+    <a href="/questionnaires/">Questionnaires</a> <span>/</span> {{ questionnaire.title }}
+</nav>
+{% endblock %}
+
 {% block content %}
 <div id="q-runner"
      data-questionnaire="{{ questionnaire.id }}"
      data-test="{% if test_mode %}1{% else %}0{% endif %}">
 
-    <header class="q-runner-head">
+    <div class="q-pagehead">
         <div>
             <h1>{{ questionnaire.title }}</h1>
-            {% if test_mode %}<span class="q-badge q-test">mode test</span>{% endif %}
+            {% if test_mode %}
+                <p><span class="q-badge q-test">Mode test</span>
+                   <span class="q-help">Cette tentative ne compte pas dans les statistiques.</span></p>
+            {% endif %}
         </div>
         <div class="q-save-state" id="q-save-state" data-state="idle">
             <span class="q-dot"></span><span id="q-save-label">Pret</span>
         </div>
-    </header>
-
-    <div class="q-progress"><div class="q-progress-bar" id="q-progress-bar"></div></div>
-    <p class="q-muted" id="q-progress-label"></p>
-
-    <div id="q-start-panel" class="q-panel">
-        <p>{{ questionnaire.description }}</p>
-        <ul class="q-meta">
-            <li>Tentatives : {{ card.attempts_used }}{% if card.max_attempts %} / {{ card.max_attempts }}{% endif %}</li>
-        </ul>
-        <button class="q-btn q-primary" id="q-start">
-            {% if has_attempt %}Reprendre ma tentative{% else %}Commencer{% endif %}
-        </button>
-        <p class="q-warn" id="q-start-error"></p>
     </div>
 
-    <form id="q-form" class="q-panel" hidden></form>
+    <div class="q-progress-wrap" id="q-progress-wrap" hidden>
+        <div class="q-progress"><div class="q-progress-bar" id="q-progress-bar"></div></div>
+        <p class="q-progress-label" id="q-progress-label"></p>
+    </div>
+
+    <div id="q-start-panel" class="q-panel">
+        {% if questionnaire.description %}<p>{{ questionnaire.description }}</p>{% endif %}
+
+        <div class="q-callout">
+            <h3>Avant de commencer</h3>
+            <p>Vos reponses sont enregistrees automatiquement, une par une. Vous pouvez fermer
+               cette page et revenir plus tard : vous reprendrez ou vous vous etes arrete.</p>
+            <p>Le bouton <b>Terminer</b> cloture la tentative et calcule votre resultat.
+               Apres cela, vos reponses ne sont plus modifiables.</p>
+        </div>
+
+        <ul class="q-meta" style="margin-bottom:1rem">
+            <li><b>{{ card.question_count }}</b> question{{ card.question_count|pluralize }}</li>
+            <li>Tentatives utilisees : <b>{{ card.attempts_used }}</b>{% if card.max_attempts %} sur {{ card.max_attempts }}{% endif %}</li>
+        </ul>
+
+        <div class="q-actions">
+            <button class="q-btn q-primary" id="q-start">
+                {% if has_attempt %}Reprendre ma tentative{% else %}Commencer le questionnaire{% endif %}
+            </button>
+            <a class="q-btn q-ghost" href="/questionnaires/">Retour</a>
+            {% if card.attempts_used %}
+            <a class="q-btn q-ghost" href="/questionnaires/{{ questionnaire.id }}/results/">Mes resultats</a>
+            {% endif %}
+        </div>
+        <p class="q-error" id="q-start-error"></p>
+    </div>
+
+    <form id="q-form" hidden></form>
 
     <div class="q-footer" id="q-footer" hidden>
         <button class="q-btn" id="q-prev" type="button">Precedent</button>
         <button class="q-btn" id="q-next" type="button">Suivant</button>
-        <button class="q-btn q-primary" id="q-finish" type="button">Terminer</button>
+        <p class="q-error" id="q-finish-error"></p>
+        <span class="spacer"></span>
         <button class="q-btn q-ghost" id="q-later" type="button">Reprendre plus tard</button>
+        <button class="q-btn q-primary" id="q-finish" type="button">Terminer</button>
     </div>
 
-    <div class="q-panel" id="q-result" hidden></div>
+    <div id="q-result" hidden></div>
 </div>
 {% endblock %}
 

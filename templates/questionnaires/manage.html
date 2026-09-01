@@ -1,37 +1,59 @@
 {% extends "questionnaires/base.html" %}
 {% load static %}
-{% block title %}Administration des questionnaires{% endblock %}
+{% block title %}Administration{% endblock %}
 
 {% block content %}
-<div id="q-manage" data-can-create="{% if capabilities.create %}1{% else %}0{% endif %}">
-    <header class="q-runner-head">
-        <h1>Administration des questionnaires</h1>
+<div id="q-manage">
+    <div class="q-pagehead">
+        <div>
+            <h1>Administration des questionnaires</h1>
+            <p class="q-lede">Creez, modifiez et publiez vos questionnaires. Rien n'est visible
+               par les participants tant que vous n'avez pas publie.</p>
+        </div>
         {% if capabilities.create %}
-        <button class="q-btn q-primary" id="q-new">Nouveau questionnaire</button>
+        <div class="q-actions">
+            <button class="q-btn" id="q-import">Importer un .json</button>
+            <button class="q-btn q-primary" id="q-new">Nouveau questionnaire</button>
+        </div>
+        <input type="file" id="q-import-file" accept="application/json,.json" hidden>
         {% endif %}
-    </header>
-
-    <div class="q-filters">
-        <label>Statut
-            <select id="q-filter-status">
-                <option value="">tous</option>
-                {% for code, label in statuses.items %}
-                <option value="{{ code }}">{{ label }}</option>
-                {% endfor %}
-            </select>
-        </label>
-        <label>Recherche <input id="q-filter-search" type="search" placeholder="titre"></label>
     </div>
 
-    <table class="q-table" id="q-list">
-        <thead>
-            <tr>
-                <th>#</th><th>Titre</th><th>Statut</th><th>Version</th>
-                <th>Versions</th><th>Tentatives</th><th>Modifie le</th><th>Actions</th>
-            </tr>
-        </thead>
-        <tbody></tbody>
-    </table>
+    <div class="q-callout">
+        <h3>Comment ca marche</h3>
+        <p><b>1.</b> Vous creez un questionnaire — il demarre en <b>brouillon</b>, invisible pour tous.
+           <b>2.</b> Vous ajoutez vos questions dans l'editeur.
+           <b>3.</b> Vous <b>publiez</b> : il devient accessible selon les regles d'acces que vous avez definies.</p>
+        <p>Une version publiee ne se modifie plus. Pour la corriger, l'editeur cree automatiquement
+           une nouvelle version : les resultats deja obtenus restent intacts.</p>
+    </div>
+
+    <div class="q-filters">
+        <div class="q-field">
+            <label for="q-filter-status">Statut</label>
+            <select id="q-filter-status">
+                <option value="">Tous</option>
+                {% for code, label in statuses.items %}<option value="{{ code }}">{{ label }}</option>{% endfor %}
+            </select>
+        </div>
+        <div class="q-field">
+            <label for="q-filter-search">Rechercher</label>
+            <input id="q-filter-search" type="search" placeholder="titre du questionnaire">
+        </div>
+    </div>
+
+    <div class="q-tablewrap">
+        <table class="q-table" id="q-list">
+            <thead>
+                <tr>
+                    <th>Titre</th><th>Statut</th><th>En ligne</th>
+                    <th class="num">Versions</th><th class="num">Tentatives</th>
+                    <th>Modifie</th><th>Actions</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
 </div>
 {% endblock %}
 

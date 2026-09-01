@@ -139,14 +139,19 @@ class QuestionnaireRunner {
         });
 
         node.appendChild(qEl('h3', {}, [
-            `${index + 1}. ${question.text}`,
-            question.required ? qEl('span', { class: 'q-required', text: ' *' }) : null,
+            qEl('span', { class: 'q-qnum', text: index + 1 }),
+            qEl('span', {}, [
+                question.text,
+                question.required ? qEl('span', { class: 'q-required', text: ' *' }) : null,
+            ]),
         ]));
         if (question.description) {
             node.appendChild(qEl('p', { class: 'q-hint', text: question.description }));
         }
 
-        node.appendChild(QFields.build(question, (value) => this.change(question.id, value)));
+        node.appendChild(qEl('div', { class: 'q-answer' }, [
+            QFields.build(question, (value) => this.change(question.id, value)),
+        ]));
         node.appendChild(qEl('p', { class: 'q-error', id: `q-error-${question.id}` }));
         return node;
     }
@@ -174,9 +179,12 @@ class QuestionnaireRunner {
     }
 
     updateProgress(progress) {
+        document.getElementById('q-progress-wrap').hidden = false;
         document.getElementById('q-progress-bar').style.width = `${progress.percent}%`;
-        document.getElementById('q-progress-label').textContent =
-            `${progress.answered} / ${progress.total} question(s) — ${progress.percent} %`;
+        const left = progress.total - progress.answered;
+        document.getElementById('q-progress-label').textContent = left === 0
+            ? `Toutes les questions sont remplies (${progress.total}).`
+            : `${progress.answered} sur ${progress.total} — il reste ${left} question${left > 1 ? 's' : ''}.`;
     }
 
     /* --- file de sauvegarde ---------------------------------------------- */
@@ -321,13 +329,34 @@ class QuestionnaireRunner {
 
     /* --- fin ------------------------------------------------------------- */
 
+    /* Le pied de page est colle en bas de l'ecran : un message affiche en haut
+       de page serait invisible au moment ou l'utilisateur clique. */
+    footerError(message, nodes = []) {
+        const box = document.getElementById('q-finish-error');
+        if (!box) return;
+        box.replaceChildren();
+        if (!message) return;
+        box.appendChild(qEl('span', { text: message }));
+        nodes.forEach(n => box.appendChild(n));
+    }
+
     async finish() {
+        const left = this.state.attempt.progress.total - this.state.attempt.progress.answered;
+        const warn = left > 0
+            ? `Il reste ${left} question${left > 1 ? 's' : ''} sans reponse.\n\n`
+            : '';
+        if (!confirm(`${warn}Terminer le questionnaire ?\n\n`
+            + `Vos reponses seront verrouillees et votre resultat calcule.`)) return;
+
+        this.footerError('');
         const button = document.getElementById('q-finish');
         button.disabled = true;
         await this.flush();
 
         if (this.pending.size > 0) {
             this.indicator.set('error', 'Reponses non sauvegardees');
+            this.footerError('Certaines reponses ne sont pas encore enregistrees. '
+                + 'Verifiez votre connexion, puis reessayez.');
             button.disabled = false;
             return;
         }
@@ -337,71 +366,119 @@ class QuestionnaireRunner {
             this.showResult(data.result);
         } catch (error) {
             if (error.code === 'missing_required') {
-                this.indicator.set('error', 'Questions obligatoires sans reponse');
                 await this.resync();
+                this.showMissing(error.payload.missing || []);
             } else {
                 this.indicator.set('error', error.message);
+                this.footerError(error.message);
             }
             button.disabled = false;
         }
     }
 
+    /* Signale precisement ce qui bloque, et emmene a la premiere question. */
+    showMissing(ids) {
+        this.form.querySelectorAll('.q-question').forEach(n => n.classList.remove('q-missing'));
+
+        const titles = [];
+        ids.forEach(id => {
+            const node = document.getElementById(`q-question-${id}`);
+            if (node) {
+                node.classList.add('q-missing');
+                const heading = node.querySelector('h3');
+                if (heading) titles.push(heading.textContent.trim());
+            }
+            this.setError(id, 'Cette question est obligatoire.');
+        });
+
+        const jump = qEl('button', {
+            class: 'q-btn small', type: 'button', text: 'Aller a la premiere',
+            onclick: () => {
+                const first = document.getElementById(`q-question-${ids[0]}`);
+                if (!first) return;
+                if (this.state.questionnaire.navigation_mode === 'LINEAR') {
+                    const index = this.state.questions.findIndex(q => q.id === ids[0]);
+                    if (index >= 0) { this.cursor = index; this.applyNavigation(); }
+                }
+                first.hidden = false;
+                first.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            },
+        });
+
+        this.footerError(
+            ids.length === 1
+                ? `Il reste 1 question obligatoire sans reponse : ${titles[0] || ''}`
+                : `Il reste ${ids.length} questions obligatoires sans reponse.`,
+            ids.length ? [jump] : []);
+        this.indicator.set('error', 'Questions obligatoires sans reponse');
+    }
+
     showResult(result) {
         this.form.hidden   = true;
         this.footer.hidden = true;
+        document.getElementById('q-progress-wrap').hidden = true;
         this.resultPane.hidden = false;
-        this.resultPane.replaceChildren();
 
-        this.resultPane.appendChild(qEl('h2', { text: 'Questionnaire termine' }));
+        const head = qEl('div', { class: 'q-result-head' }, [
+            result.percentage !== undefined
+                ? qEl('div', { class: 'score', text: `${result.percentage} %` })
+                : qEl('div', { class: 'score', text: 'Termine' }),
+            qEl('div', { class: 'sub', text: result.score !== undefined
+                ? `${result.score} sur ${result.max_score} point(s)`
+                : 'Vos reponses ont bien ete enregistrees.' }),
+            result.passed !== undefined
+                ? qEl('span', { class: `q-badge ${result.passed ? 'q-ok' : 'q-ko'}`,
+                                text: (result.passed ? 'Reussi' : 'Echoue')
+                                      + (result.level ? ` — ${result.level}` : '') })
+                : null,
+        ]);
 
-        const list = qEl('ul', { class: 'q-meta' });
-        if (result.score !== undefined) {
-            list.appendChild(qEl('li', { text: `Score : ${result.score} / ${result.max_score}` }));
-        }
-        if (result.percentage !== undefined) {
-            list.appendChild(qEl('li', { text: `Pourcentage : ${result.percentage} %` }));
-        }
-        if (result.passed !== undefined) {
-            list.appendChild(qEl('li', {}, [
-                qEl('span', {
-                    class: `q-badge ${result.passed ? 'q-ok' : 'q-ko'}`,
-                    text: result.passed ? 'reussi' : 'echoue',
-                }),
-                result.level ? ` — ${result.level}` : '',
-            ]));
-        }
-        this.resultPane.appendChild(list);
+        const inner = qEl('div', { style: 'padding:1.25rem' });
 
-        if (result.answers) {
-            const table = qEl('table', { class: 'q-table' });
-            table.appendChild(qEl('thead', {}, [qEl('tr', {}, [
-                qEl('th', { text: 'Question' }), qEl('th', { text: 'Votre reponse' }),
-                qEl('th', { text: 'Attendu' }),  qEl('th', { text: '' }),
-            ])]));
-            const tbody = qEl('tbody');
-            result.answers.forEach(answer => {
-                tbody.appendChild(qEl('tr', {}, [
-                    qEl('td', { text: answer.text }),
-                    qEl('td', { text: answer.given || '—' }),
-                    qEl('td', { text: answer.expected || '—' }),
-                    qEl('td', {}, [
-                        answer.is_correct === true  ? qEl('span', { class: 'q-badge q-ok', text: 'correct' }) :
-                        answer.is_correct === false ? qEl('span', { class: 'q-badge q-ko', text: 'incorrect' }) : null,
-                        answer.explanation ? qEl('p', { class: 'q-muted', text: answer.explanation }) : null,
+        if (result.answers && result.answers.length) {
+            const showExpected = result.answers.some(a => a.expected);
+            inner.append(
+                qEl('h2', { text: 'Le detail' }),
+                qEl('div', { class: 'q-tablewrap', style: 'margin-top:.75rem' }, [
+                    qEl('table', { class: 'q-table' }, [
+                        qEl('thead', {}, [qEl('tr', {}, [
+                            qEl('th', { text: 'Question' }),
+                            qEl('th', { text: 'Votre reponse' }),
+                            showExpected ? qEl('th', { text: 'Attendu' }) : null,
+                            qEl('th', { text: '' }),
+                        ])]),
+                        qEl('tbody', {}, result.answers.map(a => qEl('tr', {}, [
+                            qEl('td', {}, [
+                                a.text,
+                                a.explanation ? qEl('p', { class: 'q-help', text: a.explanation }) : null,
+                            ]),
+                            qEl('td', { text: a.given || '—' }),
+                            showExpected ? qEl('td', { text: a.expected || '—' }) : null,
+                            qEl('td', {}, [
+                                a.is_correct === true  ? qEl('span', { class: 'q-badge q-ok', text: 'correct' }) :
+                                a.is_correct === false ? qEl('span', { class: 'q-badge q-ko', text: 'incorrect' }) : null,
+                            ]),
+                        ]))),
                     ]),
-                ]));
-            });
-            table.appendChild(tbody);
-            this.resultPane.appendChild(table);
+                ]),
+            );
+        } else {
+            inner.appendChild(qEl('p', { class: 'q-muted',
+                text: 'Le detail de vos reponses n’est pas consultable pour ce questionnaire.' }));
         }
 
-        this.resultPane.appendChild(qEl('a', {
-            class: 'q-btn', href: `/questionnaires/${this.questionnaire}/results/`,
-            text: 'Voir tous mes resultats',
-        }));
+        inner.appendChild(qEl('div', { class: 'q-actions', style: 'margin-top:1.25rem' }, [
+            qEl('a', { class: 'q-btn q-primary', text: 'Mes resultats',
+                       href: `/questionnaires/${this.questionnaire}/results/` }),
+            qEl('a', { class: 'q-btn', text: 'Retour aux questionnaires', href: '/questionnaires/' }),
+        ]));
+
+        this.resultPane.replaceChildren(
+            qEl('div', { class: 'q-panel', style: 'padding:0;overflow:hidden' }, [head, inner]));
 
         localStorage.removeItem(this.storageKey('pending'));
-        this.indicator.set('saved', 'Termine');
+        this.indicator.set('saved', 'Tentative terminee');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 }
 

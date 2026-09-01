@@ -1,21 +1,35 @@
 {% extends "questionnaires/base.html" %}
 {% load static %}
-{% block title %}Previsualisation - {{ questionnaire.title }}{% endblock %}
+{% block title %}Previsualisation{% endblock %}
+
+{% block crumbs %}
+<nav class="q-crumbs">
+    <a href="/questionnaires/manage/">Administration</a> <span>/</span>
+    <a href="/questionnaires/manage/{{ questionnaire.id }}/">{{ questionnaire.title }}</a> <span>/</span>
+    Previsualisation
+</nav>
+{% endblock %}
 
 {% block content %}
-<div id="q-preview"
-     data-questionnaire="{{ questionnaire.id }}"
-     data-version="{{ version_number }}">
-    <header class="q-runner-head">
-        <h1>Previsualisation — version {{ version_number }}</h1>
-        <a class="q-btn" href="/questionnaires/manage/{{ questionnaire.id }}/">retour</a>
-    </header>
-    <p class="q-warn">Affichage identique a celui de l'utilisateur. Aucune reponse n'est enregistree.</p>
-    <div class="q-panel" id="q-preview-body"></div>
+<div id="q-preview" data-questionnaire="{{ questionnaire.id }}" data-version="{{ version_number }}">
+    <div class="q-pagehead">
+        <div>
+            <h1>Previsualisation</h1>
+            <p class="q-lede">Version {{ version_number }} — exactement ce que verra le participant.</p>
+        </div>
+        <a class="q-btn" href="/questionnaires/manage/{{ questionnaire.id }}/">Retour a l'editeur</a>
+    </div>
+
+    <div class="q-callout warn">
+        <h3>Aucune reponse n'est enregistree</h3>
+        <p>Vous pouvez manipuler les champs librement. Les questions conditionnelles sont signalees
+           mais toutes affichees ici, alors qu'un participant ne verra que celles qui le concernent.</p>
+    </div>
+
+    <div id="q-preview-body"></div>
 </div>
 {% endblock %}
 
 {% block scripts %}
-<script src="{% static 'questionnaire_runner.js' %}"></script>
 <script src="{% static 'questionnaire_preview.js' %}"></script>
 {% endblock %}

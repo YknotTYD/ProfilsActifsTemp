@@ -1,46 +1,73 @@
 {% extends "questionnaires/base.html" %}
-{% block title %}Resultats - {{ questionnaire.title }}{% endblock %}
+{% block title %}Mes resultats{% endblock %}
+
+{% block crumbs %}
+<nav class="q-crumbs">
+    <a href="/questionnaires/">Questionnaires</a> <span>/</span>
+    <a href="/questionnaires/{{ questionnaire.id }}/">{{ questionnaire.title }}</a> <span>/</span> Mes resultats
+</nav>
+{% endblock %}
 
 {% block content %}
-<h1>Mes resultats — {{ questionnaire.title }}</h1>
-<p><a href="/questionnaires/">retour au catalogue</a></p>
+<div class="q-pagehead">
+    <div>
+        <h1>Mes resultats</h1>
+        <p class="q-lede">{{ questionnaire.title }}</p>
+    </div>
+</div>
 
-{% if not results %}<p class="q-empty">Aucun resultat enregistre.</p>{% endif %}
+{% if not results %}
+    <div class="q-panel"><p class="q-empty">Vous n'avez pas encore termine ce questionnaire.</p></div>
+{% endif %}
 
 {% for r in results %}
-<article class="q-card">
-    <h2>Tentative #{{ r.attempt_id }} — version {{ r.version }}</h2>
-    <ul class="q-meta">
-        <li>{{ r.computed_at }}</li>
-        {% if r.percentage %}<li>{{ r.percentage }} %</li>{% endif %}
-        {% if r.score %}<li>{{ r.score }} / {{ r.max_score }}</li>{% endif %}
+<div class="q-panel" style="padding:0;overflow:hidden">
+    <div class="q-result-head">
+        {% if r.percentage %}<div class="score">{{ r.percentage }} %</div>{% endif %}
+        <div class="sub">
+            Tentative du {{ r.computed_at|slice:":10" }}
+            {% if r.score %} · {{ r.score }} sur {{ r.max_score }} point{{ r.max_score|pluralize }}{% endif %}
+            · version {{ r.version }}
+        </div>
         {% if r.visibility.show_pass_fail %}
-        <li><span class="q-badge {% if r.passed %}q-ok{% else %}q-ko{% endif %}">
-            {% if r.passed %}reussi{% else %}echoue{% endif %}</span>
-            {% if r.level %} — {{ r.level }}{% endif %}
-        </li>
+            <span class="q-badge {% if r.passed %}q-ok{% else %}q-ko{% endif %}">
+                {% if r.passed %}Reussi{% else %}Echoue{% endif %}{% if r.level %} — {{ r.level }}{% endif %}
+            </span>
         {% endif %}
-    </ul>
+    </div>
 
     {% if r.answers %}
-    <table class="q-table">
-        <thead><tr><th>Question</th><th>Votre reponse</th>{% if r.visibility.show_correct_answers %}<th>Attendu</th>{% endif %}<th></th></tr></thead>
-        <tbody>
-        {% for a in r.answers %}
-            <tr>
-                <td>{{ a.text }}</td>
-                <td>{{ a.given|default:"—" }}</td>
-                {% if r.visibility.show_correct_answers %}<td>{{ a.expected|default:"—" }}</td>{% endif %}
-                <td>
-                    {% if a.is_correct is True %}<span class="q-badge q-ok">correct</span>
-                    {% elif a.is_correct is False %}<span class="q-badge q-ko">incorrect</span>{% endif %}
-                    {% if a.explanation %}<p class="q-muted">{{ a.explanation }}</p>{% endif %}
-                </td>
-            </tr>
-        {% endfor %}
-        </tbody>
-    </table>
+    <div style="padding:1.25rem">
+        <div class="q-tablewrap">
+            <table class="q-table">
+                <thead>
+                    <tr>
+                        <th>Question</th>
+                        <th>Votre reponse</th>
+                        {% if r.visibility.show_correct_answers %}<th>Reponse attendue</th>{% endif %}
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for a in r.answers %}
+                    <tr>
+                        <td>
+                            {{ a.text }}
+                            {% if a.explanation %}<p class="q-help">{{ a.explanation }}</p>{% endif %}
+                        </td>
+                        <td>{{ a.given|default:"—" }}</td>
+                        {% if r.visibility.show_correct_answers %}<td>{{ a.expected|default:"—" }}</td>{% endif %}
+                        <td>
+                            {% if a.is_correct is True %}<span class="q-badge q-ok">correct</span>
+                            {% elif a.is_correct is False %}<span class="q-badge q-ko">incorrect</span>{% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
     {% endif %}
-</article>
+</div>
 {% endfor %}
 {% endblock %}

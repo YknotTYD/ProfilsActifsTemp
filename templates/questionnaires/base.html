@@ -3,22 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Questionnaires{% endblock %}</title>
-    <link rel="stylesheet" href="{% static 'style.css' %}">
+    <title>{% block title %}Questionnaires{% endblock %} — JibJob</title>
     <link rel="stylesheet" href="{% static 'questionnaires.css' %}">
     <meta name="csrf-token" content="{{ csrf_token }}">
 </head>
 <body class="q-body">
     <header class="q-header">
-        <a class="q-brand" href="/">JibJob</a>
-        <nav>
-            <a href="/questionnaires/">Questionnaires</a>
-            {% if can_manage %}<a href="/questionnaires/manage/">Administration</a>{% endif %}
-            <a href="/logout">Deconnexion</a>
-        </nav>
+        <div>
+            <a class="q-brand" href="/">JibJob</a>
+            <nav>
+                <a href="/questionnaires/">Questionnaires</a>
+                {% if can_manage %}<a href="/questionnaires/manage/">Administration</a>{% endif %}
+                <a href="/logout">Deconnexion</a>
+            </nav>
+        </div>
     </header>
 
     <main class="q-main">
+        {% block crumbs %}{% endblock %}
         {% block content %}{% endblock %}
     </main>
 

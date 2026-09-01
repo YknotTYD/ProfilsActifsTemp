@@ -426,9 +426,12 @@ def finish_attempt(attempt, *, force: bool = False) -> QuestionnaireResult:
             )
         ]
         if missing:
-            raise AttemptError(
-                "des questions obligatoires sont sans reponse", "missing_required", 400
+            error = AttemptError(
+                f"{len(missing)} question(s) obligatoire(s) sans reponse",
+                "missing_required", 400,
             )
+            error.missing = missing
+            raise error
 
     computed = score_attempt(attempt)
 

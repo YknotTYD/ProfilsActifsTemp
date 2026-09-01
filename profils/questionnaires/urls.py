@@ -27,6 +27,8 @@ urlpatterns = [
     # ------------------------------------------------------------------ #
     path("api/questionnaires/",                      api_admin.collection),
     path("api/questionnaires/types/",                api_admin.question_types),
+    path("api/questionnaires/import/",               api_admin.import_),
+    path("api/questionnaires/<int:pk>/export/",      api_admin.export),
     path("api/questionnaires/<int:pk>/",             api_admin.item),
     path("api/questionnaires/<int:pk>/duplicate/",   api_admin.duplicate),
     path("api/questionnaires/<int:pk>/archive/",     api_admin.archive),
