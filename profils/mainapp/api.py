@@ -3,7 +3,7 @@ from django.http.response       import HttpResponse
 from django.shortcuts           import redirect
 from django.contrib.auth.models import User
 from django.contrib.auth        import authenticate, login as login_
-from .models                    import Role, Video, Reaction
+from .models                    import Role, VideoLink, Reaction
 from . import constants
 import json
 
@@ -49,8 +49,14 @@ def login(request: HttpRequest) -> HttpResponse:
 def video_upload(request: HttpRequest) -> HttpResponse:
 
     if request.user.is_authenticated and (url := request.POST.get("url")):
+
         url = "https://" + url.removeprefix("https://")
-        Video.objects.create(user = request.user, url = url).save()
+
+        if url.startswith("https://www.youtube.com/watch?v="):
+            url = url.removeprefix("https://www.youtube.com/watch?v=")
+            url = "https://www.youtube.com/embed/" + url
+
+        VideoLink.objects.create(user = request.user, url = url).save()
 
     return redirect(request.GET.get("camefrom", "/"))
 
@@ -68,7 +74,7 @@ def react(request: HttpRequest) -> HttpResponse:
     ): # invalid data
         return HttpResponse(status = 404)
 
-    vid = Video.objects.filter(id = body["video_id"]).first() # take a guess
+    vid = VideoLink.objects.filter(id = body["video_id"]).first() # take a guess
 
     if vid is None:
         return HttpResponse(status = 400)

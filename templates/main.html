@@ -12,7 +12,7 @@
 <body>
     {% if user.is_authenticated %}
         <h1>Welcome {{ user.username }}</h1>
-        <p>You are a proud {{ role }}.</p><br>
+        <p>You are a {{ role }}.</p><br>
         {% if role == "JobSeeker" %}
 
 <form method="post" action="/api/upload/video/?camefrom=/">
@@ -26,22 +26,18 @@
 
             {% if role == "Recruiter" %}
 
-                {% for vid in videos %}
 
-                    <div style = "text-align: center;">
-                        <p>Uploaded by {{ vid.user }}</p>
-                        <p>{{ vid.likes }} likes {{ vid.dislikes }} dislikes</p>
-                        <button class="react-btn" data-video-id="{{ vid.id }}" data-reaction="like">like</button>
-                        <button class="react-btn" data-video-id="{{ vid.id }}" data-reaction="dislike">dislike</button>
 
-                        <iframe width="420" height="315"
-                            src="{{ vid.url }}"
-                            referrerpolicy="strict-origin-when-cross-origin"
-                            allowfullscreen>
-                        </iframe><br><br>
-                    </div>
-
-                {% endfor %}
+{% for vid, liked, disliked in videos_ld %}
+  <div class="video-card">
+    <iframe width="420" height="315" src="{{ vid.url }}?autoplay=0&mute=0" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+    <div class="info-row">
+      <span>Posted by {{ vid.user }}</span>
+      <button {% if liked %}style="background-color: green;" {% endif %} class="react-btn" data-video-id="{{ vid.id }}" data-reaction="like">👍 {{ vid.likes }}</button>
+      <button {% if disliked %}style="background-color: red;" {% endif %} class="react-btn" data-video-id="{{ vid.id }}" data-reaction="dislike">👎 {{ vid.dislikes }}</button>
+    </div>
+  </div><br>
+{% endfor %}
 
             {% endif %}
 
@@ -71,9 +67,14 @@ document.querySelectorAll('.react-btn').forEach(btn => {
                 reaction: btn.dataset.reaction,
             }),
         })
-        .then(res => res.json())
+        .then(res  => res.json())
         .then(data => console.log(data))
         .catch(err => console.error(err));
     });
 });
 </script>
+
+<style>
+  .video-card { text-align: center; margin-bottom: 30px; }
+  .info-row { display: flex; justify-content: center; gap: 15px; align-items: center; margin: 6px 0; }
+</style>
