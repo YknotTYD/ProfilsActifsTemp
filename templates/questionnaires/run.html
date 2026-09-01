@@ -1,0 +1,49 @@
+{% extends "questionnaires/base.html" %}
+{% load static %}
+{% block title %}{{ questionnaire.title }}{% endblock %}
+
+{% block content %}
+<div id="q-runner"
+     data-questionnaire="{{ questionnaire.id }}"
+     data-test="{% if test_mode %}1{% else %}0{% endif %}">
+
+    <header class="q-runner-head">
+        <div>
+            <h1>{{ questionnaire.title }}</h1>
+            {% if test_mode %}<span class="q-badge q-test">mode test</span>{% endif %}
+        </div>
+        <div class="q-save-state" id="q-save-state" data-state="idle">
+            <span class="q-dot"></span><span id="q-save-label">Pret</span>
+        </div>
+    </header>
+
+    <div class="q-progress"><div class="q-progress-bar" id="q-progress-bar"></div></div>
+    <p class="q-muted" id="q-progress-label"></p>
+
+    <div id="q-start-panel" class="q-panel">
+        <p>{{ questionnaire.description }}</p>
+        <ul class="q-meta">
+            <li>Tentatives : {{ card.attempts_used }}{% if card.max_attempts %} / {{ card.max_attempts }}{% endif %}</li>
+        </ul>
+        <button class="q-btn q-primary" id="q-start">
+            {% if has_attempt %}Reprendre ma tentative{% else %}Commencer{% endif %}
+        </button>
+        <p class="q-warn" id="q-start-error"></p>
+    </div>
+
+    <form id="q-form" class="q-panel" hidden></form>
+
+    <div class="q-footer" id="q-footer" hidden>
+        <button class="q-btn" id="q-prev" type="button">Precedent</button>
+        <button class="q-btn" id="q-next" type="button">Suivant</button>
+        <button class="q-btn q-primary" id="q-finish" type="button">Terminer</button>
+        <button class="q-btn q-ghost" id="q-later" type="button">Reprendre plus tard</button>
+    </div>
+
+    <div class="q-panel" id="q-result" hidden></div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{% static 'questionnaire_runner.js' %}"></script>
+{% endblock %}

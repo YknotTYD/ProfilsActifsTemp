@@ -1,0 +1,46 @@
+{% extends "questionnaires/base.html" %}
+{% block title %}Resultats - {{ questionnaire.title }}{% endblock %}
+
+{% block content %}
+<h1>Mes resultats — {{ questionnaire.title }}</h1>
+<p><a href="/questionnaires/">retour au catalogue</a></p>
+
+{% if not results %}<p class="q-empty">Aucun resultat enregistre.</p>{% endif %}
+
+{% for r in results %}
+<article class="q-card">
+    <h2>Tentative #{{ r.attempt_id }} — version {{ r.version }}</h2>
+    <ul class="q-meta">
+        <li>{{ r.computed_at }}</li>
+        {% if r.percentage %}<li>{{ r.percentage }} %</li>{% endif %}
+        {% if r.score %}<li>{{ r.score }} / {{ r.max_score }}</li>{% endif %}
+        {% if r.visibility.show_pass_fail %}
+        <li><span class="q-badge {% if r.passed %}q-ok{% else %}q-ko{% endif %}">
+            {% if r.passed %}reussi{% else %}echoue{% endif %}</span>
+            {% if r.level %} — {{ r.level }}{% endif %}
+        </li>
+        {% endif %}
+    </ul>
+
+    {% if r.answers %}
+    <table class="q-table">
+        <thead><tr><th>Question</th><th>Votre reponse</th>{% if r.visibility.show_correct_answers %}<th>Attendu</th>{% endif %}<th></th></tr></thead>
+        <tbody>
+        {% for a in r.answers %}
+            <tr>
+                <td>{{ a.text }}</td>
+                <td>{{ a.given|default:"—" }}</td>
+                {% if r.visibility.show_correct_answers %}<td>{{ a.expected|default:"—" }}</td>{% endif %}
+                <td>
+                    {% if a.is_correct is True %}<span class="q-badge q-ok">correct</span>
+                    {% elif a.is_correct is False %}<span class="q-badge q-ko">incorrect</span>{% endif %}
+                    {% if a.explanation %}<p class="q-muted">{{ a.explanation }}</p>{% endif %}
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+</article>
+{% endfor %}
+{% endblock %}

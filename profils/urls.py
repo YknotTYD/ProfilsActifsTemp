@@ -16,7 +16,7 @@ Including another URLconf
 """
 
 from django.contrib import admin
-from django.urls    import path
+from django.urls    import include, path
 from .mainapp       import views
 from .mainapp       import api
 
@@ -29,5 +29,6 @@ urlpatterns = [
     path("api/register/",     api.register),
     path("api/login/",        api.login),
     path("api/upload/video/", api.video_upload),
-    path("api/react/",        api.react)
+    path("api/react/",        api.react),
+    path("",                  include("profils.questionnaires.urls")),
 ]

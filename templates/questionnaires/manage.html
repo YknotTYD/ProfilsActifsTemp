@@ -1,0 +1,40 @@
+{% extends "questionnaires/base.html" %}
+{% load static %}
+{% block title %}Administration des questionnaires{% endblock %}
+
+{% block content %}
+<div id="q-manage" data-can-create="{% if capabilities.create %}1{% else %}0{% endif %}">
+    <header class="q-runner-head">
+        <h1>Administration des questionnaires</h1>
+        {% if capabilities.create %}
+        <button class="q-btn q-primary" id="q-new">Nouveau questionnaire</button>
+        {% endif %}
+    </header>
+
+    <div class="q-filters">
+        <label>Statut
+            <select id="q-filter-status">
+                <option value="">tous</option>
+                {% for code, label in statuses.items %}
+                <option value="{{ code }}">{{ label }}</option>
+                {% endfor %}
+            </select>
+        </label>
+        <label>Recherche <input id="q-filter-search" type="search" placeholder="titre"></label>
+    </div>
+
+    <table class="q-table" id="q-list">
+        <thead>
+            <tr>
+                <th>#</th><th>Titre</th><th>Statut</th><th>Version</th>
+                <th>Versions</th><th>Tentatives</th><th>Modifie le</th><th>Actions</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{% static 'questionnaire_admin.js' %}"></script>
+{% endblock %}

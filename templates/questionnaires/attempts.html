@@ -1,0 +1,36 @@
+{% extends "questionnaires/base.html" %}
+{% load static %}
+{% block title %}Tentatives - {{ questionnaire.title }}{% endblock %}
+
+{% block content %}
+<div id="q-attempts" data-questionnaire="{{ questionnaire.id }}">
+    <h1>Tentatives &amp; resultats — {{ questionnaire.title }}</h1>
+    <p><a href="/questionnaires/manage/{{ questionnaire.id }}/">retour a l'editeur</a></p>
+
+    <div class="q-filters">
+        <label><input type="checkbox" id="q-include-test"> inclure les tentatives de test</label>
+    </div>
+
+    <div class="q-panel" id="q-stats"></div>
+
+    <h2>Tentatives</h2>
+    <table class="q-table" id="q-attempt-list">
+        <thead><tr><th>#</th><th>Utilisateur</th><th>Version</th><th>Statut</th><th>Test</th>
+                   <th>Progression</th><th>Score</th><th>Debut</th><th></th></tr></thead>
+        <tbody></tbody>
+    </table>
+
+    <h2>Resultats</h2>
+    <table class="q-table" id="q-result-list">
+        <thead><tr><th>Utilisateur</th><th>Version</th><th>Score</th><th>%</th>
+                   <th>Resultat</th><th>Niveau</th><th>Date</th></tr></thead>
+        <tbody></tbody>
+    </table>
+
+    <div class="q-panel" id="q-transcript" hidden></div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{% static 'questionnaire_attempts.js' %}"></script>
+{% endblock %}

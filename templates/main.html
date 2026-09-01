@@ -12,7 +12,8 @@
 <body>
     {% if user.is_authenticated %}
         <h1>Welcome {{ user.username }}</h1>
-        <p>You are a proud {{ role }}.</p><br>
+        <p>You are a proud {{ role }}.</p>
+        <p><a href="/questionnaires/">Questionnaires</a></p><br>
         {% if role == "JobSeeker" %}
 
 <form method="post" action="/api/upload/video/?camefrom=/">

@@ -1,0 +1,50 @@
+{% extends "questionnaires/base.html" %}
+{% block title %}Questionnaires{% endblock %}
+
+{% block content %}
+<h1>Questionnaires</h1>
+
+{% if not questionnaires %}
+    <p class="q-empty">Aucun questionnaire ne vous est propose pour le moment.</p>
+{% endif %}
+
+<div class="q-cards">
+    {% for q in questionnaires %}
+    <article class="q-card">
+        <h2>{{ q.title }}</h2>
+        <p class="q-muted">{{ q.description }}</p>
+
+        <ul class="q-meta">
+            <li>{{ q.question_count }} question(s)</li>
+            <li>
+                Tentatives : {{ q.attempts_used }}{% if q.max_attempts %} / {{ q.max_attempts }}{% else %} (illimitees){% endif %}
+            </li>
+            {% if q.available_until %}<li>Jusqu'au {{ q.available_until }}</li>{% endif %}
+            {% if q.best_result %}
+            <li>
+                Meilleur resultat : {{ q.best_result.percentage }}%
+                <span class="q-badge {% if q.best_result.passed %}q-ok{% else %}q-ko{% endif %}">
+                    {% if q.best_result.passed %}reussi{% else %}echoue{% endif %}
+                </span>
+            </li>
+            {% endif %}
+        </ul>
+
+        <div class="q-actions">
+            {% if q.has_open_attempt %}
+                <a class="q-btn q-primary" href="/questionnaires/{{ q.id }}/">Reprendre</a>
+            {% elif q.can_start.allowed %}
+                <a class="q-btn q-primary" href="/questionnaires/{{ q.id }}/">Commencer</a>
+            {% else %}
+                <span class="q-btn q-disabled" title="{{ q.can_start.reason }}">Indisponible</span>
+            {% endif %}
+            <a class="q-btn" href="/questionnaires/{{ q.id }}/results/">Mes resultats</a>
+        </div>
+
+        {% if not q.can_start.allowed and not q.has_open_attempt %}
+            <p class="q-warn">{{ q.can_start.reason }}</p>
+        {% endif %}
+    </article>
+    {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,21 @@
+{% extends "questionnaires/base.html" %}
+{% load static %}
+{% block title %}Previsualisation - {{ questionnaire.title }}{% endblock %}
+
+{% block content %}
+<div id="q-preview"
+     data-questionnaire="{{ questionnaire.id }}"
+     data-version="{{ version_number }}">
+    <header class="q-runner-head">
+        <h1>Previsualisation — version {{ version_number }}</h1>
+        <a class="q-btn" href="/questionnaires/manage/{{ questionnaire.id }}/">retour</a>
+    </header>
+    <p class="q-warn">Affichage identique a celui de l'utilisateur. Aucune reponse n'est enregistree.</p>
+    <div class="q-panel" id="q-preview-body"></div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{% static 'questionnaire_runner.js' %}"></script>
+<script src="{% static 'questionnaire_preview.js' %}"></script>
+{% endblock %}

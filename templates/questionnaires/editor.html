@@ -1,0 +1,72 @@
+{% extends "questionnaires/base.html" %}
+{% load static %}
+{% block title %}Editeur - {{ questionnaire.title }}{% endblock %}
+
+{% block content %}
+<div id="q-editor" data-questionnaire="{{ questionnaire.id }}">
+    <header class="q-runner-head">
+        <div>
+            <h1 id="q-title">{{ questionnaire.title }}</h1>
+            <p class="q-muted">
+                <span id="q-status"></span> · version en edition <span id="q-version"></span>
+                · <a href="/questionnaires/manage/{{ questionnaire.id }}/versions/">versions</a>
+                · <a href="/questionnaires/manage/{{ questionnaire.id }}/attempts/">tentatives</a>
+            </p>
+        </div>
+        <div class="q-save-state" id="q-save-state" data-state="idle">
+            <span class="q-dot"></span><span id="q-save-label">Pret</span>
+        </div>
+    </header>
+
+    <nav class="q-tabs">
+        <button class="q-tab q-tab-active" data-tab="questions">Questions</button>
+        <button class="q-tab" data-tab="settings">Parametres</button>
+        <button class="q-tab" data-tab="scoring">Scoring</button>
+        <button class="q-tab" data-tab="access">Acces &amp; visibilite</button>
+        <button class="q-tab" data-tab="audit">Audit</button>
+    </nav>
+
+    <section class="q-tabpane" data-pane="questions">
+        <div class="q-panel" id="q-locked-note" hidden>
+            <p class="q-warn">Cette version est figee. Toute modification creera une nouvelle version.</p>
+            <button class="q-btn q-primary" id="q-make-editable">Creer une version modifiable</button>
+        </div>
+        <div id="q-questions"></div>
+        <div class="q-add-row">
+            <select id="q-new-type"></select>
+            <button class="q-btn q-primary" id="q-add-question">Ajouter une question</button>
+        </div>
+    </section>
+
+    <section class="q-tabpane" data-pane="settings" hidden>
+        <form id="q-settings" class="q-panel q-grid"></form>
+    </section>
+
+    <section class="q-tabpane" data-pane="scoring" hidden>
+        <form id="q-scoring" class="q-panel q-grid"></form>
+    </section>
+
+    <section class="q-tabpane" data-pane="access" hidden>
+        <div class="q-panel" id="q-access"></div>
+    </section>
+
+    <section class="q-tabpane" data-pane="audit" hidden>
+        <table class="q-table" id="q-audit">
+            <thead><tr><th>Date</th><th>Action</th><th>Par</th><th>Objet</th><th>Detail</th></tr></thead>
+            <tbody></tbody>
+        </table>
+    </section>
+
+    <footer class="q-footer">
+        <a class="q-btn" href="/questionnaires/manage/">retour</a>
+        <button class="q-btn" id="q-preview">Previsualiser</button>
+        {% if capabilities.test %}<button class="q-btn" id="q-to-test">Passer en mode TEST</button>{% endif %}
+        {% if capabilities.publish %}<button class="q-btn q-primary" id="q-publish">Publier</button>{% endif %}
+        {% if capabilities.invalidate %}<button class="q-btn q-danger" id="q-invalidate">Invalider</button>{% endif %}
+    </footer>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{% static 'questionnaire_editor.js' %}"></script>
+{% endblock %}

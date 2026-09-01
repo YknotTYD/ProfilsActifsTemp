@@ -11,6 +11,12 @@ Site de recherche de mise en relation entre demandeur et recruteur sous forme de
 ```
 
 
+## Modules
+
+- **Questionnaires** — création, versioning, passage et scoring de questionnaires.
+  Voir [profils/questionnaires/README.md](profils/questionnaires/README.md).
+
+
 ## Tech Stack
 
 **Front**: React
