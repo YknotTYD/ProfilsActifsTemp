@@ -4,6 +4,7 @@ from django.contrib.auth.models import User
 from . import constants
 
 # TODO: constructors for models
+# TODO: error messages
 
 def strings_to_choice_char_fields(strings: tuple[str]) -> models.CharField:
     return models.CharField(
@@ -26,7 +27,16 @@ class VideoLink(models.Model):
     url  = models.CharField(max_length = 1024)
 
     def __str__(self):
-        return f"Video<{self.user};'{self.url}'>"
+        return f"VideoLink<{self.user};'{self.url}'>"
+
+class VideoFile(models.Model):
+
+    user = models.ForeignKey(User, on_delete = models.CASCADE)
+    file = None
+
+    def __str__(self):
+        return f"VideoFile<{self.user}>"
+
 
 class Reaction(models.Model):
 

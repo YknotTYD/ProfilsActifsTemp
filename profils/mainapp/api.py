@@ -4,8 +4,15 @@ from django.shortcuts           import redirect
 from django.contrib.auth.models import User
 from django.contrib.auth        import authenticate, login as login_
 from .models                    import Role, VideoLink, Reaction
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
+
+
 from . import constants
 import json
+
+# TODO: RESTful email on login/logout
+# TODO: RESTful login/logout
 
 def register(request: HttpRequest) -> HttpResponse:
 
@@ -14,6 +21,11 @@ def register(request: HttpRequest) -> HttpResponse:
 
     if User.objects.filter(username = request.POST["username"]).first():
         return redirect("/login")
+
+    try:
+        validate_password(request.POST["password"])
+    except ValidationError:
+        return redirect("/register")
 
     user = User.objects.create_user(
         request.POST["username"],

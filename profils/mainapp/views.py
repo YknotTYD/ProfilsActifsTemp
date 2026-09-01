@@ -6,6 +6,7 @@ from django.contrib.auth        import logout as logout_
 from .models                    import Role, VideoLink, Reaction
 
 # TODO: deleting
+# TODO: support for multiple languages
 
 def get_videos(request: HttpResponse) -> list[tuple[int, int]]:
 
