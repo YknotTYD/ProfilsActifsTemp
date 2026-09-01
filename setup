@@ -2,6 +2,8 @@
 
 set -euo pipefail
 
+NAME='profilsactifs'
+
 if [ "$1" = "install" ]; then
     sudo apt-get update
     sudo apt-get remove -y docker docker-engine docker.io containerd runc 
@@ -9,16 +11,18 @@ if [ "$1" = "install" ]; then
     echo "Installation complete"
     exit 1
 elif [ "$1" = "shell" ]; then
-    docker exec -it profilsactifs sh
+    sudo docker exec -it $NAME sh
     exit 1
 elif [ "$1" = "run" ]; then
     export PORT="${2:-8080}"
     echo "Lancement sur le port $PORT"
-    docker compose watch
+    sudo docker compose watch
     exit 1
 elif [ "$1" = "stop" ]; then
-    docker kill profilsactifs
+    sudo docker kill $NAME
     exit 1
+elif [ "$1" = "logs" ]; then
+    sudo docker logs -f $NAME
 else
     echo "Usage: $0 <argument>
 
@@ -27,6 +31,7 @@ else
     - run: start the project [port (8080 by default)]
     - stop: stop the project
     - shell: run shell of the project
+    - logs: print docker's logs
     "
     exit 1 
 fi

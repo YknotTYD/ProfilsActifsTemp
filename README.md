@@ -13,13 +13,13 @@ Site de recherche de mise en relation entre demandeur et recruteur sous forme de
 ## Deploiement
 
 ```bash
-  ./setup start
+  ./setup run
 ```
 
 
 Création d'un utilisateur administrateur
 ```bash
-  docker exec -it [id_container] sh
+  ./setup shell
   python manage.py createsuperuser
 ```
 
