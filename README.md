@@ -1,5 +1,5 @@
 
-# JibJob
+# ProfilsActifs
 
 Site de recherche de mise en relation entre demandeur et recruteur sous forme de réseau social pour la piscine Survivor de Tech 3
 
@@ -8,6 +8,11 @@ Site de recherche de mise en relation entre demandeur et recruteur sous forme de
 
 ```bash
   docker compose watch
+```
+
+```bash
+  docker exec -it [id_container] sh
+  python manage.py createsuperuser
 ```
 
 
