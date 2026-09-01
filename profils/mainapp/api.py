@@ -81,7 +81,6 @@ def react(request: HttpRequest) -> HttpResponse:
             video    = vid,
             reaction = body["reaction"]
         ).save()
-        print(request.body)
 
     if prev_reaction:
         prev_reaction.delete()
