@@ -11,6 +11,33 @@
 <body>
     {% if user.is_authenticated %}
         <h1>Welcome {{ user.username }}</h1>
+        <p>You are a proud {{ role }}.</p><br>
+        {% if role == "JobSeeker" %}
+
+<form method="post" action="/api/upload/video/?camefrom=/">
+{% csrf_token %}
+  <label>url: 
+    <input name="url" autocomplete="Your URL" />
+  </label><br>
+  <button>Uploader</button>
+</form>
+        {% else %}
+
+            {% if role == "Recruiter" %}
+
+                {% for url in videos %}
+
+                    <iframe width="420" height="315"
+                        src="{{ url }}"
+                        referrerpolicy="strict-origin-when-cross-origin"
+                        allowfullscreen>
+                    </iframe><br>
+
+                {% endfor %}
+
+            {% endif %}
+
+        {% endif %}
         <a href="/logout">logout</a>
     {% else %}
         <h1>Not Logged In</h1>
