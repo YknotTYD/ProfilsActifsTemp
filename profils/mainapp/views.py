@@ -3,13 +3,13 @@ from django.http.request        import HttpRequest
 from django.http.response       import HttpResponse
 from django.shortcuts           import render, redirect
 from django.contrib.auth        import logout as logout_
-from .models                    import Role, Video, Reaction
+from .models                    import Role, VideoLink, Reaction
 
 # TODO: deleting
 
 def get_videos(request: HttpResponse) -> list[tuple[int, int]]:
 
-    videos = [vid for vid in Video.objects.all()]
+    videos = [vid for vid in VideoLink.objects.all()]
     liked_disliked = [(0, 0)] * len(videos)
 
     if request.user.is_authenticated:        

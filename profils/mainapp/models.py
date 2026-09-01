@@ -20,7 +20,7 @@ class Role(models.Model):
     def __str__(self) -> str:
         return self.role
 
-class Video(models.Model):
+class VideoLink(models.Model):
 
     user = models.ForeignKey(User, on_delete = models.CASCADE)
     url  = models.CharField(max_length = 1024)
@@ -31,20 +31,20 @@ class Video(models.Model):
 class Reaction(models.Model):
 
     user     = models.ForeignKey(User,  on_delete = models.CASCADE)
-    video    = models.ForeignKey(Video, on_delete = models.CASCADE)
+    video    = models.ForeignKey(VideoLink, on_delete = models.CASCADE)
     reaction = strings_to_choice_char_fields(constants.REACTIONS)
 
     def __str__(self) -> str:
         return f"{self.reaction} from {self.user} on vid{self.video.id}"
 
-def get_likes(vid: Video):
+def get_likes(vid: VideoLink):
     return len(Reaction.objects.filter(video = vid, reaction = "like"))
-def get_dislikes(vid: Video):
+def get_dislikes(vid: VideoLink):
     return len(Reaction.objects.filter(video = vid, reaction = "dislike"))
 
-Video.likes    = property(get_likes)
-Video.dislikes = property(get_dislikes)
+VideoLink.likes    = property(get_likes)
+VideoLink.dislikes = property(get_dislikes)
 
 admin.site.register(Role)
-admin.site.register(Video)
+admin.site.register(VideoLink)
 admin.site.register(Reaction)
