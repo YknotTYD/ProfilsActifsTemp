@@ -7,7 +7,7 @@ Site de recherche de mise en relation entre demandeur et recruteur sous forme de
 ## Installation
 
 ```bash
-  ./setup.sh install
+  ./setup install
 ```
 
 ## Deploiement

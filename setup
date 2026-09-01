@@ -11,7 +11,9 @@ if [ "$1" = "install" ]; then
 elif [ "$1" = "shell" ]; then
     docker exec -it profilsactifs sh
     exit 1
-elif [ "$1" = "start" ]; then
+elif [ "$1" = "run" ]; then
+    export PORT="${2:-8080}"
+    echo "Lancement sur le port $PORT"
     docker compose watch
     exit 1
 elif [ "$1" = "stop" ]; then
@@ -22,7 +24,7 @@ else
 
     arguments:
     - install: install all the packages
-    - start: start the project
+    - run: start the project [port (8080 by default)]
     - stop: stop the project
     - shell: run shell of the project
     "

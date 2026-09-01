@@ -3,7 +3,7 @@ services:
     container_name: profilsactifs
     build: .
     ports:
-      - "8080:8080"
+      - "${PORT:-8080}:8080"
     develop:
       watch:
         - action: sync
