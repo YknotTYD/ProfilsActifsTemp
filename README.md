@@ -22,7 +22,7 @@ Site de recherche de mise en relation entre demandeur et recruteur sous forme de
 
 ## Authors
 
-- [Eren Turkoglu](https://github.com/Florian-Gros)
-- [Ethan Bertin-Prévot](https://github.com/Babou-136)
-- [Julian Hemmer](https://github.com/ISpityy)
+- [Eren Turkoglu](https://github.com/erenworld)
+- [Ethan Bertin-Prévot](https://github.com/YknotTYD)
+- [Julian Hemmer](https://github.com/julian-hemmer)
 - [Pierre Maciejewski](https://github.com/pierre54200)
