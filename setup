@@ -14,9 +14,16 @@ elif [ "$1" = "shell" ]; then
     sudo docker exec -it $NAME sh
     exit 0
 elif [ "$1" = "run" ]; then
-    export PORT="${2:-8080}"
+    PORT="${2:-8080}"
     echo "Lancement sur le port $PORT"
-    sudo PORT="$PORT" docker compose watch
+    trap 'exit 0' SIGINT SIGTERM
+    sudo PORT="$PORT" docker compose up --watch
+    sudo docker compose down
+    exit 0
+elif [ "$1" = "start" ]; then
+    PORT="${2:-8080}"
+    echo "Lancement sur le port $PORT"
+    sudo PORT="$PORT" docker compose up --watch
     exit 0
 elif [ "$1" = "stop" ]; then
     sudo docker kill $NAME
@@ -29,7 +36,8 @@ else
 
     arguments:
     - install: install all the packages
-    - run: start the project [port (8080 by default)]
+    - run: start the project [port (8080 by default)] and kill it
+    - start: start the project [port (8080 by default)]
     - stop: stop the project
     - shell: run shell of the project
     - logs: print docker's logs
