@@ -7,7 +7,7 @@ services:
       watch:
         - action: sync
           path: .
-          target: /profils
+          target: /app
           ignore:
             - __pycache__/
             - "*.pyc"
