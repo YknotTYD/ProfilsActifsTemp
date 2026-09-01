@@ -7,6 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Main Page</title>
     <link rel="stylesheet" href="{% static 'style.css' %}">
+    <meta name="csrf-token" content="{{ csrf_token }}">
 </head>
 <body>
     {% if user.is_authenticated %}
@@ -29,6 +30,9 @@
 
                     <div style = "text-align: center;">
                         <p>Uploaded by {{ vid.user }}</p>
+                        <p>{{ vid.likes }} likes {{ vid.dislikes }} dislikes</p>
+                        <button class="react-btn" data-video-id="{{ vid.id }}" data-reaction="like">like</button>
+                        <button class="react-btn" data-video-id="{{ vid.id }}" data-reaction="dislike">dislike</button>
 
                         <iframe width="420" height="315"
                             src="{{ vid.url }}"
@@ -50,3 +54,26 @@
     {% endif %}
 </body>
 </html>
+
+<script>
+const csrftoken = document.querySelector('meta[name="csrf-token"]').content;
+
+document.querySelectorAll('.react-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        fetch('/api/react/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrftoken,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                video_id: btn.dataset.videoId,
+                reaction: btn.dataset.reaction,
+            }),
+        })
+        .then(res => res.json())
+        .then(data => console.log(data))
+        .catch(err => console.error(err));
+    });
+});
+</script>

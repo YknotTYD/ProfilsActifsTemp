@@ -28,5 +28,6 @@ urlpatterns = [
     path("logout/",           views.logout),
     path("api/register/",     api.register),
     path("api/login/",        api.login),
-    path("api/upload/video/", api.video_upload)
+    path("api/upload/video/", api.video_upload),
+    path("api/react/",        api.react)
 ]

@@ -3,7 +3,9 @@ from django.http.response       import HttpResponse
 from django.shortcuts           import redirect
 from django.contrib.auth.models import User
 from django.contrib.auth        import authenticate, login as login_
-from .models                    import Role, Video
+from .models                    import Role, Video, Reaction
+from . import constants
+import json
 
 def register(request: HttpRequest) -> HttpResponse:
 
@@ -18,7 +20,6 @@ def register(request: HttpRequest) -> HttpResponse:
         None,
         request.POST["password"]
     )
-    user.save()
 
     if request.POST["is_recruiter"] == "1":
         Role(user = user, role = "Recruiter").save()
@@ -52,3 +53,37 @@ def video_upload(request: HttpRequest) -> HttpResponse:
         Video.objects.create(user = request.user, url = url).save()
 
     return redirect(request.GET.get("camefrom", "/"))
+
+def react(request: HttpRequest) -> HttpResponse:
+
+    if not request.user.is_authenticated:
+        return HttpResponse(status = 401)
+
+    body = json.loads(request.body)
+
+    if (
+        "video_id" not in body or
+        "reaction" not in body or
+        body["reaction"] not in constants.REACTIONS
+    ): # invalid data
+        return HttpResponse(status = 404)
+
+    vid = Video.objects.filter(id = body["video_id"]).first() # take a guess
+
+    if vid is None:
+        return HttpResponse(status = 400)
+
+    prev_reaction = Reaction.objects.filter(user = request.user, video = vid).first()
+
+    if prev_reaction is None or prev_reaction.reaction != body["reaction"]:
+        Reaction.objects.create(
+            user     = request.user,
+            video    = vid,
+            reaction = body["reaction"]
+        ).save()
+        print(request.body)
+
+    if prev_reaction:
+        prev_reaction.delete()
+
+    return HttpResponse(status = 200)
