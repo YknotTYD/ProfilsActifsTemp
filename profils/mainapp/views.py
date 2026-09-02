@@ -73,4 +73,7 @@ def logout(request: HttpRequest) -> HttpResponse:
 
 def certification(request: HttpRequest) -> HttpResponse:
     return render(request, "certification.html")
+
+def cgu(request: HttpRequest) -> HttpResponse:
+    return render(request, "cgu.html")
     
