@@ -1,54 +1,98 @@
 {% load static %}
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Main Page</title>
-    <link rel="stylesheet" href="{% static 'style.css' %}">
+    <title>ProfilsActifs</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Spectral:wght@400;500;600;700&family=Spectral:ital@1&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'style.css' %}?v={{ css_version }}">
     <meta name="csrf-token" content="{{ csrf_token }}">
 </head>
 <body>
-    {% if user.is_authenticated %}
-        <h1>Welcome {{ user.username }}</h1>
-        <p>You are a {{ role }}.</p><br>
-        {% if role == "JobSeeker" %}
-
-<form method="post" action="/api/upload/video/?camefrom=/">
-{% csrf_token %}
-  <label>url: 
-    <input name="url" autocomplete="Your URL" />
-  </label><br>
-  <button>Uploader</button>
-</form>
-        {% else %}
-
-            {% if role == "Recruiter" %}
-
-
-{% for vid, liked, disliked in videos_ld %}
-  <div class="video-card">
-    <iframe width="420" height="315" src="{{ vid.url }}?autoplay=0&mute=0" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-    <div class="info-row">
-      <span>Posted by {{ vid.user }}</span>
-      <button {% if liked %}style="background-color: green;" {% endif %} class="react-btn" data-video-id="{{ vid.id }}" data-reaction="like">👍 {{ vid.likes }}</button>
-      <button {% if disliked %}style="background-color: red;" {% endif %} class="react-btn" data-video-id="{{ vid.id }}" data-reaction="dislike">👎 {{ vid.dislikes }}</button>
-    </div>
-  </div><br>
-{% endfor %}
-
-            {% endif %}
-
+    <div class="brand-header">
+        <span class="wordmark">ProfilsActifs</span>
+        {% if not user.is_authenticated %}
+            <a href="/register/" class="btn-primary-sm">CRÉER MON PROFIL</a>
         {% endif %}
-        <a href="/logout">logout</a>
+    </div>
+    {% if user.is_authenticated %}
+        <div class="dashboard-page">
+            <div class="card">
+                <h1 class="card-title">Bienvenue {{ user.username }}</h1>
+                <p class="text-center text-[#4a4a4a]">Vous êtes {{ role }}.</p>
+
+                {% if role == "JobSeeker" %}
+                    <form method="post" action="/api/upload/video/?camefrom=/" class="grid gap-[14px] mt-[14px]">
+                        {% csrf_token %}
+                        <div class="field">
+                            <input id="video-url" name="url" placeholder=" " autocomplete="off" required class="peer field-input">
+                            <label for="video-url" class="field-label">URL de votre vidéo de présentation</label>
+                        </div>
+                        <button type="submit" class="btn-primary">UPLOADER</button>
+                    </form>
+                {% elif role == "Recruiter" %}
+                    {% if videos_ld %}
+                        <div class="feed mt-5">
+                            {% for vid, liked, disliked in videos_ld %}
+                                <div class="feed-item">
+                                    <iframe
+                                        src="{{ vid.url }}?autoplay=1&mute=1&playsinline=1&controls=0"
+                                        referrerpolicy="strict-origin-when-cross-origin"
+                                        allow="autoplay; encrypted-media"
+                                        allowfullscreen>
+                                    </iframe>
+                                    <div class="feed-caption">
+                                        <strong>@{{ vid.user }}</strong>
+                                    </div>
+                                    <div class="feed-actions">
+                                        <button class="feed-react-btn react-btn {% if liked %}is-active-like{% endif %}"
+                                            data-video-id="{{ vid.id }}" data-reaction="like">
+                                            <span class="feed-react-icon">👍</span>
+                                            <span>{{ vid.likes }}</span>
+                                        </button>
+                                        <button class="feed-react-btn react-btn {% if disliked %}is-active-dislike{% endif %}"
+                                            data-video-id="{{ vid.id }}" data-reaction="dislike">
+                                            <span class="feed-react-icon">👎</span>
+                                            <span>{{ vid.dislikes }}</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-center text-[#4a4a4a] mt-5">Aucune vidéo pour le moment.</p>
+                    {% endif %}
+                {% endif %}
+
+                <div class="foot">
+                    <button type="button" onclick="document.getElementById('logout-modal').style.display='flex'" class="link-btn">Se déconnecter</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="logout-modal" class="modal-overlay">
+            <div class="modal-card">
+                <h2 class="font-title font-extrabold text-2xl text-primary">Déconnexion</h2>
+                <p class="mt-4 text-[17px] text-text">Êtes-vous sûr de vouloir vous déconnecter ?</p>
+                <div class="mt-8 flex items-center justify-end gap-6">
+                    <button type="button" onclick="document.getElementById('logout-modal').style.display='none'" class="btn-ghost">ANNULER</button>
+                    <a href="/logout" class="btn-primary-sm px-6 py-3 text-sm">SE DÉCONNECTER</a>
+                </div>
+            </div>
+        </div>
     {% else %}
-        <h1>Not Logged In</h1>
-        <a href="/register">register</a><br>
-        <a href="/login">login</a><br>
+        <div class="home-hero">
+            <h1 class="hero-title">Les bonnes données pour le bon recrutement.</h1>
+            <p class="hero-subtitle">La plateforme de ProfilsActifs, propulsée par l'IA, identifie et valide les compétences qui font la réussite professionnelle.</p>
+
+            <div class="max-w-[520px] mx-auto mt-10">
+                <div class="text-base text-[#4a4a4a]">Vous avez déjà un compte ? <a href="/login/">Se connecter</a></div>
+            </div>
+        </div>
     {% endif %}
-</body>
-</html>
 
 <script>
 const csrftoken = document.querySelector('meta[name="csrf-token"]').content;
@@ -66,14 +110,10 @@ document.querySelectorAll('.react-btn').forEach(btn => {
                 reaction: btn.dataset.reaction,
             }),
         })
-        .then(res  => res.json())
-        .then(data => console.log(data))
+        .then(() => window.location.reload())
         .catch(err => console.error(err));
     });
 });
 </script>
-
-<style>
-  .video-card { text-align: center; margin-bottom: 30px; }
-  .info-row { display: flex; justify-content: center; gap: 15px; align-items: center; margin: 6px 0; }
-</style>
+</body>
+</html>

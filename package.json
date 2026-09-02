@@ -1,0 +1,27 @@
+{
+  "name": "profilsactifstemp",
+  "version": "1.0.0",
+  "description": "Site de recherche de mise en relation entre demandeur et recruteur sous forme de réseau social pour la piscine Survivor de Tech 3",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build:css": "tailwindcss -i ./static/src/input.css -o ./static/style.css --minify",
+    "watch:css": "tailwindcss -i ./static/src/input.css -o ./static/style.css --watch"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/YknotTYD/ProfilsActifsTemp.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/YknotTYD/ProfilsActifsTemp/issues"
+  },
+  "homepage": "https://github.com/YknotTYD/ProfilsActifsTemp#readme",
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.3.3",
+    "tailwindcss": "^4.3.3"
+  }
+}

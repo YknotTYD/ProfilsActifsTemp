@@ -49,7 +49,10 @@ def register(request: HttpRequest) -> HttpResponse:
     if request.user.is_authenticated:
         return main(request)
 
-    return render(request, "register.html")
+    return render(request, "register.html", {
+        "error": request.GET.get("error"),
+        "username": request.GET.get("username", ""),
+    })
 
 def login(request: HttpRequest) -> HttpResponse:
 
@@ -65,3 +68,7 @@ def logout(request: HttpRequest) -> HttpResponse:
 
     logout_(request)
     return redirect("/")
+
+def certification(request: HttpRequest) -> HttpResponse:
+    return render(request, "certification.html")
+    

@@ -23,6 +23,7 @@ from .mainapp       import api
 urlpatterns = [
     path('admin/',            admin.site.urls),
     path("",                  views.main),
+    path("certification/",    views.certification),
     path("register/",         views.register),
     path("login/",            views.login),
     path("logout/",           views.logout),

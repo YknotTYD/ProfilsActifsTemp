@@ -1,4 +1,7 @@
 *.pyc
+__pycache__/
 db.sqlite3
 .venv
-.gitignore
+node_modules
+.DS_Store
+.claude/

@@ -1,0 +1,242 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-bg: #f5f4f2;
+  --color-primary: #1b3a6b;
+  --color-secondary: #d9631a;
+  --color-secondary-hover: #b8530f;
+  --color-cta: #f6d179;
+  --color-cta-hover: #f0c65e;
+  --color-text: #262626;
+  --color-link: #2e6ef5;
+  --color-link-hover: #1f52c2;
+
+  --font-title: 'Marianne', 'Helvetica Neue', Arial, sans-serif;
+  --font-body: 'Spectral', Georgia, 'Times New Roman', serif;
+}
+
+/* Police officielle Marianne (fichiers dans /static/fonts) */
+@font-face {
+  font-family: 'Marianne';
+  src: url('fonts/Marianne-Thin.woff2') format('woff2');
+  font-weight: 200;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Marianne';
+  src: url('fonts/Marianne-Light.woff2') format('woff2');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Marianne';
+  src: url('fonts/Marianne-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Marianne';
+  src: url('fonts/Marianne-Regular_Italic.woff2') format('woff2');
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Marianne';
+  src: url('fonts/Marianne-Medium.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Marianne';
+  src: url('fonts/Marianne-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Marianne';
+  src: url('fonts/Marianne-ExtraBold.woff2') format('woff2');
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+@layer base {
+  body {
+    @apply m-0 bg-bg text-text font-body;
+  }
+  a {
+    @apply text-link no-underline;
+  }
+  a:hover {
+    @apply text-link-hover underline;
+  }
+}
+
+@layer components {
+  /* Bloc-marque */
+  .brand-header {
+    @apply flex flex-wrap items-center justify-between gap-3 px-4 py-4 sm:px-[26px] sm:py-6;
+  }
+  .wordmark {
+    @apply font-title font-extrabold tracking-tight leading-none text-primary text-lg sm:text-[22px];
+  }
+
+  /* Boutons */
+  .btn-primary {
+    @apply block w-full rounded border-0 px-[18px] py-[18px] text-[15px] font-title font-extrabold tracking-[0.04em] text-center no-underline cursor-pointer bg-cta text-text;
+  }
+  .btn-primary:hover {
+    @apply bg-cta-hover;
+  }
+  .btn-primary-sm {
+    @apply inline-block rounded px-4 py-2 sm:px-5 sm:py-2.5 text-xs sm:text-sm font-title font-extrabold tracking-[0.04em] text-center no-underline cursor-pointer bg-cta text-text;
+  }
+  .btn-primary-sm:hover {
+    @apply bg-cta-hover;
+  }
+  .btn-ghost {
+    @apply bg-transparent border-0 p-0 cursor-pointer font-title font-bold text-sm tracking-[0.04em] text-[#7a7a7a] no-underline;
+  }
+  .btn-ghost:hover {
+    @apply text-text;
+  }
+  .link-btn {
+    @apply bg-transparent border-0 p-0 cursor-pointer font-body text-base text-link no-underline;
+  }
+  .link-btn:hover {
+    @apply text-link-hover underline;
+  }
+
+  /* Page d'auth (login/register) */
+  .auth-page {
+    @apply flex items-start justify-center px-5 pb-[60px];
+    min-height: calc(100vh - 76px);
+  }
+  .card {
+    @apply w-full max-w-[520px] mx-auto bg-white border border-[#ececec] rounded-lg pt-[38px] px-[46px] pb-[34px] max-[620px]:px-5 max-[620px]:py-[26px];
+  }
+  .card-title {
+    @apply font-title font-extrabold text-[27px] text-center text-primary mt-[26px] mb-[30px];
+  }
+
+  /* Champs de formulaire flottants */
+  .field {
+    @apply relative;
+  }
+  .field-input {
+    @apply w-full border border-[#d9d9d9] rounded px-4 pt-5 pb-2 text-[17px] text-text bg-white font-body focus:outline-none focus:border-2 focus:border-primary focus:px-[15px] focus:pt-[19px] focus:pb-[7px];
+  }
+  .field-label {
+    @apply pointer-events-none absolute left-4 top-[15px] text-[17px] text-[#9b9b9b] transition-all duration-[120ms] ease-out peer-focus:-top-2 peer-focus:left-3 peer-focus:px-[5px] peer-focus:text-xs peer-focus:bg-white peer-focus:text-primary peer-[:not(:placeholder-shown)]:-top-2 peer-[:not(:placeholder-shown)]:left-3 peer-[:not(:placeholder-shown)]:px-[5px] peer-[:not(:placeholder-shown)]:text-xs peer-[:not(:placeholder-shown)]:bg-white peer-[:not(:placeholder-shown)]:text-primary;
+  }
+  .field-select-label {
+    @apply block mb-1.5 text-sm text-[#7a7a7a];
+  }
+  .field-select {
+    @apply w-full border border-[#d9d9d9] rounded px-4 py-[15px] text-[17px] text-text bg-white font-body focus:outline-none focus:border-2 focus:border-primary;
+  }
+
+  .foot {
+    @apply mt-[26px] text-center text-base;
+  }
+
+  /* Modale */
+  .modal-overlay {
+    @apply hidden fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-5;
+  }
+  .modal-card {
+    @apply w-full max-w-[420px] bg-white rounded-lg p-8;
+  }
+
+  /* Accueil */
+  .home-hero {
+    @apply max-w-[1020px] mx-auto px-4 sm:px-[26px] pt-[10px] pb-[70px] text-center;
+  }
+  .hero-title {
+    @apply mx-auto mt-[30px] max-w-[34ch] text-[28px] sm:text-[32px] md:text-[38px] font-title font-extrabold leading-[1.28] tracking-[-0.01em] text-primary;
+  }
+  .hero-subtitle {
+    @apply mx-auto mt-5 max-w-[46ch] text-base sm:text-[17px] text-[#4a4a4a];
+  }
+  .phone-frame {
+    @apply relative mx-auto mt-[38px] w-full rounded-2xl overflow-hidden shadow-[0_10px_30px_rgba(0,0,0,0.14)];
+    max-width: 431px;
+    aspect-ratio: 375/667;
+  }
+  .phone-frame iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+  .dashboard-page {
+    @apply max-w-[640px] mx-auto px-[26px] pt-[10px] pb-[70px];
+  }
+
+  /* Feed vidéos (recruteur) — inspiré de static/feedapp */
+  .feed {
+    @apply relative mx-auto overflow-y-scroll overscroll-y-contain rounded-[25px] bg-black;
+    width: 100%;
+    max-width: 375px;
+    height: min(667px, 78vh);
+    scroll-snap-type: y mandatory;
+    scrollbar-width: none;
+    font-family: 'Montserrat', var(--font-sans, sans-serif);
+  }
+  .feed::-webkit-scrollbar {
+    display: none;
+  }
+  .feed-item {
+    @apply relative w-full;
+    height: 100%;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+  }
+  .feed-item iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+  .feed-item::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.75) 0%, rgba(0, 0, 0, 0) 30%);
+  }
+  .feed-caption {
+    @apply absolute left-3 bottom-4 z-10 max-w-[70%] text-white;
+    text-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
+  }
+  .feed-caption strong {
+    @apply block text-sm font-semibold;
+  }
+  .feed-actions {
+    @apply absolute right-3 bottom-4 z-10 flex flex-col items-center gap-4;
+  }
+  .feed-react-btn {
+    @apply flex flex-col items-center gap-1 text-white cursor-pointer;
+  }
+  .feed-react-btn .feed-react-icon {
+    @apply flex items-center justify-center rounded-full bg-white/90 text-text w-11 h-11 text-lg leading-none shadow;
+  }
+  .feed-react-btn span {
+    @apply text-[11px] font-semibold;
+    text-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
+  }
+  .feed-react-btn.is-active-like .feed-react-icon {
+    @apply bg-primary text-white;
+  }
+  .feed-react-btn.is-active-dislike .feed-react-icon {
+    @apply bg-secondary text-white;
+  }
+}

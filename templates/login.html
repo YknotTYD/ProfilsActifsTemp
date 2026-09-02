@@ -1,29 +1,35 @@
 {% load static %}
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
-    <link rel="stylesheet" href="{% static 'style.css' %}">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Connexion — ProfilsActifs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Spectral:wght@400;500;600;700&family=Spectral:ital@1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'style.css' %}?v={{ css_version }}">
 </head>
 <body>
-LOGIN
-
-<form method="post" action="/api/login/">
-{% csrf_token %}
-  <label>Nom: 
-    <input name="username" autocomplete="name" />
-  </label><br>
-  <label>Mot de passe:
-    <input name="password" autocomplete="name" />
-  </label><br>
-  <button>login</button>
-</form>
-<br>
-
-<a href="/">back</a>
-
+<div class="brand-header"><span class="wordmark">ProfilsActifs</span></div>
+<div class="auth-page">
+  <div class="card">
+    <h1 class="card-title">Connexion à ProfilsActifs</h1>
+    <form method="post" action="/api/login/" class="grid gap-[14px]">
+      {% csrf_token %}
+      <div class="field">
+        <input id="login-username" name="username" type="text" autocomplete="username" placeholder=" " required class="peer field-input">
+        <label for="login-username" class="field-label">Nom d'utilisateur</label>
+      </div>
+      <div class="field">
+        <input id="login-password" name="password" type="password" autocomplete="current-password" placeholder=" " required class="peer field-input">
+        <label for="login-password" class="field-label">Mot de passe</label>
+      </div>
+      <button type="submit" class="btn-primary mt-2">SE CONNECTER</button>
+    </form>
+    <div class="foot">Pas encore de compte ? <a href="/register/">Créer un compte gratuitement</a></div>
+    <div class="foot"><a href="/">Retour à l'accueil</a></div>
+  </div>
+</div>
 </body>
 </html>
