@@ -7,12 +7,12 @@ from .models                    import Role, VideoLink, Reaction
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 
-
 from . import constants
 import json
 
 # TODO: RESTful email on login/logout
 # TODO: RESTful login/logout
+# TODO: check @api_view
 # TODO: actual APIs with json responses
 
 def register(request: HttpRequest) -> HttpResponse:
