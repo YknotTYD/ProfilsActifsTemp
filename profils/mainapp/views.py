@@ -7,6 +7,8 @@ from .models                    import Role, VideoLink, Reaction
 
 # TODO: deleting
 # TODO: support for multiple languages
+# TODO: @api_view stuff
+
 
 def get_videos(request: HttpResponse) -> list[tuple[int, int]]:
 

@@ -1,0 +1,16 @@
+name: Mirror repository
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Push mirror
+        run: |
+          git clone --mirror https://github.com/YknotTYD/ProfilsActifsTemp repo-mirror
+          cd repo-mirror
+          git push --mirror https://${{ secrets.MIRROR_TOKEN }}@github.com/EpitechPGE3-2026/G-SVR-500-NCY-5-1-survivor-4
