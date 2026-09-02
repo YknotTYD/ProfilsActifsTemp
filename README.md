@@ -15,6 +15,9 @@ Site de recherche de mise en relation entre demandeur et recruteur sous forme de
 
 - **Questionnaires** — création, versioning, passage et scoring de questionnaires.
   Voir [profils/questionnaires/README.md](profils/questionnaires/README.md).
+- **Profils professionnels** — profil, compétences structurées, expériences,
+  formations, recherche de candidats.
+  Voir [profils/profiles/README.md](profils/profiles/README.md).
 
 
 ## Tech Stack

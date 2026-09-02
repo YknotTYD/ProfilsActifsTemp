@@ -31,4 +31,5 @@ urlpatterns = [
     path("api/upload/video/", api.video_upload),
     path("api/react/",        api.react),
     path("",                  include("profils.questionnaires.urls")),
+    path("",                  include("profils.profiles.urls")),
 ]

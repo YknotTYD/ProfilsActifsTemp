@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     "profils.mainapp",
     "profils.questionnaires",
+    "profils.profiles",
 ]
 
 MIDDLEWARE = [
