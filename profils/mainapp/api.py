@@ -13,6 +13,7 @@ import json
 # TODO: RESTful email on login/logout
 # TODO: RESTful login/logout
 # TODO: check @api_view
+# TODO: actual APIs with json responses
 
 def register(request: HttpRequest) -> HttpResponse:
 
