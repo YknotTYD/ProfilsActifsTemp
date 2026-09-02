@@ -11,7 +11,12 @@
 <link rel="stylesheet" href="{% static 'style.css' %}">
 </head>
 <body>
-<div class="brand-header"><span class="wordmark">ProfilsActifs</span></div>
+<div class="brand-header">
+  <a href="/" class="brand-link">
+    <img src="{% static 'logo.svg' %}" alt="" width="24" height="24" />
+    <span class="wordmark">ProfilsActifs</span>
+  </a>
+</div>
 <div class="auth-page">
   <div class="card">
     <h1 class="card-title">Connexion à ProfilsActifs</h1>

@@ -1,0 +1,115 @@
+{% load static %}
+
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Conditions Générales d'Utilisation — ProfilsActifs</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Spectral:wght@400;500;600;700&family=Spectral:ital@1&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="{% static 'style.css' %}" />
+  </head>
+  <body>
+    <div class="brand-header">
+      <a href="/" class="brand-link">
+        <img src="{% static 'logo.svg' %}" alt="" width="24" height="24" />
+        <span class="wordmark">ProfilsActifs</span>
+      </a>
+    </div>
+
+    <div class="legal-page">
+      <h1 class="card-title" style="text-align: left; margin-top: 10px">
+        Conditions Générales d'Utilisation
+      </h1>
+      <p class="text-sm" style="color: #9b9b9b">
+        Dernière mise à jour : {% now "d/m/Y" %}
+      </p>
+
+      <h2>1. Objet</h2>
+      <p>
+        Les présentes Conditions Générales d'Utilisation (CGU) encadrent l'accès
+        et l'utilisation de la plateforme ProfilsActifs, mettant en relation
+        demandeurs d'emploi et recruteurs.
+      </p>
+
+      <h2>2. Accès au service</h2>
+      <p>
+        L'inscription est gratuite et ouverte à toute personne physique ou
+        morale disposant de la capacité juridique de contracter. Chaque
+        utilisateur est responsable de la confidentialité de ses identifiants.
+      </p>
+
+      <h2>3. Contenu publié par les utilisateurs</h2>
+      <ul>
+        <li>
+          Les vidéos de présentation doivent respecter les lois en vigueur et ne
+          pas porter atteinte aux droits de tiers.
+        </li>
+        <li>
+          ProfilsActifs se réserve le droit de retirer tout contenu
+          manifestement illicite ou contraire aux présentes CGU.
+        </li>
+        <li>
+          L'utilisateur garantit être titulaire des droits nécessaires sur les
+          contenus publiés.
+        </li>
+      </ul>
+
+      <h2>4. Données personnelles</h2>
+      <p>
+        Les données collectées sont utilisées strictement dans le cadre de la
+        mise en relation entre profils et recruteurs, conformément au Règlement
+        Général sur la Protection des Données (RGPD). Chaque utilisateur dispose
+        d'un droit d'accès, de rectification et de suppression de ses données.
+      </p>
+
+      <h2>5. Responsabilité</h2>
+      <p>
+        ProfilsActifs agit en tant qu'intermédiaire technique et ne saurait être
+        tenu responsable des échanges, décisions de recrutement ou informations
+        communiquées entre utilisateurs.
+      </p>
+
+      <h2>6. Modification des CGU</h2>
+      <p>
+        ProfilsActifs se réserve le droit de modifier les présentes CGU à tout
+        moment. Les utilisateurs seront informés de toute modification
+        substantielle.
+      </p>
+
+      <h2>7. Contact</h2>
+      <p>
+        Pour toute question relative aux présentes CGU, vous pouvez nous
+        contacter à
+        <a href="mailto:contact@profilsactifs.fr">contact@profilsactifs.fr</a>.
+      </p>
+
+      <div class="foot" style="text-align: left; margin-top: 40px">
+        <a href="/">← Retour à l'accueil</a>
+      </div>
+    </div>
+
+    <footer class="site-footer">
+      <div class="site-footer-inner">
+        <div>
+          <div class="site-footer-brand">ProfilsActifs</div>
+          <p class="site-footer-tagline">
+            Les bonnes données pour le bon recrutement.
+          </p>
+        </div>
+        <div class="site-footer-links">
+          <a href="/">Accueil</a>
+          <a href="/cgu/">CGU</a>
+          <a href="mailto:contact@profilsactifs.fr">Contact</a>
+        </div>
+      </div>
+      <div class="site-footer-bottom">
+        © {% now "Y" %} ProfilsActifs. Tous droits réservés.
+      </div>
+    </footer>
+  </body>
+</html>
