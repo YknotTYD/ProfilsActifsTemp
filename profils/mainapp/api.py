@@ -59,7 +59,7 @@ def login(request: HttpRequest) -> HttpResponse:
 
     return redirect("/")
 
-def video_upload(request: HttpRequest) -> HttpResponse:
+def videolink_upload(request: HttpRequest) -> HttpResponse:
 
     if request.user.is_authenticated and (url := request.POST.get("url")):
 

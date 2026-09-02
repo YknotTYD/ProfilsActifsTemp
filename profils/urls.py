@@ -21,13 +21,13 @@ from .mainapp       import views
 from .mainapp       import api
 
 urlpatterns = [
-    path('admin/',            admin.site.urls),
-    path("",                  views.main),
-    path("register/",         views.register),
-    path("login/",            views.login),
-    path("logout/",           views.logout),
-    path("api/register/",     api.register),
-    path("api/login/",        api.login),
-    path("api/upload/video/", api.video_upload),
-    path("api/react/",        api.react)
+    path('admin/',                 admin.site.urls),
+    path("",                       views.main),
+    path("register/",              views.register),
+    path("login/",                 views.login),
+    path("logout/",                views.logout),
+    path("api/register/",          api.register),
+    path("api/login/",             api.login),
+    path("api/upload/video/link/", api.videolink_upload),
+    path("api/react/",             api.react)
 ]

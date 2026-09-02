@@ -15,7 +15,7 @@
         <p>You are a {{ role }}.</p><br>
         {% if role == "JobSeeker" %}
 
-<form method="post" action="/api/upload/video/?camefrom=/">
+<form method="post" action="/api/upload/video/link/?camefrom=/">
 {% csrf_token %}
   <label>url: 
     <input name="url" autocomplete="Your URL" />
