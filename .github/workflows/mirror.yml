@@ -1,11 +1,9 @@
 name: Mirror repository
 
 on:
-  push:
-    branches:
-      - '**'
-    tags:
-      - '**'
+  schedule:
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
 
 jobs:
   mirror:
