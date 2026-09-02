@@ -69,6 +69,10 @@ def video_upload(request: HttpRequest) -> HttpResponse:
             url = url.removeprefix("https://www.youtube.com/watch?v=")
             url = "https://www.youtube.com/embed/" + url
 
+        if url.startswith("https://vimeo.com/"):
+            url = url.removeprefix("https://vimeo.com/")
+            url = "https://player.vimeo.com/video/" + url
+
         VideoLink.objects.create(user = request.user, url = url).save()
 
     return redirect(request.GET.get("camefrom", "/"))
