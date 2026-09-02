@@ -90,8 +90,11 @@ def _check_attempt_quota(questionnaire, user, *, test: bool):
     if test:
         return
 
+    # une tentative reportee lors d'un changement de version est imposee au
+    # participant : elle ne doit pas lui couter une de ses tentatives
     previous = QuestionnaireAttempt.objects.filter(
         questionnaire = questionnaire, user = user, is_test = False,
+        carried_from__isnull = True,
     ).order_by("-started_at")
 
     used = previous.count()
@@ -246,7 +249,7 @@ def _assert_answer_writable(attempt, question, existing):
     if attempt.is_expired:
         expire_if_needed(attempt)
         raise AttemptError("tentative expiree", "attempt_expired")
-    if not attempt.version.accepts_answers:
+    if not attempt.version.allows_continuation:
         raise AttemptError(
             f"version {attempt.version.status.lower()} : plus aucune reponse acceptee",
             "version_closed",

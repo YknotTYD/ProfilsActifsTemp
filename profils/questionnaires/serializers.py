@@ -127,6 +127,7 @@ def admin_questionnaire(questionnaire, *, detail: bool = False) -> dict:
             "allow_retry_after_pass": questionnaire.allow_retry_after_pass,
             "allow_retry_after_fail": questionnaire.allow_retry_after_fail,
             "keep_previous_attempts": questionnaire.keep_previous_attempts,
+            "carry_over_answers":     questionnaire.carry_over_answers,
         },
         "answer_rules": {
             "answer_edit_mode": questionnaire.answer_edit_mode,

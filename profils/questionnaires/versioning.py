@@ -114,7 +114,12 @@ def editable_version(questionnaire, *, actor = None):
 # --------------------------------------------------------------------------- #
 
 @transaction.atomic
-def publish_version(version, *, actor = None):
+def publish_version(version, *, actor = None, carry_over = None):
+    """Met une version en ligne.
+
+    `carry_over` force le report des reponses des participants, ou l'empeche ;
+    sans precision, le reglage du questionnaire decide.
+    """
     if version.status == c.STATUS_INVALIDATED:
         raise ValidationError("une version invalidee ne peut pas etre publiee")
     if not version.questions.exists():
@@ -144,6 +149,16 @@ def publish_version(version, *, actor = None):
         old = {"previous_version": previous.version_number if previous else None},
         new = {"version_number": version.version_number},
     )
+
+    # les participants deja passes ne repartent pas de zero
+    wanted = questionnaire.carry_over_answers if carry_over is None else carry_over
+    if wanted and previous is not None and previous.pk != version.pk:
+        from .carryover import carry_over as run_carry_over
+
+        version.carry_over_report = run_carry_over(questionnaire, version, actor = actor)
+    else:
+        version.carry_over_report = None
+
     return version
 
 

@@ -810,66 +810,98 @@ class QuestionnaireEditor {
     }
 
     async renderPublish() {
-        const box    = document.getElementById('q-publish-panel');
-        const status = this.questionnaire.status;
-        const checks = this.blockers();
-        const ready  = checks.every(c => c.ok);
-        const who    = await this.whoCanAccess();
+        const box     = document.getElementById('q-publish-panel');
+        const draft   = this.draft;                       // la version editee
+        const live    = this.questionnaire.current_version;
+        const qStatut = this.questionnaire.status;
+        const checks  = this.blockers();
+        const ready   = checks.every(c => c.ok);
+        const who     = await this.whoCanAccess();
+        const isLive  = live === draft.version_number && qStatut === 'PUBLISHED';
 
-        const texts = {
-            DRAFT: ["Brouillon — personne ne le voit",
-                "Ce questionnaire n'apparait dans aucune liste et personne ne peut le commencer. "
-                + "Publiez-le pour le rendre accessible."],
-            TEST: ["En test — reserve aux testeurs",
-                "Seuls les utilisateurs autorises a tester peuvent le passer, et leurs tentatives "
-                + "ne comptent pas dans les statistiques. Publiez quand il vous convient."],
-            PUBLISHED: ["Publie — accessible aux participants",
-                "Il apparait dans la liste des participants autorises et peut etre commence."],
-            DISABLED: ["Desactive — temporairement ferme",
-                "Personne ne peut le commencer. Les resultats deja obtenus sont conserves."],
-            ARCHIVED: ["Archive",
-                "Il n'est plus propose. Les resultats deja obtenus restent consultables."],
-            INVALIDATED: ["Invalide",
-                "Il n'accepte plus aucune reponse. Les tentatives passees restent consultables."],
-        };
-        const [title, detail] = texts[status] || [status, ''];
+        /* Le panneau parle de la VERSION en cours d'edition, pas du
+           questionnaire : une fois publie, c'est le seul moyen de mettre en
+           ligne la version suivante. */
+        let title, detail, cls;
+
+        if (['ARCHIVED', 'INVALIDATED'].includes(qStatut)) {
+            cls = 'is-blocked';
+            title = qStatut === 'ARCHIVED' ? 'Questionnaire archive' : 'Questionnaire invalide';
+            detail = qStatut === 'ARCHIVED'
+                ? "Il n'est plus propose aux participants. Les resultats obtenus restent consultables."
+                : "Il n'accepte plus aucune reponse. Les tentatives passees restent consultables.";
+        } else if (draft.status === 'DRAFT') {
+            cls = ready ? 'is-draft' : 'is-blocked';
+            title = `Version ${draft.version_number} en brouillon`;
+            detail = live
+                ? `La version ${live} est actuellement en ligne. Publier la version `
+                  + `${draft.version_number} la remplacera ; la version ${live} sera archivee `
+                  + `et les resultats deja obtenus resteront intacts.`
+                : "Personne ne voit encore ce questionnaire. Publiez-le pour le rendre accessible.";
+        } else if (draft.status === 'TEST') {
+            cls = 'is-test';
+            title = `Version ${draft.version_number} en test`;
+            detail = "Seuls les testeurs autorises peuvent la passer, et leurs tentatives ne "
+                   + "comptent pas dans les statistiques. Publiez-la quand elle vous convient.";
+        } else if (isLive) {
+            cls = 'is-published';
+            title = `Version ${draft.version_number} en ligne`;
+            detail = "Les participants autorises la voient et peuvent la commencer. "
+                   + "Pour la modifier, creez une version modifiable : celle-ci restera en ligne "
+                   + "jusqu'a ce que vous publiiez la nouvelle.";
+        } else if (qStatut === 'DISABLED') {
+            cls = 'is-blocked';
+            title = 'Questionnaire desactive';
+            detail = "Personne ne peut le commencer pour l'instant. Les resultats sont conserves.";
+        } else {
+            cls = 'is-draft';
+            title = `Version ${draft.version_number} — ${draft.status.toLowerCase()}`;
+            detail = live ? `La version ${live} est en ligne.`
+                          : "Aucune version n'est en ligne pour le moment.";
+        }
 
         const actions = qEl('div', { class: 'q-actions' });
         const err     = qEl('p', { class: 'q-error', id: 'q-publish-error' });
+        const impact  = qEl('div', { id: 'q-impact' });
 
-        if (['DRAFT', 'TEST'].includes(status)) {
-            if (this.capabilities.publish) {
-                actions.appendChild(qEl('button', {
-                    class: 'q-btn q-primary', text: 'Publier maintenant',
-                    disabled: !ready,
-                    title: ready ? '' : "Completez d'abord les points signales ci-dessus",
-                    onclick: () => this.publish(),
-                }));
-            }
-            if (status === 'DRAFT' && this.capabilities.test) {
-                actions.appendChild(qEl('button', {
-                    class: 'q-btn', text: 'Mettre en test d’abord',
-                    disabled: !ready,
-                    onclick: () => this.confirmAction('test', 'Mettre cette version en test ?',
-                        'Seuls les testeurs autorises pourront la passer. La version sera figee.'),
-                }));
-            }
+        const publishable = ['DRAFT', 'TEST'].includes(draft.status)
+            && !['ARCHIVED', 'INVALIDATED'].includes(qStatut);
+
+        if (publishable && this.capabilities.publish) {
+            actions.appendChild(qEl('button', {
+                class: 'q-btn q-primary',
+                text: live ? `Publier la version ${draft.version_number}` : 'Publier maintenant',
+                disabled: !ready,
+                title: ready ? '' : "Completez d'abord les points signales ci-dessus",
+                onclick: () => this.publish(),
+            }));
         }
-        if (status === 'PUBLISHED' && this.capabilities.update) {
+        if (publishable && draft.status === 'DRAFT' && this.capabilities.test) {
+            actions.appendChild(qEl('button', {
+                class: 'q-btn', text: 'Mettre en test d’abord', disabled: !ready,
+                onclick: () => this.confirmAction('test', 'Mettre cette version en test ?',
+                    'Seuls les testeurs autorises pourront la passer. La version sera figee.'),
+            }));
+        }
+        if (isLive && this.capabilities.update) {
+            actions.appendChild(qEl('button', {
+                class: 'q-btn q-accent', text: 'Creer une version modifiable',
+                onclick: () => this.makeEditable(),
+            }));
             actions.appendChild(qEl('button', {
                 class: 'q-btn', text: 'Desactiver temporairement',
                 onclick: () => this.statusAction('disable', 'Desactiver ce questionnaire ?',
                     'Personne ne pourra le commencer tant qu’il sera desactive.'),
             }));
         }
-        if (status === 'DISABLED' && this.capabilities.publish) {
+        if (qStatut === 'DISABLED' && this.capabilities.publish) {
             actions.appendChild(qEl('button', {
                 class: 'q-btn q-primary', text: 'Reactiver',
                 onclick: () => this.statusAction('reactivate', 'Reactiver ce questionnaire ?',
                     'Il redeviendra accessible selon vos regles d’acces.'),
             }));
         }
-        if (['PUBLISHED', 'DISABLED', 'TEST'].includes(status) && this.capabilities.archive) {
+        if (['PUBLISHED', 'DISABLED', 'TEST'].includes(qStatut) && this.capabilities.archive) {
             actions.appendChild(qEl('button', {
                 class: 'q-btn q-danger', text: 'Archiver',
                 onclick: () => this.statusAction('archive', 'Archiver ce questionnaire ?',
@@ -877,19 +909,23 @@ class QuestionnaireEditor {
             }));
         }
 
-        const cls = status === 'PUBLISHED' ? 'is-published'
-                  : status === 'TEST' ? 'is-test'
-                  : (!ready ? 'is-blocked' : 'is-draft');
-
         box.replaceChildren(qEl('section', { class: `q-publish ${cls}` }, [
-            qEl('header', {}, [qStatus(status), qEl('h2', { text: title })]),
+            qEl('header', {}, [
+                qStatus(draft.status),
+                qEl('h2', { text: title }),
+                live && !isLive
+                    ? qEl('span', { class: 'q-badge q-info', text: `version ${live} en ligne` })
+                    : null,
+            ]),
             qEl('p', { text: detail }),
 
-            ['DRAFT', 'TEST'].includes(status) ? qEl('ul', { class: 'q-checklist' },
+            publishable ? qEl('ul', { class: 'q-checklist' },
                 checks.map(c => qEl('li', { class: c.ok ? 'ok' : 'ko' }, [
                     qEl('span', { class: 'mark', text: c.ok ? '✓' : '✗' }),
                     qEl('span', { text: c.ok ? c.done : c.todo }),
                 ]))) : null,
+
+            impact,
 
             qEl('p', { class: 'q-who' }, [
                 qEl('b', { text: 'Qui y aura acces : ' }), who, ' ',
@@ -901,16 +937,76 @@ class QuestionnaireEditor {
             actions.children.length ? actions : null,
             err,
         ]));
+
+        if (publishable) await this.renderImpact(impact);
+    }
+
+    /* Ce que la publication changerait pour les participants deja passes. */
+    async renderImpact(box) {
+        let data;
+        try { data = await QAPI.get(`${this.version()}/impact/`); }
+        catch (_) { return; }
+
+        const i = data.impact;
+        if (!i.participants) return;
+
+        const lines = [];
+        if (!data.carry_over_enabled) {
+            lines.push(`${i.participants} participant(s) ont deja repondu. Le report des reponses `
+                     + `est desactive : ils repartiront de zero.`);
+        } else {
+            lines.push(`${i.participants} participant(s) ont deja repondu. Leurs reponses seront `
+                     + `reportees sur cette version, et leurs anciens resultats conserves.`);
+            if (i.rescored)  lines.push(`${i.rescored} verront leur score recalcule immediatement.`);
+            if (i.pending)   lines.push(`${i.pending} devront repondre aux nouvelles questions.`);
+            if (i.in_progress) lines.push(`${i.in_progress} sont en cours et continueront sur la nouvelle version.`);
+            if (i.dropped_answers)
+                lines.push(`${i.dropped_answers} reponse(s) seront perdues : la question ou l'option `
+                         + `correspondante n'existe plus.`);
+        }
+
+        box.replaceChildren(qEl('div', {
+            class: `q-callout ${i.dropped_answers || !data.carry_over_enabled ? 'warn' : ''}`,
+            style: 'margin:0',
+        }, [
+            qEl('h3', { text: 'Effet sur les participants' }),
+            ...lines.map(text => qEl('p', { text })),
+            i.new_questions.length
+                ? qEl('p', { class: 'q-help',
+                    text: `Nouvelle(s) question(s) : ${i.new_questions.join(' · ')}` })
+                : null,
+        ]));
     }
 
     async publish() {
-        if (!confirm("Publier ce questionnaire ?\n\n"
-            + "Il deviendra accessible aux participants autorises. Cette version sera figee : "
-            + "pour la modifier ensuite, l'editeur en creera une nouvelle.")) return;
+        const live = this.questionnaire.current_version;
+        let impact = null;
+        try { impact = (await QAPI.get(`${this.version()}/impact/`)).impact; } catch (_) {}
+
+        const lines = [`Publier la version ${this.draft.version_number} ?`, ''];
+        if (live) lines.push(`La version ${live} sera archivee et remplacee.`);
+        lines.push("Cette version sera figee : pour la modifier ensuite, l'editeur en creera une nouvelle.");
+        if (impact && impact.participants) {
+            lines.push('', `${impact.participants} participant(s) ont deja repondu :`);
+            if (impact.rescored)   lines.push(`  · ${impact.rescored} verront leur score recalcule`);
+            if (impact.pending)    lines.push(`  · ${impact.pending} devront repondre aux nouvelles questions`);
+            if (impact.in_progress) lines.push(`  · ${impact.in_progress} en cours continueront sur la nouvelle version`);
+            if (impact.dropped_answers)
+                lines.push(`  · ${impact.dropped_answers} reponse(s) seront perdues`);
+            lines.push('Leurs anciens resultats sont conserves.');
+        }
+        if (!confirm(lines.join('\n'))) return;
+
         const err = document.getElementById('q-publish-error');
         if (err) err.textContent = '';
         try {
-            await this.guard(() => QAPI.post(`${this.version()}/publish/`, {}), 'Questionnaire publie');
+            const data = await this.guard(() => QAPI.post(`${this.version()}/publish/`, {}),
+                                          'Version publiee');
+            const report = data.carry_over;
+            if (report && report.participants) {
+                this.indicator.set('saved',
+                    `Publiee — ${report.participants} participant(s) reportes`);
+            }
             await this.load();
         } catch (error) {
             if (err) err.textContent = error.message;
@@ -985,6 +1081,11 @@ class QuestionnaireEditor {
                 v => p.allow_retry_after_pass = v),
             QForm.check('Peut recommencer apres avoir echoue', p.allow_retry_after_fail,
                 v => p.allow_retry_after_fail = v),
+            QForm.check('Reporter les reponses lors d’une nouvelle version', p.carry_over_answers,
+                v => p.carry_over_answers = v,
+                { help: "A la publication d'une nouvelle version, les participants retrouvent "
+                      + "leurs reponses et n'ont a repondre qu'aux questions ajoutees. "
+                      + "Leurs anciens resultats sont conserves dans tous les cas." }),
 
             qEl('h3', { text: 'Periode de disponibilite' }),
             qEl('div', { class: 'q-grid' }, [

@@ -492,16 +492,22 @@ select { cursor: pointer; }
 /* Barre d'actions collante                                               */
 /* --------------------------------------------------------------------- */
 
+/* Barre d'actions collee en bas de la zone de lecture.
+   Elle reste dans la colonne : toute tentative de la faire deborder sur toute
+   la largeur oblige a compenser en marges negatives, et la moindre erreur
+   pousse les boutons hors de l'ecran. */
 .q-footer {
     position: sticky; bottom: 0; z-index: 5;
     display: flex; gap: .5rem; flex-wrap: wrap; align-items: center;
-    background: var(--paper); border-top: 1px solid var(--line);
-    padding: .8rem clamp(1rem, 4vw, 2rem); margin: 1.5rem -100vw 0;
-    padding-left: max(1rem, calc(50vw - 38rem + 1rem));
-    padding-right: max(1rem, calc(50vw - 38rem + 1rem));
+    max-width: 100%;
+    background: var(--paper);
+    border: 1px solid var(--line); border-bottom: none;
+    border-radius: var(--radius) var(--radius) 0 0;
+    padding: .75rem 1rem; margin: 1.5rem 0 0;
     box-shadow: 0 -2px 12px rgba(26, 34, 51, .07);
 }
-.q-footer .spacer { flex: 1; }
+.q-footer .spacer { flex: 1 1 auto; min-width: 0; }
+.q-footer > * { flex-shrink: 0; }
 
 .q-filters {
     display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-end;
@@ -546,10 +552,16 @@ select { cursor: pointer; }
 .q-result-head .sub { color: #C7D3E4; font-size: .9rem; margin-top: .4rem; }
 .q-result-head .q-badge { margin-top: .8rem; font-size: .82rem; }
 
+@media (max-width: 48rem) {
+    /* l'espaceur mangerait une ligne entiere une fois les boutons replies */
+    .q-footer .spacer { display: none; }
+}
+
 @media (max-width: 40rem) {
     h1 { font-size: 1.5rem; }
     .q-main { padding-bottom: 6rem; }
-    .q-footer { margin-left: -1rem; margin-right: -1rem; padding-left: 1rem; padding-right: 1rem; }
+    .q-footer { padding: .6rem .75rem; }
+    .q-footer .q-btn { flex: 1 1 auto; justify-content: center; }
     .q-result-head .score { font-size: 2.25rem; }
 }
 

@@ -17,7 +17,7 @@ ou en local :
 ```bash
 python manage.py migrate
 python manage.py runserver
-python manage.py test profils.questionnaires --parallel 4    # 213 tests
+python manage.py test profils.questionnaires --parallel 4    # 285 tests
 ```
 
 ### Se donner les droits admin
@@ -48,8 +48,7 @@ user.user_permissions.add(Permission.objects.get(codename = "publish_questionnai
 | `/questionnaires/<id>/` | tout le monde | passer le questionnaire |
 | `/questionnaires/<id>/results/` | tout le monde | mes résultats |
 | `/questionnaires/manage/` | admin | liste + création |
-| `/questionnaires/manage/<id>/` | admin | l'éditeur |
-| `/questionnaires/manage/<id>/versions/` | admin | historique, diff, restauration |
+| `/questionnaires/manage/<id>/` | admin | l'éditeur (questions, réglages, notation, accès, versions) |
 | `/questionnaires/manage/<id>/attempts/` | admin | tentatives, résultats, stats |
 | `/questionnaires/manage/<id>/preview/<n>/` | admin | prévisualisation |
 
@@ -103,6 +102,28 @@ exactement ça pour le prouver.
 En plus, chaque réponse embarque un **snapshot** (l'énoncé et les libellés
 au moment où la personne a répondu), donc on peut rejouer une vieille
 tentative même des années après.
+
+### 2 bis. Mais les participants ne repartent pas de zéro
+
+Quand tu publies une nouvelle version, leurs réponses sont **reportées**
+dessus (appariées par clé stable, donc un libellé modifié ne casse rien) :
+
+| Situation du participant | Ce qui se passe |
+|---|---|
+| Il était **en cours** | Sa tentative passe sur la nouvelle version, il garde ses réponses et découvre les nouvelles questions |
+| Il avait **terminé**, rien de nouveau à répondre | Une nouvelle tentative est créée, remplie, et **re-notée aussitôt** |
+| Il avait **terminé**, tu as ajouté une question | Une nouvelle tentative l'attend, ses anciennes réponses déjà dedans ; il ne complète que ce qui manque |
+
+**Son ancien résultat n'est jamais touché.** Il en obtient simplement un
+nouveau à côté. Une réponse dont la question ou l'option a disparu est
+abandonnée, et comptée dans le rapport.
+
+Avant de publier, l'éditeur t'annonce l'effet exact : combien de participants,
+combien seront re-notés, combien devront compléter, combien de réponses seront
+perdues.
+
+Ça se désactive dans **Réglages → « Reporter les réponses lors d'une nouvelle
+version »**, ou ponctuellement en passant `carry_over: false` à la publication.
 
 ### 3. Les IDs sont stables
 
@@ -165,6 +186,7 @@ DELETE /api/questionnaires/:id/                          archive si utilisé, su
 POST   /api/questionnaires/:id/duplicate/
 POST   /api/questionnaires/:id/versions/editable/        dériver une version modifiable
 GET    /api/questionnaires/:id/versions/compare/?from=1&to=3
+GET    /api/questionnaires/:id/versions/:n/impact/         effet du report avant publication
 POST   /api/questionnaires/:id/versions/:n/publish/
 POST   /api/questionnaires/:id/versions/:n/restore/
 POST   /api/questionnaires/:id/versions/:n/invalidate/
@@ -186,6 +208,7 @@ services.py         tentatives : start / save / finish
 scoring.py          calcul des scores
 conditions.py       questions conditionnelles
 versioning.py       créer / publier / comparer / restaurer
+carryover.py        report des réponses d'une version à la suivante
 access.py           qui peut voir, qui peut commencer
 permissions.py      droits admin (+ pont avec le Role de mainapp)
 editing.py          CRUD questions/options avec validation
@@ -321,6 +344,12 @@ Trois choses distinctes se règlent séparément :
 - **Une version en TEST est déjà gelée.** Pour corriger, il faut en dériver une
   nouvelle. C'est voulu (une tentative de test doit rester reproductible), mais
   ça surprend.
+- **Publier une version en archive une autre**, mais ceux qui étaient en train
+  de répondre dessus peuvent terminer : une version archivée accepte encore les
+  tentatives déjà ouvertes. Une version *désactivée* ou *invalidée*, non — c'est
+  une décision délibérée.
+- **Une tentative reportée ne consomme pas de tentative.** Sinon publier une
+  nouvelle version enfermerait dehors tous ceux qui ont un quota de 1.
 - **Le type `city` refuse d'être créé sans liste de villes.** Pas de saisie
   libre : `{"cities": [{"code": "PAR", "name": "Paris"}]}`.
 - **`DELETE` n'efface pas** un questionnaire qui a des tentatives, il l'archive.

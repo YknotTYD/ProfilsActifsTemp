@@ -49,6 +49,7 @@ urlpatterns = [
     path("api/questionnaires/<int:pk>/versions/compare/",        api_admin.version_compare),
     path("api/questionnaires/<int:pk>/versions/editable/",       api_admin.version_editable),
     path("api/questionnaires/<int:pk>/versions/<int:number>/",   api_admin.version_item),
+    path("api/questionnaires/<int:pk>/versions/<int:number>/impact/",     api_admin.version_impact),
     path("api/questionnaires/<int:pk>/versions/<int:number>/publish/",    api_admin.version_publish),
     path("api/questionnaires/<int:pk>/versions/<int:number>/test/",       api_admin.version_test),
     path("api/questionnaires/<int:pk>/versions/<int:number>/invalidate/", api_admin.version_invalidate),

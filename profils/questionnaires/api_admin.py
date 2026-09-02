@@ -36,6 +36,7 @@ from .versioning  import (
 SETTINGS_FIELDS = (
     "max_attempts", "cooldown_seconds", "time_limit_seconds", "attempt_expiry_seconds",
     "allow_retry_after_pass", "allow_retry_after_fail", "keep_previous_attempts",
+    "carry_over_answers",
     "answer_edit_mode", "navigation_mode", "allow_back",
 )
 
@@ -145,7 +146,7 @@ def _update(request, questionnaire):
             continue
         value = payload[field]
         if field in ("allow_retry_after_pass", "allow_retry_after_fail",
-                     "keep_previous_attempts", "allow_back"):
+                     "keep_previous_attempts", "allow_back", "carry_over_answers"):
             value = get_bool(payload, field)
         elif field in ("answer_edit_mode", "navigation_mode"):
             valid = dict(c.ANSWER_EDIT_MODES if field == "answer_edit_mode" else c.NAVIGATION_MODES)
@@ -386,13 +387,31 @@ def version_compare(request, pk):
     return ok({"diff": compare_versions(left, right)})
 
 
+@api(("GET",), perm = c.PERM_VIEW)
+def version_impact(request, pk, number):
+    """Ce que publier cette version changerait pour les participants."""
+    from .carryover import preview as carry_preview
+
+    version = _version(pk, number)
+    return ok({
+        "carry_over_enabled": version.questionnaire.carry_over_answers,
+        "impact": carry_preview(version.questionnaire, version),
+    })
+
+
 @api(("POST",), perm = c.PERM_PUBLISH)
 def version_publish(request, pk, number):
     version = _version(pk, number)
-    publish_version(version, actor = request.user)
+    payload = body(request)
+
+    carry = payload.get("carry_over")
+    publish_version(version, actor = request.user,
+                    carry_over = None if carry is None else bool(carry))
+
     return ok({
-        "version":       admin_version(version),
-        "questionnaire": admin_questionnaire(version.questionnaire),
+        "version":        admin_version(version),
+        "questionnaire":  admin_questionnaire(version.questionnaire),
+        "carry_over":     getattr(version, "carry_over_report", None),
     })
 
 

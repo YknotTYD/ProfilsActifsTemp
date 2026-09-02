@@ -64,6 +64,10 @@ class Questionnaire(models.Model):
     allow_retry_after_pass = models.BooleanField(default = False)
     allow_retry_after_fail = models.BooleanField(default = True)
     keep_previous_attempts = models.BooleanField(default = True)
+    carry_over_answers     = models.BooleanField(
+        default = True,
+        help_text = "reporter les reponses des participants lors d'une nouvelle version"
+    )
 
     # -- regles de modification des reponses (section 16) ------------------- #
     answer_edit_mode = models.CharField(
@@ -224,7 +228,19 @@ class QuestionnaireVersion(models.Model):
 
     @property
     def accepts_answers(self) -> bool:
+        """Peut-on demarrer une tentative sur cette version ?"""
         return self.status not in c.CLOSED_VERSION_STATUSES
+
+    @property
+    def allows_continuation(self) -> bool:
+        """Une tentative deja ouverte peut-elle encore etre completee ?
+
+        Une version archivee l'a generalement ete parce qu'une version plus
+        recente a ete publiee : ceux qui etaient en train de repondre doivent
+        pouvoir terminer. Seules une desactivation ou une invalidation, qui sont
+        des decisions deliberees, ferment la porte.
+        """
+        return self.status not in (c.STATUS_DISABLED, c.STATUS_INVALIDATED)
 
     @property
     def scoring(self) -> dict:

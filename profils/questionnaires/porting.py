@@ -32,7 +32,8 @@ OPTION_FIELDS   = ("order", "text", "description", "value", "is_correct")
 
 ATTEMPT_FIELDS = ("max_attempts", "cooldown_seconds", "time_limit_seconds",
                   "attempt_expiry_seconds", "allow_retry_after_pass",
-                  "allow_retry_after_fail", "keep_previous_attempts")
+                  "allow_retry_after_fail", "keep_previous_attempts",
+                  "carry_over_answers")
 ANSWER_FIELDS  = ("answer_edit_mode", "navigation_mode", "allow_back")
 
 
