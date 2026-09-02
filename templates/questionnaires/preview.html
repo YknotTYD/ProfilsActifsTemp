@@ -1,5 +1,5 @@
 {% extends "questionnaires/base.html" %}
-{% load static %}
+{% load static %}{% load versioned_static %}
 {% block title %}Previsualisation{% endblock %}
 
 {% block crumbs %}
@@ -31,5 +31,5 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="{% static 'questionnaire_preview.js' %}"></script>
+<script src="{% vstatic 'questionnaire_preview.js' %}"></script>
 {% endblock %}

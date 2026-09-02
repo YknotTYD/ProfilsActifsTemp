@@ -1,5 +1,5 @@
 {% extends "questionnaires/base.html" %}
-{% load static %}
+{% load static %}{% load versioned_static %}
 {% block title %}Tentatives — {{ questionnaire.title }}{% endblock %}
 
 {% block crumbs %}
@@ -48,5 +48,5 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="{% static 'questionnaire_attempts.js' %}"></script>
+<script src="{% vstatic 'questionnaire_attempts.js' %}"></script>
 {% endblock %}
