@@ -16,14 +16,13 @@ elif [ "$1" = "shell" ]; then
 elif [ "$1" = "run" ]; then
     PORT="${2:-8080}"
     echo "Lancement sur le port $PORT"
-    trap 'exit 0' SIGINT SIGTERM
-    PORT="$PORT" docker compose up --watch
+    PORT="$PORT" docker compose up --watch --build
     docker compose down
     exit 0
 elif [ "$1" = "start" ]; then
     PORT="${2:-8080}"
     echo "Lancement sur le port $PORT"
-    PORT="$PORT" docker compose up --watch
+    PORT="$PORT" docker compose up --watch --build
     exit 0
 elif [ "$1" = "stop" ]; then
     docker kill $NAME
