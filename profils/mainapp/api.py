@@ -6,8 +6,8 @@ from django.contrib.auth        import authenticate, login as login_
 from .models                    import Role, VideoLink, Reaction
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
-
 from . import constants
+from urllib.parse import urlencode
 import json
 
 # TODO: RESTful email on login/logout
@@ -21,12 +21,14 @@ def register(request: HttpRequest) -> HttpResponse:
         return redirect("/")
 
     if User.objects.filter(username = request.POST["username"]).first():
-        return redirect("/login")
+        query = urlencode({"error": "Ce nom d'utilisateur est déjà pris.", "username": request.POST["username"]})
+        return redirect(f"/register/?{query}")
 
     try:
         validate_password(request.POST["password"])
-    except ValidationError:
-        return redirect("/register")
+    except ValidationError as e:
+        query = urlencode({"error": " ".join(e.messages), "username": request.POST["username"]})
+        return redirect(f"/register/?{query}")
 
     user = User.objects.create_user(
         request.POST["username"],
