@@ -75,6 +75,12 @@ jobs:
             echo "| Admin | admin_demo | $DEMO_PASSWORD |"
             echo "| Recruiter | julie.marchand | $DEMO_PASSWORD |"
             echo "| JobSeeker | camille.dubois | $DEMO_PASSWORD |"
+            echo " "
+
+            echo "la clé secrete dans le .env est généré aléatoirement lors de la demo ce n'est pas une vraie"
+
+            echo "# Lancement"
+            echo "./setup run (port)"
           } | tee DEMO_ACCOUNTS.md >> "$GITHUB_STEP_SUMMARY"
 
       - name: Remove bytecode caches before packaging
@@ -101,7 +107,6 @@ jobs:
             setup
             README.md
             DEMO_ACCOUNTS.md
-            .env.example
             .env
           retention-days: 30
           if-no-files-found: error
