@@ -93,6 +93,5 @@ class VideoLinkAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Role)
-admin.site.register(VideoLink)
 admin.site.register(VideoFile)
 admin.site.register(Reaction)

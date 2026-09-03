@@ -13,8 +13,12 @@ from . import constants
 # TODO: video -> videolink
 
 def get_video_filepaths(request: HttpRequest) -> list:
-    files = list(VideoFile.objects.all())
-    return [(f, False, False, 0) for f in files]
+    # `VideoFile` n'a pas encore de champ de moderation (voir models.py) :
+    # tant qu'il n'existe pas, un fichier televerse ne doit pas atterrir
+    # dans le feed recruteur/admin sans avoir ete verifie -- exactement ce
+    # que la moderation des VideoLink existe pour empecher. A rebrancher des
+    # que VideoFile aura son propre statut.
+    return []
 
 def get_videos(request: HttpResponse) -> list[tuple[int, int]]:
     """Videos du feed recruteur/admin.

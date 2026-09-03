@@ -51,6 +51,8 @@
           <button type="submit" class="btn-primary">UPLOADER</button>
         </form>
 
+        {% include "upload.html" %}
+
         {% if my_video %}
         <div class="mt-5 text-center">
           {% if my_video.status == "PENDING" %}
@@ -69,41 +71,14 @@
           </form>
         </div>
         {% endif %}
-        {% elif role == "Recruiter" or role == "Admin" %} {% if videos_ld %}
-        <div class="feed mt-5">
-          {% for vid, liked, disliked in videos_ld %}
-          <div class="feed-item">
-            <iframe
-              src="{{ vid.url }}?autoplay=1&mute=1&playsinline=1&controls=0"
-              referrerpolicy="strict-origin-when-cross-origin"
-              allow="autoplay; encrypted-media"
-              allowfullscreen
-            >
-            </iframe>
-            <div class="feed-caption">
-              <a href="/profile/{{ vid.user }}/"><strong>@{{ vid.user }}</strong></a>
-            </div>
-            <div class="feed-actions">
-              <button
-                class="feed-react-btn react-btn {% if liked %}is-active-like{% endif %}"
-                data-video-id="{{ vid.id }}"
-                data-reaction="like"
-              >
-            </div>
-            <button type="submit" class="btn-primary">UPLOADER</button>
-          </form>
-
-        {% include "upload.html" %}
-
-        </div>
-        {% elif role == "Recruiter" %}
+        {% elif role == "Recruiter" or role == "Admin" %}
         <div class="dash-panel">
           <h2 class="dash-panel-title">Vidéos des candidats</h2>
           <p class="dash-panel-desc">
             Découvrez les profils actifs et réagissez à leurs vidéos de
             présentation.
           </p>
-          {% if videos_ldl %}
+          {% if videos_ld %}
             {% include "feed.html" %}
           {% else %}
           <div class="dash-empty">
