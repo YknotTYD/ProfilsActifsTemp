@@ -14,12 +14,7 @@
     <link rel="stylesheet" href="{% static 'style.css' %}" />
   </head>
   <body>
-    <div class="brand-header">
-      <a href="/" class="brand-link">
-        <img src="{% static 'logo.svg' %}" alt="" width="24" height="24" />
-        <span class="wordmark">ProfilsActifs</span>
-      </a>
-    </div>
+    {% include "partials/_navbar.html" %}
 
     <div class="dashboard-page">
       <div class="card">
@@ -49,5 +44,6 @@
         <div class="foot"><a href="/">Retour à l'accueil</a></div>
       </div>
     </div>
+    {% include "partials/_footer.html" %}
   </body>
 </html>

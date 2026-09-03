@@ -1,0 +1,20 @@
+{% load static %}
+<div class="brand-header">
+    <a href="/" class="brand-link">
+        <img src="{% static 'logo.svg' %}" alt="" width="24" height="24" />
+        <span class="wordmark">ProfilsActifs</span>
+    </a>
+    <nav class="flex items-center gap-6">
+        <a href="/profiles/" class="btn-ghost">RECHERCHER DES PROFILS</a>
+        {% if user.is_authenticated %}
+            <a href="/profile/" class="btn-ghost">MON PROFIL</a>
+            <a href="/questionnaires/" class="btn-ghost">QUESTIONNAIRES</a>
+            {% if can_manage %}<a href="/questionnaires/manage/" class="btn-ghost">ADMINISTRATION</a>{% endif %}
+            <a href="/logout" class="btn-ghost">DÉCONNEXION</a>
+            <a href="/profiles/edit/" class="btn-primary-sm">MODIFIER MON PROFIL</a>
+        {% else %}
+            <a href="/login/" class="btn-ghost">SE CONNECTER</a>
+            <a href="/register/" class="btn-primary-sm">CRÉER MON PROFIL</a>
+        {% endif %}
+    </nav>
+</div>
