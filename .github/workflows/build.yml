@@ -43,8 +43,11 @@ jobs:
         run: uv sync --frozen
 
       - name: Generate build-only secret key
-        run: echo "DJANGO_SECRET_KEY=$(uv run python -c 'import secrets; print(secrets.token_urlsafe(50))')" >> "$GITHUB_ENV"
-
+        run: |
+          SECRET_KEY=$(uv run python -c 'import secrets; print(secrets.token_urlsafe(50))')
+          echo "DJANGO_SECRET_KEY=$SECRET_KEY" >> "$GITHUB_ENV"
+          echo "DJANGO_SECRET_KEY=$SECRET_KEY" >> .env
+    
       - name: Django system check
         run: uv run python manage.py check
 
