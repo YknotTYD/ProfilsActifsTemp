@@ -65,12 +65,16 @@ jobs:
             echo "# Comptes de demonstration"
             echo
             echo "Ces comptes sont deja crees dans \`db.sqlite3\`, pret a l'emploi."
+            echo "Un profil complet par role ci-dessous ; 15 autres comptes de"
+            echo "demonstration (12 candidats, 2 recruteurs supplementaires) sont"
+            echo "deja crees avec le meme mot de passe, pour la recherche et les"
+            echo "questionnaires."
             echo
             echo "| Role | Utilisateur | Mot de passe |"
             echo "|------|-------------|---------------|"
-            echo "| Admin | demo.admin | $DEMO_PASSWORD |"
-            echo "| Recruiter | demo.recruteur | $DEMO_PASSWORD |"
-            echo "| JobSeeker | demo.candidat | $DEMO_PASSWORD |"
+            echo "| Admin | admin_demo | $DEMO_PASSWORD |"
+            echo "| Recruiter | julie.marchand | $DEMO_PASSWORD |"
+            echo "| JobSeeker | camille.dubois | $DEMO_PASSWORD |"
           } | tee DEMO_ACCOUNTS.md >> "$GITHUB_STEP_SUMMARY"
 
       - name: Remove bytecode caches before packaging
