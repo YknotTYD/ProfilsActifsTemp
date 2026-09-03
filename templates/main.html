@@ -29,29 +29,65 @@
 
       <div class="dash-grid">
         {% if role == "JobSeeker" %}
-        <div class="dash-panel">
-          <h2 class="dash-panel-title">Votre vidéo de présentation</h2>
-          <p class="dash-panel-desc">
-            Ajoutez le lien de votre vidéo pour la partager avec les
-            recruteurs qui consultent votre profil.
+        <form
+          method="post"
+          action="/api/upload/video/?camefrom=/"
+          class="grid gap-[14px] mt-[14px]"
+        >
+          {% csrf_token %}
+          <div class="field">
+            <input
+              id="video-url"
+              name="url"
+              placeholder=" "
+              autocomplete="off"
+              required
+              class="peer field-input"
+            />
+            <label for="video-url" class="field-label"
+              >URL de votre vidéo de présentation</label
+            >
+          </div>
+          <button type="submit" class="btn-primary">UPLOADER</button>
+        </form>
+
+        {% if my_video %}
+        <div class="mt-5 text-center">
+          {% if my_video.status == "PENDING" %}
+          <p class="text-[#4a4a4a]">Votre video est en attente de moderation.</p>
+          {% elif my_video.status == "APPROVED" %}
+          <p class="text-[#4a4a4a]">Votre video a ete validee et est visible des recruteurs.</p>
+          {% elif my_video.status == "REJECTED" %}
+          <p class="text-[#4a4a4a]">
+            Votre video a ete refusee{% if my_video.rejection_reason %} : {{ my_video.rejection_reason }}{% endif %}
           </p>
-          <form
-            method="post"
-            action="/api/upload/video/?camefrom=/"
-            class="dash-form"
-          >
+          {% endif %}
+          <form method="post" action="/api/delete/video/?camefrom=/" class="mt-2">
             {% csrf_token %}
-            <div class="field">
-              <input
-                id="video-url"
-                name="url"
-                placeholder=" "
-                autocomplete="off"
-                required
-                class="peer field-input"
-              />
-              <label for="video-url" class="field-label"
-                >URL de votre vidéo</label
+            <input type="hidden" name="video_id" value="{{ my_video.id }}" />
+            <button type="submit" class="link-btn">Supprimer ma video</button>
+          </form>
+        </div>
+        {% endif %}
+        {% elif role == "Recruiter" or role == "Admin" %} {% if videos_ld %}
+        <div class="feed mt-5">
+          {% for vid, liked, disliked in videos_ld %}
+          <div class="feed-item">
+            <iframe
+              src="{{ vid.url }}?autoplay=1&mute=1&playsinline=1&controls=0"
+              referrerpolicy="strict-origin-when-cross-origin"
+              allow="autoplay; encrypted-media"
+              allowfullscreen
+            >
+            </iframe>
+            <div class="feed-caption">
+              <a href="/profile/{{ vid.user }}/"><strong>@{{ vid.user }}</strong></a>
+            </div>
+            <div class="feed-actions">
+              <button
+                class="feed-react-btn react-btn {% if liked %}is-active-like{% endif %}"
+                data-video-id="{{ vid.id }}"
+                data-reaction="like"
               >
             </div>
             <button type="submit" class="btn-primary">UPLOADER</button>
