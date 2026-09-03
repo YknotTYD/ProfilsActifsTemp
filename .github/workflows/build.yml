@@ -2,7 +2,7 @@ name: Build and Package
 
 on:
   push:
-    branches: '**'
+    branches: [main]
 
 jobs:
   build:
@@ -11,34 +11,14 @@ jobs:
       - name: Checkout du code
         uses: actions/checkout@v4
 
-      - name: Installer uv
-        uses: astral-sh/setup-uv@v3
+      - name: Construire l'image Docker
+        run: docker build -t profils-app:latest .
 
-      - name: Installer Python
-        run: uv python install 3.12
-
-      - name: Installer les dépendances
-        run: uv sync --frozen
-
-      - name: Ajouter PyInstaller
-        run: uv add --dev pyinstaller
-
-      - name: Collecter les fichiers statiques
-        run: uv run python manage.py collectstatic --noinput
-
-      - name: Construire l'exécutable Linux
-        run: |
-          uv run pyinstaller --onefile --clean \
-            --add-data "db.sqlite3:." \
-            --add-data "collectstatic:collectstatic" \
-            --add-data "templates:templates" \
-            run_server.py
-
-      - name: Rendre l'exécutable exécutable
-        run: chmod +x dist/run_server
+      - name: Exporter l'image en fichier tar
+        run: docker save profils-app:latest -o profils-app.tar
 
       - name: Publier l'artefact
         uses: actions/upload-artifact@v4
         with:
-          name: django-app-linux
-          path: dist/run_server
+          name: profils-app-docker
+          path: profils-app.tar

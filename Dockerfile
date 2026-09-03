@@ -1,30 +1,20 @@
-# syntax=docker/dockerfile:1
-
-FROM python:3.14-alpine AS builder
-
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
-
-RUN pip install --quiet --root-user-action=ignore uv
-ENV UV_LINK_MODE=copy
+FROM python:3.12-slim
 
 WORKDIR /app
 
-RUN --mount=type=cache,target=/root/.cache/uv \
-    --mount=type=bind,source=uv.lock,target=uv.lock \
-    --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
-    uv sync --frozen --no-install-project
+# Installer uv
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
-FROM python:3.14-alpine
+# Copier les fichiers de dépendances et installer
+COPY pyproject.toml uv.lock ./
+RUN uv sync --frozen --no-dev
 
-ENV PYTHONUNBUFFERED=1
-ENV PATH="/app/.venv/bin:$PATH"
-
-WORKDIR /app
-
-COPY --from=builder /app/.venv /app/.venv
+# Copier le reste du projet, y compris db.sqlite3
 COPY . .
 
-EXPOSE 8080
+# Collecter les fichiers statiques
+RUN uv run python manage.py collectstatic --noinput
 
-CMD python manage.py makemigrations && python manage.py migrate && python manage.py collectstatic --noinput && python manage.py runserver 0.0.0.0:8080
+EXPOSE 8000
+
+CMD ["uv", "run", "python", "manage.py", "runserver", "0.0.0.0:8000"]
