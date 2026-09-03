@@ -1,11 +1,13 @@
-{% extends "questionnaires/base.html" %} {% load static %}{% load
-versioned_static %} {% block title %}{{ questionnaire.title }}{% endblock %} {%
-block crumbs %}
+{% extends "questionnaires/base.html" %}
+{% load static %}
+{% load versioned_static %}
+{% block title %}{{ questionnaire.title }}{% endblock %}
+{% block crumbs %}
 <nav class="q-crumbs">
-  <a href="/questionnaires/manage/">Administration</a> <span>/</span> {{
-  questionnaire.title }}
+  <a href="/questionnaires/manage/">Administration</a> <span>/</span> {{ questionnaire.title }}
 </nav>
-{% endblock %} {% block content %}
+{% endblock %}
+{% block content %}
 <div id="q-editor" data-questionnaire="{{ questionnaire.id }}">
   <div class="q-pagehead">
     <div>

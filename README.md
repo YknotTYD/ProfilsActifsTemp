@@ -27,6 +27,23 @@ Logs du site
   ./setup logs
 ```
 
+## Comptes de demonstration
+
+Chaque push sur `main` declenche le workflow [`Build`](.github/workflows/build.yml) :
+il installe les dependances, compile le CSS, applique les migrations, cree les
+comptes de demonstration ci-dessous puis publie l'application prete a l'emploi
+(y compris sa base `db.sqlite3` deja peuplee) en artefact de build sur l'onglet
+Actions.
+
+| Role      | Utilisateur     | Mot de passe |
+|-----------|-----------------|--------------|
+| Admin     | `demo.admin`     | `Demo1234!`  |
+| Recruiter | `demo.recruteur` | `Demo1234!`  |
+| JobSeeker | `demo.candidat`  | `Demo1234!`  |
+
+Pour les regenerer localement : `python manage.py seed_demo` (le mot de passe
+peut etre change via la variable d'environnement `DEMO_PASSWORD`).
+
 
 ## Tech Stack
 
