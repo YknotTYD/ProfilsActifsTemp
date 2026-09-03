@@ -497,6 +497,34 @@ def admin_video_reject(request, pk):
 
 
 @api(("GET",), perm = c.PERM_MODERATE)
+def admin_video_rejections(request):
+    """Historique des videos refusees (spec "Historique de moderation").
+
+    `?archived=1` renvoie les archives (au-dela de la fenetre vivante) ; sinon
+    les refus recents. Chaque entree porte le motif, l'auteur et la date, plus
+    le statut *actuel* de la video (une video refusee puis re-soumise est
+    de nouveau en attente -- l'historique, lui, garde la trace du refus).
+    """
+    archived = (request.GET.get("archived") or "").lower() in ("1", "true", "yes", "on")
+    events = list(moderation.rejection_history(archived = archived)[:200])
+    return ok({
+        "archived":       archived,
+        "retention_days": c.rejection_history_days(),
+        "rejections": [{
+            "video_id":       event.video_id,
+            "title":          event.video.title,
+            "username":       event.video.profile.username,
+            "file_url":       event.video.file_url,
+            "reason":         event.reason,
+            "rejected_at":    event.created_at.isoformat(),
+            "rejected_by":    event.actor.username if event.actor_id else event.source,
+            "current_status": event.video.status,
+            "archived_at":    event.archived_at.isoformat() if event.archived_at else None,
+        } for event in events],
+    })
+
+
+@api(("GET",), perm = c.PERM_MODERATE)
 def admin_video_history(request, pk):
     video  = _admin_video(pk)
     events = video.moderation_events.select_related("actor")

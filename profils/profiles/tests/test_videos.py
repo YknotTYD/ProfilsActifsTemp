@@ -8,9 +8,11 @@ respecte les memes regles de visibilite que le reste, et que le chemin
 """
 
 import json
+from datetime import timedelta
 
 from django.contrib.auth.models import AnonymousUser
 from django.test import Client, TestCase
+from django.utils import timezone
 
 from profils.profiles import constants as c
 from profils.profiles import moderation, serializers, services
@@ -639,3 +641,68 @@ class FeedEngagementTests(TestCase):
         self.video.status = c.VIDEO_DRAFT
         self.video.save()
         self.assertEqual(self._react("like").status_code, 404)
+
+
+class RejectionHistoryTests(TestCase):
+    """Console de moderation : historique des refus, 7 jours puis archives."""
+
+    def setUp(self):
+        self.profile = make_profile("refuse")
+        self.admin   = make_admin("moderateur")
+        self.client  = Client()
+        self.client.force_login(self.admin)
+
+    def _reject(self, title = "V", *, days_ago = 0):
+        from profils.profiles.models import VideoModerationEvent
+        video = services.submit_video_link(self.profile, {
+            "title": title, "file_url": "https://exemple.test/v.mp4",
+        })
+        services.reject_video(video, "hors sujet", user = self.admin)
+        if days_ago:
+            old = timezone.now() - timedelta(days = days_ago)
+            VideoModerationEvent.objects.filter(
+                video = video, new_status = c.VIDEO_REJECTED,
+            ).update(created_at = old)
+        return video
+
+    def test_a_recent_rejection_shows_in_the_live_window(self):
+        self._reject("Recente")
+        rows = list(moderation.rejection_history(archived = False))
+        self.assertEqual([e.video.title for e in rows], ["Recente"])
+
+    def test_an_old_rejection_is_archived_on_read(self):
+        self._reject("Ancienne", days_ago = 9)
+        self.assertEqual(list(moderation.rejection_history(archived = False)), [])
+        archived = list(moderation.rejection_history(archived = True))
+        self.assertEqual([e.video.title for e in archived], ["Ancienne"])
+
+    def test_the_archive_command_moves_stale_rejections(self):
+        self._reject("Ancienne", days_ago = 9)
+        self._reject("Recente")
+        moved = moderation.archive_stale_rejections()
+        self.assertEqual(moved, 1)
+
+    def test_the_endpoint_requires_the_moderation_permission(self):
+        self.client.force_login(make_user("simple"))
+        self.assertEqual(
+            self.client.get("/api/profiles/admin/videos/rejected/").status_code, 403,
+        )
+
+    def test_the_endpoint_splits_recent_and_archived(self):
+        self._reject("Ancienne", days_ago = 9)
+        self._reject("Recente")
+
+        recent = self.client.get("/api/profiles/admin/videos/rejected/").json()
+        self.assertEqual([r["title"] for r in recent["rejections"]], ["Recente"])
+        self.assertEqual(recent["retention_days"], 7)
+
+        archived = self.client.get("/api/profiles/admin/videos/rejected/?archived=1").json()
+        self.assertEqual([r["title"] for r in archived["rejections"]], ["Ancienne"])
+
+    def test_history_keeps_the_rejection_after_a_resubmission(self):
+        video = self._reject("Re-soumise")
+        services.resubmit_video(video, user = self.profile.user)
+
+        rows = list(moderation.rejection_history(archived = False))
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0].video.status, c.VIDEO_PENDING)

@@ -72,6 +72,7 @@ urlpatterns = [
     # messagerie et notifications")
     # ------------------------------------------------------------------ #
     path("api/profiles/admin/videos/pending/",        api.admin_video_queue),
+    path("api/profiles/admin/videos/rejected/",       api.admin_video_rejections),
     path("api/profiles/admin/videos/<int:pk>/approve/", api.admin_video_approve),
     path("api/profiles/admin/videos/<int:pk>/reject/",  api.admin_video_reject),
     path("api/profiles/admin/videos/<int:pk>/history/", api.admin_video_history),

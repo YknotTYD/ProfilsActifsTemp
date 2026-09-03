@@ -181,10 +181,19 @@ class VideoModerationEvent(models.Model):
     reason     = models.TextField(blank = True, default = "")
 
     created_at = models.DateTimeField(auto_now_add = True)
+    #: renseigne quand l'evenement sort de la fenetre d'historique "vivant"
+    #: (par defaut 7 jours, voir `constants.REJECTION_HISTORY_DAYS`). La ligne
+    #: n'est jamais supprimee -- elle bascule juste dans l'onglet "archives"
+    #: de la console de moderation. Pose par `archive_moderation_history` ou,
+    #: paresseusement, a la lecture de la liste des refus.
+    archived_at = models.DateTimeField(null = True, blank = True)
 
     class Meta:
         ordering = ("-created_at",)
-        indexes  = (models.Index(fields = ["video", "-created_at"]),)
+        indexes  = (
+            models.Index(fields = ["video", "-created_at"]),
+            models.Index(fields = ["new_status", "archived_at", "-created_at"]),
+        )
 
     def __str__(self):
         return f"VideoModerationEvent<{self.video_id}:{self.old_status}->{self.new_status}>"
