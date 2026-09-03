@@ -1,0 +1,53 @@
+{% load static %}
+
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quiz - ProfilsActifs</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Spectral:wght@400;500;600;700&family=Spectral:ital@1&family=Montserrat:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="{% static 'style.css' %}" />
+  </head>
+  <body>
+    <div class="brand-header">
+      <a href="/" class="brand-link">
+        <img src="{% static 'logo.svg' %}" alt="" width="24" height="24" />
+        <span class="wordmark">ProfilsActifs</span>
+      </a>
+    </div>
+
+    <div class="dashboard-page">
+      <div class="card">
+        <h1 class="card-title">Quiz disponibles</h1>
+
+        {% if questionnaires %}
+        <div class="grid gap-[14px]">
+          {% for q in questionnaires %}
+          <div class="flex items-center justify-between gap-4 border border-[#ececec] rounded-lg px-5 py-4">
+            <div>
+              <p class="font-title font-bold text-[17px] text-primary">{{ q.title }}</p>
+              {% if q.description %}
+              <p class="text-sm text-[#4a4a4a] mt-1">{{ q.description }}</p>
+              {% endif %}
+              <p class="text-xs text-[#9b9b9b] mt-1">
+                {{ q.question_count }} question{{ q.question_count|pluralize }}
+              </p>
+            </div>
+            <a href="/questionnaires/{{ q.id }}/" class="btn-primary-sm shrink-0">COMMENCER</a>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-center text-[#4a4a4a]">Aucun quiz disponible pour le moment.</p>
+        {% endif %}
+
+        <div class="foot"><a href="/">Retour à l'accueil</a></div>
+      </div>
+    </div>
+  </body>
+</html>

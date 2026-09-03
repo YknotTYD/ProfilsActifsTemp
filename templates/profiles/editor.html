@@ -1,0 +1,53 @@
+{% extends "profiles/base.html" %}
+{% block title %}Modifier mon profil{% endblock %}
+
+{% comment %}
+Interface d'edition (section 22), par onglets. Chaque onglet dialogue avec
+l'API des que l'utilisateur modifie un champ ; rien n'est valide ici, tout
+est revalide par le serveur qui repond avec l'etat sauvegarde.
+{% endcomment %}
+
+{% block content %}
+<div class="p-pagehead">
+    <h1>Modifier mon profil</h1>
+    <p class="p-muted">
+        <a href="/profile/{{ username }}/">Voir mon profil public</a> ·
+        <a href="/profile/{{ username }}/?preview=public">Previsualiser comme un visiteur</a>
+    </p>
+</div>
+
+<div class="p-actions" style="justify-content:space-between;margin-bottom:1rem">
+    <nav class="p-tabs" id="p-tabs">
+        <button class="p-tab p-tab-active" data-tab="general">Informations generales</button>
+        <button class="p-tab" data-tab="skills">Competences</button>
+        <button class="p-tab" data-tab="experiences">Experiences</button>
+        <button class="p-tab" data-tab="education">Formations</button>
+        <button class="p-tab" data-tab="certifications">Certifications</button>
+        <button class="p-tab" data-tab="languages">Langues</button>
+        <button class="p-tab" data-tab="projects">Projets</button>
+        <button class="p-tab" data-tab="availability">Disponibilite</button>
+        <button class="p-tab" data-tab="videos">Videos</button>
+        <button class="p-tab" data-tab="privacy">Confidentialite</button>
+    </nav>
+    <span class="p-save-state" id="p-save" data-state="idle"><span class="p-dot"></span><span id="p-save-label">Pret</span></span>
+</div>
+
+<div id="p-tab-general" class="p-tabpanel"></div>
+<div id="p-tab-skills" class="p-tabpanel" hidden></div>
+<div id="p-tab-experiences" class="p-tabpanel" hidden></div>
+<div id="p-tab-education" class="p-tabpanel" hidden></div>
+<div id="p-tab-certifications" class="p-tabpanel" hidden></div>
+<div id="p-tab-languages" class="p-tabpanel" hidden></div>
+<div id="p-tab-projects" class="p-tabpanel" hidden></div>
+<div id="p-tab-availability" class="p-tabpanel" hidden></div>
+<div id="p-tab-videos" class="p-tabpanel" hidden></div>
+<div id="p-tab-privacy" class="p-tabpanel" hidden></div>
+
+{{ meta|json_script:"p-meta" }}
+{% endblock %}
+
+{% block scripts %}
+{% load versioned_static %}
+<script src="{% vstatic 'questionnaire_common.js' %}"></script>
+<script src="{% vstatic 'profiles_editor.js' %}"></script>
+{% endblock %}

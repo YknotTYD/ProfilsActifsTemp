@@ -1,0 +1,153 @@
+{% extends "questionnaires/base.html" %} {% load static %}{% load
+versioned_static %} {% block title %}{{ questionnaire.title }}{% endblock %} {%
+block crumbs %}
+<nav class="q-crumbs">
+  <a href="/questionnaires/manage/">Administration</a> <span>/</span> {{
+  questionnaire.title }}
+</nav>
+{% endblock %} {% block content %}
+<div id="q-editor" data-questionnaire="{{ questionnaire.id }}">
+  <div class="q-pagehead">
+    <div>
+      <h1 id="q-title">{{ questionnaire.title }}</h1>
+      <p class="q-lede">
+        <span id="q-status-slot"></span>
+        Vous editez la <b id="q-version">version …</b>
+      </p>
+    </div>
+  </div>
+
+  <div id="q-publish-panel"></div>
+
+  <nav class="q-tabs">
+    <button class="q-tab q-tab-active" data-tab="questions">Questions</button>
+    <button class="q-tab" data-tab="settings">Reglages</button>
+    <button class="q-tab" data-tab="scoring">Notation</button>
+    <button class="q-tab" data-tab="access">Qui y a acces</button>
+    <button class="q-tab" data-tab="history">Versions &amp; historique</button>
+  </nav>
+
+  <section class="q-tabpane" data-pane="questions">
+    <div class="q-callout warn" id="q-locked-note" hidden>
+      <h3>Cette version est figee</h3>
+      <p>
+        Elle a ete publiee ou mise en test, donc elle ne peut plus changer -
+        c'est ce qui garantit que les resultats deja obtenus restent valables.
+      </p>
+      <p style="margin-top: 0.6rem">
+        <button class="q-btn q-accent" id="q-make-editable">
+          Creer une version modifiable
+        </button>
+      </p>
+    </div>
+
+    <div class="q-callout" id="q-questions-intro">
+      <h3>Ajouter des questions</h3>
+      <p>
+        Choisissez un type ci-dessous : chacun impose son propre format de
+        reponse, ce qui permet de corriger automatiquement. Cliquez sur une
+        question pour la deplier et la regler.
+      </p>
+    </div>
+
+    <div id="q-questions"></div>
+
+    <div class="q-add-row">
+      <div class="q-field">
+        <label for="q-new-type">Type de question</label>
+        <select id="q-new-type"></select>
+        <p class="q-typehint" id="q-type-hint"></p>
+      </div>
+      <div class="q-field" style="flex: 2 1 20rem">
+        <label for="q-new-text">Enonce</label>
+        <input
+          type="text"
+          id="q-new-text"
+          placeholder="Ex. : Quelle est la capitale de la France ?"
+        />
+      </div>
+      <button class="q-btn q-primary" id="q-add-question">Ajouter</button>
+    </div>
+    <p class="q-error" id="q-add-error"></p>
+  </section>
+
+  <section class="q-tabpane" data-pane="settings" hidden>
+    <div class="q-callout">
+      <h3>Reglages du questionnaire</h3>
+      <p>
+        Ces reglages s'appliquent a toutes les versions, y compris celles deja
+        publiees. Vous pouvez les changer a tout moment sans creer de nouvelle
+        version.
+      </p>
+    </div>
+    <div class="q-panel"><div id="q-settings" class="q-field-group"></div></div>
+  </section>
+
+  <section class="q-tabpane" data-pane="scoring" hidden>
+    <div class="q-callout">
+      <h3>Notation</h3>
+      <p>
+        Le bareme de chaque question se regle dans l'onglet <b>Questions</b>.
+        Ici, vous definissez ce qui se passe une fois toutes les questions
+        notees : a partir de quel pourcentage le questionnaire est reussi, et
+        les paliers eventuels.
+      </p>
+      <p>
+        Ces reglages appartiennent a la version : les modifier n'affecte pas les
+        resultats deja calcules.
+      </p>
+    </div>
+    <div class="q-panel"><div id="q-scoring" class="q-field-group"></div></div>
+  </section>
+
+  <section class="q-tabpane" data-pane="access" hidden>
+    <div class="q-callout">
+      <h3>Trois questions differentes</h3>
+      <p>
+        <b>Visibilite</b> - qui voit que ce questionnaire existe dans la
+        liste.<br />
+        <b>Accessibilite</b> - qui peut reellement le commencer.<br />
+        <b>Resultats</b> - ce que le participant voit une fois qu'il a termine.
+      </p>
+    </div>
+    <div id="q-access"></div>
+  </section>
+
+  <section class="q-tabpane" data-pane="history" hidden>
+    <div class="q-callout">
+      <h3>Historique</h3>
+      <p>
+        Chaque publication cree une version figee. Vous pouvez comparer deux
+        versions, en restaurer une ancienne (cela en cree une nouvelle), ou en
+        invalider une.
+      </p>
+    </div>
+    <div id="q-history"></div>
+  </section>
+
+  <footer class="q-footer">
+    <a class="q-btn q-ghost" href="/questionnaires/manage/"
+      >Retour a la liste</a
+    >
+    <p class="q-error" id="q-footer-error"></p>
+    <span class="spacer"></span>
+    <a class="q-btn" id="q-preview" href="#">Previsualiser</a>
+    <a
+      class="q-btn"
+      href="/questionnaires/manage/{{ questionnaire.id }}/attempts/"
+      >Tentatives</a
+    >
+    <button class="q-btn" id="q-export">Exporter (.json)</button>
+    {% if capabilities.test %}<button class="q-btn" id="q-to-test">
+      Mettre en test</button
+    >{% endif %} {% if capabilities.publish %}<button
+      class="q-btn q-primary"
+      id="q-publish"
+    >
+      Publier</button
+    >{% endif %}
+  </footer>
+</div>
+{% endblock %} {% block scripts %}
+<script src="{% vstatic 'questionnaire_editor.js' %}"></script>
+{% endblock %}

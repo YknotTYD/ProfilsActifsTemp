@@ -1,0 +1,9 @@
+{% extends "questionnaires/base.html" %}
+{% block title %}Versions{% endblock %}
+{% block content %}
+<div class="q-panel">
+    <h1>Versions</h1>
+    <p>L'historique des versions est desormais dans l'onglet <b>Versions &amp; historique</b> de l'editeur.</p>
+    <p><a class="q-btn q-primary" href="/questionnaires/manage/{{ questionnaire.id }}/#history">Ouvrir l'editeur</a></p>
+</div>
+{% endblock %}
