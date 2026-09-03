@@ -2,7 +2,7 @@ name: Build and Package
 
 on:
   push:
-    branches: '**'
+    branches: [main]
 
 jobs:
   build:
@@ -23,15 +23,10 @@ jobs:
       - name: Collecter les fichiers statiques
         run: uv run python manage.py collectstatic --noinput
 
-      - name: Appliquer les migrations et charger les données de démo
-        run: |
-          uv run python manage.py migrate
-          uv run python manage.py loaddata demo_users.json
-
       - name: Créer l'archive de build
         run: |
           mkdir build_output
-          tar -czf build_output/app.tar.gz --exclude='.git' --exclude='build_output' .
+          tar -czf build_output/app.tar.gz --exclude='.git' --exclude='build_output' --exclude='.venv' .
 
       - name: Publier l'artefact
         uses: actions/upload-artifact@v4
