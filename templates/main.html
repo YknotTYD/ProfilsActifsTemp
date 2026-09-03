@@ -45,6 +45,9 @@
           </div>
           <button type="submit" class="btn-primary">UPLOADER</button>
         </form>
+
+{% include "upload.html" %}
+
         {% elif role == "Recruiter" %} {% if videos_ld %}
         <div class="feed mt-5">
           {% for vid, liked, disliked in videos_ld %}

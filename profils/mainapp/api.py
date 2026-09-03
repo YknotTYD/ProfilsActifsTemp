@@ -1,11 +1,12 @@
 from django.http.request        import HttpRequest
-from django.http.response       import HttpResponse
+from django.http.response       import HttpResponse, JsonResponse
 from django.shortcuts           import redirect
 from django.contrib.auth.models import User
 from django.contrib.auth        import authenticate, login as login_
-from .models                    import Role, VideoLink, Reaction
+from .models                    import Role, VideoLink, Reaction, VideoFile
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
+from django.core.files.storage import default_storage
 from . import constants
 from urllib.parse import urlencode
 import json
@@ -107,3 +108,16 @@ def react(request: HttpRequest) -> HttpResponse:
         prev_reaction.delete()
 
     return HttpResponse(status = 200)
+
+def videofile_upload(request: HttpRequest) -> HttpResponse:
+
+    file = request.FILES.get('file')
+
+    if not file:
+        return JsonResponse({'error': 'No file provided'}, status=400)
+
+    path = default_storage.save(constants.VIDEOFILE_STORAGE_PATH + file.name, file)
+    video = VideoFile(user=request.user, file=path)
+    video.save()
+
+    return JsonResponse({'url': f"'{constants.VIDEOFILE_STORAGE_PATH}{file.name}'"})

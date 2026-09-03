@@ -8,9 +8,9 @@ from .models                    import Role, VideoLink, Reaction
 # TODO: deleting
 # TODO: support for multiple languages
 # TODO: @api_view stuff
+# TODO: video -> videolink
 
-
-def get_videos(request: HttpResponse) -> list[tuple[int, int]]:
+def get_videos(request: HttpResponse) -> list[tuple[VideoLink, int, int]]:
 
     videos = [vid for vid in VideoLink.objects.all()]
     liked_disliked = [(0, 0)] * len(videos)
@@ -25,9 +25,8 @@ def get_videos(request: HttpResponse) -> list[tuple[int, int]]:
                 for r in reactions
         ]
 
-    videos = [(vid, l, d) for vid, (l, d) in zip(videos, liked_disliked)]
+    videos = [(vid, l, d, 1) for vid, (l, d) in zip(videos, liked_disliked)]
     return videos
-
 
 def main(request: HttpRequest) -> HttpResponse:
 
@@ -92,4 +91,3 @@ def quiz(request: HttpRequest) -> HttpResponse:
 
 def cgu(request: HttpRequest) -> HttpResponse:
     return render(request, "cgu.html")
-    

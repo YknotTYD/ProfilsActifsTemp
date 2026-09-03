@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.db import models
 from django.contrib.auth.models import User
+from django.core.validators import FileExtensionValidator
 from . import constants
 
 # TODO: constructors for models
@@ -32,7 +33,10 @@ class VideoLink(models.Model):
 class VideoFile(models.Model):
 
     user = models.ForeignKey(User, on_delete = models.CASCADE)
-    file = None
+    file = models.FileField(
+        upload_to = 'videos/',
+        validators = [FileExtensionValidator(allowed_extensions = ['mp4', 'mov', 'avi', 'webm'])]
+    )
 
     def __str__(self):
         return f"VideoFile<{self.user}>"
