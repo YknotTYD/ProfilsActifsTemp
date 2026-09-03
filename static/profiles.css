@@ -314,21 +314,33 @@ a:hover { color: var(--blue-mid); }
    une carte unique, pas une grille -- une grille suggererait qu'on peut en
    poster plusieurs. */
 .p-video-single {
-    display: block; width: min(220px, 100%); aspect-ratio: 9 / 16;
-    border-radius: var(--radius);
-    background: var(--sunk) center/cover no-repeat; border: 1px solid var(--line);
-    position: relative; overflow: hidden; text-decoration: none; color: #fff;
+    margin: 0; width: min(560px, 100%);
 }
 .p-video-single figcaption {
-    position: absolute; inset: auto 0 0 0; padding: 2rem .6rem .5rem;
-    background: linear-gradient(transparent, rgba(18, 41, 77, .85));
-    font-family: var(--font-title); font-size: .82rem; line-height: 1.3;
+    margin-top: .55rem; font-family: var(--font-title); font-size: .9rem;
+    line-height: 1.3; color: var(--ink); display: flex; align-items: baseline;
+    gap: .5rem; flex-wrap: wrap;
 }
 .p-video-single .p-duration {
-    position: absolute; top: .4rem; right: .4rem;
-    background: rgba(18, 41, 77, .8); color: #fff;
-    font-size: .7rem; padding: .1rem .35rem; border-radius: 3px;
-    font-family: var(--font-title); font-variant-numeric: tabular-nums;
+    background: var(--sunk); color: var(--muted);
+    font-size: .7rem; padding: .1rem .4rem; border-radius: 3px;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Lecteur video partage (page de profil, page de gestion). */
+.p-video-player {
+    position: relative; width: 100%; aspect-ratio: 16 / 9;
+    border-radius: var(--radius); overflow: hidden;
+    background: #000; border: 1px solid var(--line);
+}
+.p-video-player iframe,
+.p-video-player video {
+    position: absolute; inset: 0; width: 100%; height: 100%; border: 0;
+    object-fit: contain; background: #000;
+}
+.p-video-player > .p-muted {
+    position: absolute; inset: 0; display: flex; align-items: center;
+    justify-content: center; color: #cbd5e1; margin: 0; padding: 1rem; text-align: center;
 }
 
 .p-video-empty {

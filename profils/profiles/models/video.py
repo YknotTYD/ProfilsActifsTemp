@@ -140,6 +140,17 @@ class ProfileVideo(models.Model):
     def skill_names(self) -> list[str]:
         return [link.skill.name for link in self.skill_links.all()]
 
+    @property
+    def playback(self) -> dict:
+        """Comment lire cette video : `{"mode": "iframe"|"file", "url": ...}`.
+
+        Une seule source de verite pour le feed, la page de profil et la page
+        de gestion -- toutes doivent afficher la meme video de la meme facon.
+        """
+        from ..feed import playback
+        mode, url = playback(self.source_type, self.file_url)
+        return {"mode": mode, "url": url}
+
 
 class VideoModerationEvent(models.Model):
     """Historique de moderation d'une video (section "Historique de moderation").

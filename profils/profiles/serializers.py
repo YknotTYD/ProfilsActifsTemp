@@ -155,6 +155,7 @@ def video(row, *, include_moderation: bool = False) -> dict:
         "description":      row.description,
         "source_type":      row.source_type,
         "file_url":         row.file_url,
+        "playback":         row.playback,
         "thumbnail_url":    row.thumbnail_url,
         "duration_seconds": row.duration_seconds,
         "status":           row.status,

@@ -79,6 +79,13 @@ class ProfilePageTests(TestCase):
         response = self.client.get(f"/profile/{self.owner.username}/")
         self.assertContains(response, "pas encore publie de video")
 
+    def test_a_published_video_embeds_a_player_not_a_blank_box(self):
+        add_video(self.profile, title = "Presentation",
+                  file_url = "https://www.youtube.com/embed/abc123")
+        response = self.client.get(f"/profile/{self.owner.username}/")
+        self.assertContains(response, "p-video-player")
+        self.assertContains(response, "https://www.youtube.com/embed/abc123")
+
 
 class SearchPageTests(TestCase):
 

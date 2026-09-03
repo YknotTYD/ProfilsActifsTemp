@@ -165,9 +165,12 @@ la page ne la contient pas.
     <section class="p-panel">
         <h2>Video de presentation</h2>
         {% if live_video %}
-        <figure class="p-video-single" {% if live_video.thumbnail_url %}style="background-image:url('{{ live_video.thumbnail_url }}')"{% endif %}>
-            {% if live_video.duration_seconds %}<span class="p-duration">{{ live_video.duration_seconds|duration_seconds }}</span>{% endif %}
-            <figcaption>{{ live_video.title }}</figcaption>
+        <figure class="p-video-single">
+            {% include "profiles/_video_player.html" with player=live_video.playback title=live_video.title %}
+            <figcaption>
+                {{ live_video.title }}
+                {% if live_video.duration_seconds %}<span class="p-duration">{{ live_video.duration_seconds|duration_seconds }}</span>{% endif %}
+            </figcaption>
         </figure>
         {% if live_video.stats %}
         {# section 6 : n'apparait que si le serialiseur a inclus les stats -- proprietaire ou admin seulement. #}
