@@ -451,4 +451,36 @@
   .notif-empty {
     @apply px-4 py-6 text-center text-sm text-[#9b9b9b];
   }
+
+  /* Messagerie */
+  .msg-thread {
+    @apply max-h-[55vh] overflow-y-auto;
+  }
+  .msg-list {
+    @apply list-none m-0 p-0 flex flex-col gap-3;
+  }
+  .msg-bubble {
+    @apply max-w-[75%] rounded-lg px-4 py-2.5 border border-[#ececec];
+  }
+  .msg-mine {
+    @apply ml-auto bg-primary text-white border-transparent;
+  }
+  .msg-theirs {
+    @apply mr-auto bg-bg;
+  }
+  .msg-author {
+    @apply block text-[11px] font-title font-bold tracking-[0.03em] opacity-70;
+  }
+  .msg-body {
+    @apply mt-0.5 whitespace-pre-line text-[15px];
+  }
+  .msg-date {
+    @apply block mt-1 text-[11px] opacity-60;
+  }
+  .msg-compose {
+    @apply mt-4 flex flex-col items-end gap-2;
+  }
+  .msg-compose textarea {
+    @apply w-full;
+  }
 }

@@ -1,0 +1,31 @@
+{% extends "profiles/base.html" %}
+{% block title %}Conversation avec {{ other.username }}{% endblock %}
+
+{% block content %}
+<div class="p-pagehead">
+    <h1>Conversation avec @{{ other.username }}</h1>
+    <p class="p-muted"><a href="/messages/" class="link-btn">← Toutes mes conversations</a></p>
+</div>
+
+<div class="p-panel msg-thread">
+    {% if messages_list %}
+    <ul class="msg-list">
+        {% for m in messages_list %}
+        <li class="msg-bubble {% if m.sender_id == request.user.id %}msg-mine{% else %}msg-theirs{% endif %}">
+            <span class="msg-author">@{{ m.sender.username }}</span>
+            <p class="msg-body">{{ m.body }}</p>
+            <span class="msg-date">{{ m.created_at }}</span>
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p class="p-empty">Aucun message pour le moment -- ecrivez le premier.</p>
+    {% endif %}
+</div>
+
+<form method="post" class="msg-compose">
+    {% csrf_token %}
+    <textarea name="body" rows="3" required class="field-select" placeholder="Votre message…"></textarea>
+    <button type="submit" class="p-btn p-primary">Envoyer</button>
+</form>
+{% endblock %}

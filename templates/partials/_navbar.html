@@ -8,6 +8,7 @@
         <a href="/profiles/" class="btn-ghost">RECHERCHER DES PROFILS</a>
         {% if user.is_authenticated %}
             <a href="/profile/" class="btn-ghost">MON PROFIL</a>
+            <a href="/messages/" class="btn-ghost">MESSAGES</a>
             <a href="/questionnaires/" class="btn-ghost">QUESTIONNAIRES</a>
             {% if can_manage %}<a href="/questionnaires/manage/" class="btn-ghost">ADMINISTRATION</a>{% endif %}
             {% if capabilities.moderate %}<a href="/profiles/admin/videos/" class="btn-ghost">MODÉRATION VIDÉO</a>{% endif %}

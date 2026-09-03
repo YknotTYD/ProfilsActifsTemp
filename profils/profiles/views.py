@@ -35,6 +35,8 @@ def profile_page(request, username):
     viewer  = _viewer(request, profile)
     payload = serializers.public_profile(profile, viewer)
 
+    from profils.messaging.rules import can_start as can_message
+
     return render(request, "profiles/profile.html", {
         "p":          payload,
         "profile":    profile,
@@ -47,6 +49,11 @@ def profile_page(request, username):
         "link_kinds": dict(c.LINK_KINDS),
         "cover_colors": c.COVER_COLORS,
         "capabilities": permissions.capabilities(request.user),
+        # section 4 : un recruteur peut contacter ce candidat s'il a publie
+        # une video -- l'import est local pour que `profiles` reste
+        # chargeable sans `messaging` la ou ce bouton n'a pas de sens
+        # (l'API, par exemple).
+        "can_message": can_message(request.user, profile.user),
     })
 
 
