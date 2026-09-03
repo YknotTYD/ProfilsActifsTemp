@@ -352,25 +352,104 @@ LINK_KINDS = (
 
 
 # --------------------------------------------------------------------------- #
-# Videos (sections 16 et 17)
+# Videos : moderation (spec "Moderation video, presentation, messagerie et
+# notifications", section 1 et 2)
 # --------------------------------------------------------------------------- #
+#
+# Un seul enumere pour "en cours de verification / validee / refusee / en
+# ligne", plutot que deux drapeaux croises ("validee" et "publiee") : deux
+# champs rendraient representable une video refusee et publiee, qu'il
+# faudrait ensuite interdire par une contrainte. Un seul champ rend cet etat
+# tout simplement inexistant.
+#
+#   DRAFT -> PROCESSING -> PENDING -> APPROVED -> PUBLISHED
+#                             \                       \
+#                              -> REJECTED             -> HIDDEN
+#
+# Seul PUBLISHED est visible d'un visiteur (VISIBLE_VIDEO_STATUSES). DRAFT et
+# PROCESSING sont reserves au futur upload par fichier (verification du
+# format avant d'entrer en file de moderation) : la soumission par lien de
+# cette version entre directement en PENDING, il n'y a rien a "traiter".
 
 VIDEO_DRAFT      = "DRAFT"
 VIDEO_PROCESSING = "PROCESSING"
+VIDEO_PENDING    = "PENDING"
+VIDEO_APPROVED   = "APPROVED"
 VIDEO_PUBLISHED  = "PUBLISHED"
+VIDEO_REJECTED   = "REJECTED"
 VIDEO_HIDDEN     = "HIDDEN"
 VIDEO_DELETED    = "DELETED"
 
 VIDEO_STATUSES = (
     (VIDEO_DRAFT,      "Brouillon"),
     (VIDEO_PROCESSING, "En traitement"),
+    (VIDEO_PENDING,    "En attente de moderation"),
+    (VIDEO_APPROVED,   "Validee"),
     (VIDEO_PUBLISHED,  "Publiee"),
+    (VIDEO_REJECTED,   "Refusee"),
     (VIDEO_HIDDEN,     "Masquee"),
     (VIDEO_DELETED,    "Supprimee"),
 )
 
 #: seul statut dans lequel une video peut etre servie a un visiteur
 VISIBLE_VIDEO_STATUSES = (VIDEO_PUBLISHED,)
+
+#: qui declenche une transition : le proprietaire, un administrateur, ou un
+#: traitement automatique (verification de lien, controle technique)
+ACTOR_OWNER  = "OWNER"
+ACTOR_ADMIN  = "ADMIN"
+ACTOR_SYSTEM = "SYSTEM"
+
+MODERATION_ACTORS = (
+    (ACTOR_OWNER,  "Proprietaire"),
+    (ACTOR_ADMIN,  "Administrateur"),
+    (ACTOR_SYSTEM, "Systeme"),
+)
+
+#: (statut de depart, statut d'arrivee) -> acteurs autorises. Verifie par
+#: `moderation.transition_video`, seul point d'ecriture du statut d'une
+#: video : une transition absente d'ici est refusee, jamais executee sur la
+#: foi de l'appelant.
+VIDEO_TRANSITIONS = {
+    (VIDEO_DRAFT,      VIDEO_PROCESSING): {ACTOR_OWNER},
+    (VIDEO_PROCESSING, VIDEO_PENDING):    {ACTOR_SYSTEM},
+    (VIDEO_PROCESSING, VIDEO_REJECTED):   {ACTOR_SYSTEM},
+    (VIDEO_PENDING,    VIDEO_APPROVED):   {ACTOR_ADMIN},
+    (VIDEO_PENDING,    VIDEO_REJECTED):   {ACTOR_ADMIN},
+    (VIDEO_REJECTED,   VIDEO_PENDING):    {ACTOR_OWNER},
+    (VIDEO_APPROVED,   VIDEO_PUBLISHED):  {ACTOR_OWNER},
+    (VIDEO_HIDDEN,     VIDEO_PUBLISHED):  {ACTOR_OWNER},
+    # un lien change sous une video deja publiee doit repasser par la
+    # moderation : sans cette regle, faire valider une video anodine puis
+    # remplacer le lien contournerait toute verification.
+    (VIDEO_PUBLISHED,  VIDEO_PENDING):    {ACTOR_OWNER},
+    (VIDEO_PUBLISHED,  VIDEO_HIDDEN):     {ACTOR_OWNER, ACTOR_ADMIN, ACTOR_SYSTEM},
+}
+
+#: DELETED est atteignable depuis n'importe quel statut (section 1 : "l'utilisateur
+#: peut supprimer sa video ; un administrateur peut egalement la supprimer") --
+#: enumerer chaque (statut, DELETED) serait un bruit pur, `moderation.py` le
+#: traite comme un cas a part avec ce meme ensemble d'acteurs.
+DELETE_ACTORS = {ACTOR_OWNER, ACTOR_ADMIN}
+
+#: statuts pour lesquels un motif est obligatoire (section 1)
+REASON_REQUIRED_STATUSES = {VIDEO_REJECTED}
+
+VIDEO_SOURCE_LINK = "LINK"
+VIDEO_SOURCE_FILE = "FILE"
+
+VIDEO_SOURCES = (
+    (VIDEO_SOURCE_LINK, "Lien externe"),
+    (VIDEO_SOURCE_FILE, "Fichier televerse"),
+)
+
+#: seul mode utilisable a la soumission pour le moment. Le modele est deja
+#: pret pour l'upload par fichier (`ProfileVideo.file_blob`, en blob brut
+#: plutot qu'un stockage disque), mais son implementation (reception,
+#: controle de format/taille/extension) est menee separement : tant qu'elle
+#: n'est pas branchee, `services.submit_video_link` reste le seul point
+#: d'entree pour une nouvelle video.
+ENABLED_VIDEO_SOURCES = (VIDEO_SOURCE_LINK,)
 
 
 # --------------------------------------------------------------------------- #

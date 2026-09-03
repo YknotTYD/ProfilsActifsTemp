@@ -14,11 +14,11 @@ qu'il appartient bien au profil avant toute ecriture.
 from django.db.models import Q
 
 from . import constants as c
-from . import permissions, serializers, services
+from . import moderation, permissions, serializers, services
 from .http import BadRequest, api, body, fail, ok
 from .models import (
     Certification, Education, Language, ProfileVideo, Project, Skill, UserLanguage,
-    WorkExperience,
+    VideoModerationEvent, WorkExperience,
 )
 from .search import ProfileQuery, search as run_search
 from .skills import resolve_skill
@@ -338,21 +338,125 @@ def me_language_item(request, pk):
 
 
 # --------------------------------------------------------------------------- #
-# Videos (sections 15 a 17)
+# Videos (sections 15 a 17, et moderation)
 # --------------------------------------------------------------------------- #
+#
+# Ces routes ne passent pas par `_collection`/`_item` : la moderation leur
+# donne assez de comportement propre (soumission, confirmation explicite,
+# re-soumission) pour que forcer le moule generique coute plus cher qu'il
+# n'economise.
+
+def _own_video(request, pk) -> ProfileVideo:
+    profile = _me(request)
+    video = ProfileVideo.objects.filter(pk = pk).select_related("profile").first()
+    permissions.assert_owns_child(request.user, profile, video, "video")
+    return video
+
 
 @api(("GET", "POST"))
 def me_videos(request):
-    """Fiches video du proprietaire.
-
-    L'upload n'est pas de cette version : ce que POST enregistre, ce sont les
-    metadonnees et les competences associees (section 17), pour que le futur
-    feed trouve une structure deja peuplee.
+    """Mes videos, tous statuts confondus (section 1 : "consulter a tout
+    moment le statut de ses videos") ; POST soumet un nouveau lien.
     """
-    return _collection(request, "videos", serializers.video, services.create_video)
+    profile = _me(request)
+    if request.method == "POST":
+        permissions.assert_can_edit(request.user, profile)
+        video = services.submit_video_link(profile, body(request))
+        return ok(serializers.video(video, include_moderation = True), status = 201)
+
+    rows = profile.videos.exclude(status = c.VIDEO_DELETED).prefetch_related("skill_links__skill")
+    return ok({"videos": [serializers.video(row, include_moderation = True) for row in rows]})
 
 
-@api(("PUT", "PATCH", "DELETE"))
+@api(("GET", "PATCH", "DELETE"))
 def me_video_item(request, pk):
-    return _item(request, ProfileVideo, pk, serializers.video,
-                 services.update_video, services.delete_video, "video")
+    video = _own_video(request, pk)
+
+    if request.method == "DELETE":
+        services.delete_video(video, actor = c.ACTOR_OWNER, user = request.user)
+        return ok()
+
+    payload = body(request)
+    if request.method == "PATCH":
+        new_link = payload.pop("file_url", None)
+        if new_link:
+            services.replace_video_link(video, new_link, user = request.user)
+        if payload:
+            services.update_video(video, payload)
+
+    return ok(serializers.video(video, include_moderation = True))
+
+
+@api(("POST",))
+def me_video_publish(request, pk):
+    """Confirmation explicite de publication (section 2) : le seul geste qui
+    rend une video de presentation visible au public.
+    """
+    video = _own_video(request, pk)
+    services.publish_presentation_video(video, user = request.user)
+    return ok(serializers.video(video, include_moderation = True))
+
+
+@api(("POST",))
+def me_video_resubmit(request, pk):
+    """Re-soumission apres un refus (section 1)."""
+    video = _own_video(request, pk)
+    services.resubmit_video(video, user = request.user,
+                            new_file_url = body(request).get("file_url"))
+    return ok(serializers.video(video, include_moderation = True))
+
+
+# --------------------------------------------------------------------------- #
+# Videos : moderation administrateur
+# --------------------------------------------------------------------------- #
+
+@api(("GET",), perm = c.PERM_MODERATE)
+def admin_video_queue(request):
+    """File d'attente de moderation : toutes les videos en `PENDING`."""
+    rows = (ProfileVideo.objects.filter(status = c.VIDEO_PENDING)
+            .select_related("profile__user").order_by("created_at"))
+    return ok({"videos": [
+        {**serializers.video(row, include_moderation = True),
+         "profile": {"username": row.profile.username, "user_id": row.profile.user_id}}
+        for row in rows
+    ]})
+
+
+def _admin_video(pk) -> ProfileVideo:
+    video = ProfileVideo.objects.filter(pk = pk).first()
+    if video is None:
+        from django.core.exceptions import ObjectDoesNotExist
+        raise ObjectDoesNotExist("video introuvable")
+    return video
+
+
+@api(("POST",), perm = c.PERM_MODERATE)
+def admin_video_approve(request, pk):
+    video = _admin_video(pk)
+    services.approve_video(video, user = request.user)
+    return ok(serializers.video(video, include_moderation = True))
+
+
+@api(("POST",), perm = c.PERM_MODERATE)
+def admin_video_reject(request, pk):
+    video = _admin_video(pk)
+    reason = (body(request).get("reason") or "").strip()
+    services.reject_video(video, reason, user = request.user)
+    return ok(serializers.video(video, include_moderation = True))
+
+
+@api(("GET",), perm = c.PERM_MODERATE)
+def admin_video_history(request, pk):
+    video  = _admin_video(pk)
+    events = video.moderation_events.select_related("actor")
+    return ok({"history": [
+        {
+            "actor":      event.actor.username if event.actor_id else None,
+            "source":     event.source,
+            "old_status": event.old_status,
+            "new_status": event.new_status,
+            "reason":     event.reason,
+            "created_at": event.created_at.isoformat(),
+        }
+        for event in events
+    ]})

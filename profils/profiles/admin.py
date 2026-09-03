@@ -11,7 +11,8 @@ from .models import (
     Certification, CertificationSkill, Education, EducationSkill, Language,
     ProfessionalProfile, ProfileContractType, ProfileLink, ProfileSearchSettings,
     ProfileVideo, ProfileVideoSkill, ProfileVisibility, Project, ProjectSkill,
-    Skill, SkillAlias, UserLanguage, UserSkill, WorkExperience, WorkExperienceSkill,
+    Skill, SkillAlias, UserLanguage, UserSkill, VideoModerationEvent, WorkExperience,
+    WorkExperienceSkill,
 )
 
 
@@ -69,8 +70,28 @@ class EducationAdmin(admin.ModelAdmin):
 
 @admin.register(ProfileVideo)
 class ProfileVideoAdmin(admin.ModelAdmin):
-    list_display = ("id", "profile", "title", "status", "visibility", "published_at")
-    list_filter  = ("status", "visibility")
+    list_display = ("id", "profile", "title", "status", "source_type",
+                    "is_presentation", "visibility", "published_at")
+    list_filter  = ("status", "source_type", "is_presentation", "visibility")
+    readonly_fields = ("file_blob", "moderated_at", "moderated_by")
+
+
+@admin.register(VideoModerationEvent)
+class VideoModerationEventAdmin(admin.ModelAdmin):
+    """Lecture seule : cet historique n'appartient a personne (voir video.py)."""
+
+    list_display  = ("id", "video", "source", "actor", "old_status", "new_status", "created_at")
+    list_filter   = ("source", "old_status", "new_status")
+    search_fields = ("video__title", "actor__username")
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj = None):
+        return False
+
+    def has_delete_permission(self, request, obj = None):
+        return False
 
 
 @admin.register(Language)

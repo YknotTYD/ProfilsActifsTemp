@@ -13,13 +13,17 @@ from django.contrib.auth.models import AnonymousUser
 from django.test import Client, TestCase
 
 from profils.profiles import constants as c
-from profils.profiles import services
+from profils.profiles import moderation, services
 from profils.profiles.feed import video_candidates, videos_for_skills
-from profils.profiles.models import ProfileVideo, ProfileVideoSkill, Skill
+from profils.profiles.http import BadRequest
+from profils.profiles.models import (
+    ProfileVideo, ProfileVideoSkill, Skill, VideoModerationEvent,
+)
+from profils.profiles.permissions import ProfileAccessDenied
 from profils.profiles.search import ProfileQuery
 from profils.profiles.visibility import can_view_video, visible_videos
 
-from .factories import add_skill, add_video, make_profile, make_user
+from .factories import add_skill, add_video, make_admin, make_profile, make_user
 
 
 class EmptySectionTests(TestCase):
@@ -71,18 +75,26 @@ class VideoModelTests(TestCase):
         self.assertEqual(video.duration_seconds, 58)
 
     def test_publication_date_follows_the_status(self):
-        """La date de publication est calculee, pas fournie par le client."""
+        """La date de publication est calculee, pas fournie par le client.
+
+        `update_video` ne touche plus au statut depuis l'introduction de la
+        moderation (voir `ModerationPipelineTests`) : ce test verifie
+        directement la regle du modele, `ProfileVideo.save()`.
+        """
         draft = add_video(self.profile, status = c.VIDEO_DRAFT)
         self.assertIsNone(draft.published_at)
 
-        services.update_video(draft, {"status": c.VIDEO_PUBLISHED})
+        draft.status = c.VIDEO_PUBLISHED
+        draft.save()
         draft.refresh_from_db()
         self.assertIsNotNone(draft.published_at)
 
     def test_every_status_of_the_specification_exists(self):
         declared = {value for value, _ in c.VIDEO_STATUSES}
         self.assertEqual(
-            declared, {"DRAFT", "PROCESSING", "PUBLISHED", "HIDDEN", "DELETED"}
+            declared,
+            {"DRAFT", "PROCESSING", "PENDING", "APPROVED", "PUBLISHED",
+             "REJECTED", "HIDDEN", "DELETED"},
         )
 
     def test_deletion_is_logical(self):
@@ -287,3 +299,211 @@ class MatchingPreparationTests(TestCase):
             "skills": ["Java", "Docker"], "min_level": c.LEVEL_EXPERT,
         })
         self.assertEqual(list(search(query)["profiles"]), [])
+
+
+class ModerationPipelineTests(TestCase):
+    """Sections 1, 2 et "Historique de moderation".
+
+    Une video n'est jamais publique avant validation admin ; une validation
+    ne publie jamais toute seule ; un refus exige un motif, visible du seul
+    proprietaire ; chaque transition est historisee.
+    """
+
+    def setUp(self):
+        self.profile = make_profile("videaste")
+        self.owner   = self.profile.user
+        self.admin   = make_admin()
+        self.other   = make_user("un-autre")
+
+    def test_a_link_submission_enters_the_moderation_queue(self):
+        video = services.submit_video_link(self.profile, {
+            "title": "Ma presentation", "file_url": "https://exemple.test/v.mp4",
+        })
+        self.assertEqual(video.status, c.VIDEO_PENDING)
+        self.assertTrue(video.is_presentation)
+        self.assertFalse(video.is_published)
+
+    def test_an_unknown_transition_is_refused(self):
+        video = services.submit_video_link(self.profile, {
+            "title": "V", "file_url": "https://exemple.test/v.mp4",
+        })
+        with self.assertRaises(BadRequest):
+            moderation.transition_video(video, c.VIDEO_PUBLISHED, actor = c.ACTOR_OWNER)
+
+    def test_approval_never_publishes_by_itself(self):
+        """Critere d'acceptation : une validation admin ne publie jamais seule."""
+        video = services.submit_video_link(self.profile, {
+            "title": "V", "file_url": "https://exemple.test/v.mp4",
+        })
+        services.approve_video(video, user = self.admin)
+
+        video.refresh_from_db()
+        self.assertEqual(video.status, c.VIDEO_APPROVED)
+        self.assertFalse(video.is_published)
+        self.assertEqual(video.requires_user_action, "CONFIRM_PUBLICATION")
+
+    def test_only_the_owner_can_confirm_publication(self):
+        video = services.submit_video_link(self.profile, {
+            "title": "V", "file_url": "https://exemple.test/v.mp4",
+        })
+        services.approve_video(video, user = self.admin)
+
+        with self.assertRaises(ProfileAccessDenied):
+            moderation.transition_video(video, c.VIDEO_PUBLISHED, actor = c.ACTOR_ADMIN)
+
+    def test_the_owner_confirmation_publishes_it(self):
+        video = services.submit_video_link(self.profile, {
+            "title": "V", "file_url": "https://exemple.test/v.mp4",
+        })
+        services.approve_video(video, user = self.admin)
+        services.publish_presentation_video(video, user = self.owner)
+
+        video.refresh_from_db()
+        self.assertEqual(video.status, c.VIDEO_PUBLISHED)
+        self.assertTrue(video.is_published)
+
+    def test_rejection_requires_a_reason(self):
+        video = services.submit_video_link(self.profile, {
+            "title": "V", "file_url": "https://exemple.test/v.mp4",
+        })
+        with self.assertRaises(BadRequest):
+            services.reject_video(video, "", user = self.admin)
+
+    def test_a_rejected_video_shows_its_reason_to_the_owner_only(self):
+        video = services.submit_video_link(self.profile, {
+            "title": "V", "file_url": "https://exemple.test/v.mp4",
+        })
+        services.reject_video(video, "contenu hors sujet", user = self.admin)
+
+        video.refresh_from_db()
+        self.assertEqual(video.status, c.VIDEO_REJECTED)
+        self.assertEqual(video.rejection_reason, "contenu hors sujet")
+        # ce que le visiteur voit est verifie a la serialisation (section 6
+        # pour les reactions, meme principe pour le motif de refus) : ici, on
+        # verifie seulement que le champ existe pour le proprietaire.
+
+    def test_a_rejected_video_can_be_resubmitted(self):
+        video = services.submit_video_link(self.profile, {
+            "title": "V", "file_url": "https://exemple.test/v.mp4",
+        })
+        services.reject_video(video, "format non conforme", user = self.admin)
+        services.resubmit_video(video, user = self.owner)
+
+        video.refresh_from_db()
+        self.assertEqual(video.status, c.VIDEO_PENDING)
+        self.assertEqual(video.rejection_reason, "", "le motif ne doit pas survivre a la sortie de REJECTED")
+
+    def test_a_non_admin_cannot_approve(self):
+        video = services.submit_video_link(self.profile, {
+            "title": "V", "file_url": "https://exemple.test/v.mp4",
+        })
+        with self.assertRaises(ProfileAccessDenied):
+            moderation.transition_video(video, c.VIDEO_APPROVED, actor = c.ACTOR_OWNER)
+
+    def test_the_owner_or_an_admin_can_delete_it(self):
+        video = services.submit_video_link(self.profile, {
+            "title": "V", "file_url": "https://exemple.test/v.mp4",
+        })
+        services.delete_video(video, actor = c.ACTOR_ADMIN, user = self.admin)
+
+        video.refresh_from_db()
+        self.assertEqual(video.status, c.VIDEO_DELETED)
+
+    def test_every_transition_is_historized(self):
+        video = services.submit_video_link(self.profile, {
+            "title": "V", "file_url": "https://exemple.test/v.mp4",
+        })
+        services.approve_video(video, user = self.admin)
+        services.publish_presentation_video(video, user = self.owner)
+
+        events = list(VideoModerationEvent.objects.filter(video = video).order_by("created_at"))
+        self.assertEqual(
+            [(e.old_status, e.new_status, e.source) for e in events],
+            [
+                (c.VIDEO_PENDING,  c.VIDEO_APPROVED,  c.ACTOR_ADMIN),
+                (c.VIDEO_APPROVED, c.VIDEO_PUBLISHED, c.ACTOR_OWNER),
+            ],
+        )
+        self.assertEqual(events[0].actor, self.admin)
+
+    def test_publishing_over_the_url_of_a_live_video_forces_re_moderation(self):
+        video = services.submit_video_link(self.profile, {
+            "title": "V", "file_url": "https://exemple.test/v.mp4",
+        })
+        services.approve_video(video, user = self.admin)
+        services.publish_presentation_video(video, user = self.owner)
+
+        services.replace_video_link(video, "https://exemple.test/v2.mp4", user = self.owner)
+
+        video.refresh_from_db()
+        self.assertEqual(video.status, c.VIDEO_PENDING)
+        self.assertFalse(video.is_published)
+
+
+class PresentationReplacementTests(TestCase):
+    """Section 2 : remplacement d'une video de presentation deja publiee."""
+
+    def setUp(self):
+        self.profile = make_profile("videaste")
+        self.owner   = self.profile.user
+        self.admin   = make_admin()
+
+        self.old = services.submit_video_link(self.profile, {
+            "title": "Ancienne presentation", "file_url": "https://exemple.test/old.mp4",
+        })
+        services.approve_video(self.old, user = self.admin)
+        services.publish_presentation_video(self.old, user = self.owner)
+
+    def test_the_old_video_stays_online_through_moderation(self):
+        new = services.submit_video_link(self.profile, {
+            "title": "Nouvelle presentation", "file_url": "https://exemple.test/new.mp4",
+            "replaces": self.old.pk,
+        })
+        self.old.refresh_from_db()
+        self.assertTrue(self.old.is_published)
+        self.assertEqual(new.status, c.VIDEO_PENDING)
+
+    def test_the_old_video_stays_online_after_rejection(self):
+        new = services.submit_video_link(self.profile, {
+            "title": "Nouvelle presentation", "file_url": "https://exemple.test/new.mp4",
+            "replaces": self.old.pk,
+        })
+        services.reject_video(new, "qualite insuffisante", user = self.admin)
+
+        self.old.refresh_from_db()
+        self.assertTrue(self.old.is_published)
+
+    def test_the_old_video_stays_online_after_approval_until_confirmed(self):
+        new = services.submit_video_link(self.profile, {
+            "title": "Nouvelle presentation", "file_url": "https://exemple.test/new.mp4",
+            "replaces": self.old.pk,
+        })
+        services.approve_video(new, user = self.admin)
+
+        self.old.refresh_from_db()
+        self.assertTrue(self.old.is_published)
+        self.assertFalse(new.is_published)
+
+    def test_confirmation_swaps_them_atomically(self):
+        new = services.submit_video_link(self.profile, {
+            "title": "Nouvelle presentation", "file_url": "https://exemple.test/new.mp4",
+            "replaces": self.old.pk,
+        })
+        services.approve_video(new, user = self.admin)
+        services.publish_presentation_video(new, user = self.owner)
+
+        self.old.refresh_from_db()
+        new.refresh_from_db()
+        self.assertEqual(self.old.status, c.VIDEO_HIDDEN)
+        self.assertEqual(new.status, c.VIDEO_PUBLISHED)
+        self.assertTrue(new.is_published)
+
+    def test_only_one_published_presentation_can_exist_at_the_database_level(self):
+        """La garantie tient a l'index, pas au service : on le verifie directement."""
+        second = ProfileVideo(
+            profile = self.profile, title = "Doublon", is_presentation = True,
+            status = c.VIDEO_PUBLISHED, source_type = c.VIDEO_SOURCE_LINK,
+            file_url = "https://exemple.test/doublon.mp4",
+        )
+        with self.assertRaises(Exception):
+            second.save()

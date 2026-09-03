@@ -142,19 +142,25 @@ def link(row) -> dict:
     }
 
 
-def video(row) -> dict:
-    return {
-        "id":            row.id,
-        "title":         row.title,
-        "description":   row.description,
-        "file_url":      row.file_url,
-        "thumbnail_url": row.thumbnail_url,
+def video(row, *, include_moderation: bool = False) -> dict:
+    """`include_moderation` n'est jamais a `True` sur une route publique :
+    le motif de refus et l'identite de qui a modere ne regardent que le
+    proprietaire et les administrateurs (sections 1 et "Securite").
+    """
+    payload = {
+        "id":               row.id,
+        "title":            row.title,
+        "description":      row.description,
+        "source_type":      row.source_type,
+        "file_url":         row.file_url,
+        "thumbnail_url":    row.thumbnail_url,
         "duration_seconds": row.duration_seconds,
-        "status":        row.status,
-        "visibility":    row.visibility,
-        "tags":          row.tags,
-        "created_at":    _iso(row.created_at),
-        "published_at":  _iso(row.published_at),
+        "status":           row.status,
+        "is_presentation":  row.is_presentation,
+        "visibility":       row.visibility,
+        "tags":             row.tags,
+        "created_at":       _iso(row.created_at),
+        "published_at":     _iso(row.published_at),
         "stats": {
             "views":  row.view_count,
             "likes":  row.like_count,
@@ -162,6 +168,15 @@ def video(row) -> dict:
         },
         "skills": _linked_skills(row),
     }
+    if include_moderation:
+        payload.update({
+            "rejection_reason":     row.rejection_reason,
+            "moderated_at":         _iso(row.moderated_at),
+            "moderated_by":         row.moderated_by.username if row.moderated_by_id else None,
+            "replaces":             row.replaces_id,
+            "requires_user_action": row.requires_user_action,
+        })
+    return payload
 
 
 # --------------------------------------------------------------------------- #
