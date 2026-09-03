@@ -413,4 +413,42 @@
   .legal-page ul {
     @apply list-disc pl-5 mt-1 space-y-1;
   }
+
+  /* Centre de notifications (navbar) */
+  .notif-bell {
+    @apply relative bg-transparent border-0 p-2 cursor-pointer text-xl leading-none;
+  }
+  .notif-badge {
+    @apply absolute -top-0.5 -right-0.5 min-w-[1.1rem] h-[1.1rem] px-1 rounded-full bg-secondary text-white text-[10px] font-title font-bold leading-[1.1rem] text-center;
+  }
+  .notif-panel {
+    @apply absolute right-4 sm:right-[26px] top-[64px] w-[min(22rem,calc(100vw-2rem))] max-h-[70vh] overflow-y-auto bg-white border border-[#ececec] rounded-lg shadow-lg z-50;
+  }
+  .notif-header {
+    @apply flex items-center justify-between px-4 py-3 border-b border-[#ececec];
+  }
+  .notif-header strong {
+    @apply font-title text-text;
+  }
+  .notif-list {
+    @apply list-none m-0 p-0;
+  }
+  .notif-item {
+    @apply block px-4 py-3 border-b border-[#f0f0f0] no-underline text-text text-sm last:border-b-0;
+  }
+  .notif-item:hover {
+    @apply bg-bg;
+  }
+  .notif-item.is-unread {
+    @apply bg-[#eef4ff];
+  }
+  .notif-item-label {
+    @apply block font-title font-bold text-[13px];
+  }
+  .notif-item-date {
+    @apply block mt-0.5 text-xs text-[#9b9b9b];
+  }
+  .notif-empty {
+    @apply px-4 py-6 text-center text-sm text-[#9b9b9b];
+  }
 }

@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     "profils.mainapp",
     "profils.questionnaires",
     "profils.profiles",
+    "profils.notifications",
 ]
 
 MIDDLEWARE = [
