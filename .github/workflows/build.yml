@@ -20,16 +20,22 @@ jobs:
       - name: Installer les dépendances
         run: uv sync --frozen
 
+      - name: Ajouter PyInstaller
+        run: uv add --dev pyinstaller
+
       - name: Collecter les fichiers statiques
         run: uv run python manage.py collectstatic --noinput
 
-      - name: Créer l'archive de build
+      - name: Construire l'exécutable Linux
         run: |
-          mkdir build_output
-          tar -czf build_output/app.tar.gz --exclude='.git' --exclude='build_output' --exclude='.venv' .
+          uv run pyinstaller --onefile \
+            --add-data "db.sqlite3:." \
+            --add-data "staticfiles:staticfiles" \
+            --add-data "templates:templates" \
+            run_server.py
 
       - name: Publier l'artefact
         uses: actions/upload-artifact@v4
         with:
-          name: django-app-build
-          path: build_output/app.tar.gz
+          name: django-app-linux
+          path: dist/run_server
