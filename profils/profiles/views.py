@@ -46,6 +46,7 @@ def profile_page(request, username):
         "work_modes": dict(c.WORK_MODES),
         "link_kinds": dict(c.LINK_KINDS),
         "cover_colors": c.COVER_COLORS,
+        "capabilities": permissions.capabilities(request.user),
     })
 
 
@@ -99,6 +100,24 @@ def editor_page(request):
         "profile":  profile,
         "username": profile.username,
         "sections": c.PROFILE_SECTIONS,
+        "capabilities": permissions.capabilities(request.user),
+    })
+
+
+def admin_videos_page(request):
+    """Console de moderation video : `/profiles/admin/videos/`.
+
+    Purement une coquille : la page se peuple elle-meme en appelant les
+    routes `/api/profiles/admin/videos/...` deja existantes, comme le reste
+    des pages interactives du module. Meme garde que `questionnaires.manage`
+    -- 404 plutot que 403, pour ne pas laisser deviner que la page existe.
+    """
+    if response := _login_required(request):
+        return response
+    if not permissions.has_perm(request.user, c.PERM_MODERATE):
+        raise Http404
+    return render(request, "profiles/admin_videos.html", {
+        "capabilities": permissions.capabilities(request.user),
     })
 
 

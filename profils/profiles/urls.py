@@ -17,6 +17,7 @@ urlpatterns = [
     path("profiles/edit/",         views.editor_page,        name = "p_editor"),
     path("profile/",               views.my_profile_redirect, name = "p_me"),
     path("profile/<str:username>/", views.profile_page,      name = "p_profile"),
+    path("profiles/admin/videos/", views.admin_videos_page,  name = "p_admin_videos"),
 
     # ------------------------------------------------------------------ #
     # API - referentiels et vocabulaire

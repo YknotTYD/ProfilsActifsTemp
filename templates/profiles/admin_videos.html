@@ -1,0 +1,172 @@
+{% extends "profiles/base.html" %}
+{% block title %}Moderation video{% endblock %}
+
+{% comment %}
+Console de moderation (spec "Moderation video, presentation, messagerie et
+notifications", section 1). La page ne fait que consommer les routes deja
+testees sous /api/profiles/admin/videos/... : aucune regle de moderation
+n'est dupliquee ici, seulement son affichage.
+{% endcomment %}
+
+{% block content %}
+<div class="p-pagehead">
+    <h1>Moderation des videos de profil</h1>
+    <p class="p-muted">Chaque video soumise par lien attend ici avant de pouvoir
+       etre publiee par son proprietaire. Valider ne la rend jamais publique
+       toute seule : c'est un choix explicite laisse a l'utilisateur.</p>
+</div>
+
+<div id="p-mod-empty" class="p-panel" hidden>
+    <p class="p-empty">Aucune video en attente de moderation.</p>
+</div>
+
+<div id="p-mod-list" class="p-col"></div>
+
+<template id="p-mod-item-tpl">
+    <section class="p-panel p-mod-item">
+        <h2>
+            <span class="p-mod-title"></span>
+            <span class="p-badge p-warn">EN ATTENTE</span>
+        </h2>
+        <p class="p-muted">
+            Profil : <a class="p-mod-profile-link" target="_blank" rel="noopener"></a>
+            &middot; soumise le <span class="p-mod-date"></span>
+        </p>
+        <p class="p-mod-description p-muted"></p>
+        <p><a class="p-mod-url p-btn small" target="_blank" rel="noopener">Ouvrir le lien de la video</a></p>
+
+        <form class="p-mod-reject-form" hidden>
+            <div class="p-field">
+                <label>Motif du refus (obligatoire)</label>
+                <textarea class="p-mod-reason" rows="2" required></textarea>
+            </div>
+            <div class="p-actions">
+                <button type="submit" class="p-btn p-danger small">Confirmer le refus</button>
+                <button type="button" class="p-btn p-ghost small p-mod-cancel-reject">Annuler</button>
+            </div>
+        </form>
+
+        <div class="p-actions p-mod-actions">
+            <button type="button" class="p-btn p-primary p-mod-approve">Valider</button>
+            <button type="button" class="p-btn p-danger p-mod-reject">Refuser</button>
+            <button type="button" class="p-btn p-ghost small p-mod-history-toggle">Historique</button>
+        </div>
+
+        <ul class="p-mod-history p-muted" hidden></ul>
+    </section>
+</template>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(() => {
+    const csrftoken = document.querySelector('meta[name="csrf-token"]').content;
+
+    async function api(url, options = {}) {
+        const response = await fetch(url, {
+            ...options,
+            headers: {
+                'X-CSRFToken': csrftoken,
+                'Content-Type': 'application/json',
+                ...(options.headers || {}),
+            },
+        });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) {
+            throw new Error(payload.error || `Erreur ${response.status}`);
+        }
+        return payload;
+    }
+
+    const list  = document.getElementById('p-mod-list');
+    const empty = document.getElementById('p-mod-empty');
+    const tpl   = document.getElementById('p-mod-item-tpl');
+
+    function renderItem(video) {
+        const node = tpl.content.cloneNode(true);
+        const root = node.querySelector('.p-mod-item');
+        root.dataset.videoId = video.id;
+
+        node.querySelector('.p-mod-title').textContent = video.title;
+        const profileLink = node.querySelector('.p-mod-profile-link');
+        profileLink.href = `/profile/${video.profile.username}/`;
+        profileLink.textContent = `@${video.profile.username}`;
+        node.querySelector('.p-mod-date').textContent =
+            video.created_at ? new Date(video.created_at).toLocaleString('fr-FR') : '';
+        node.querySelector('.p-mod-description').textContent = video.description || '';
+
+        const urlLink = node.querySelector('.p-mod-url');
+        urlLink.href = video.file_url;
+
+        list.appendChild(node);
+        const item = list.lastElementChild;
+
+        item.querySelector('.p-mod-approve').addEventListener('click', () => approve(item, video.id));
+        item.querySelector('.p-mod-reject').addEventListener('click', () => {
+            item.querySelector('.p-mod-reject-form').hidden = false;
+        });
+        item.querySelector('.p-mod-cancel-reject').addEventListener('click', () => {
+            item.querySelector('.p-mod-reject-form').hidden = true;
+        });
+        item.querySelector('.p-mod-reject-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const reason = item.querySelector('.p-mod-reason').value.trim();
+            if (reason) reject(item, video.id, reason);
+        });
+        item.querySelector('.p-mod-history-toggle').addEventListener('click', () => loadHistory(item, video.id));
+    }
+
+    async function approve(item, id) {
+        try {
+            await api(`/api/profiles/admin/videos/${id}/approve/`, { method: 'POST' });
+            item.remove();
+            checkEmpty();
+        } catch (err) {
+            alert(err.message);
+        }
+    }
+
+    async function reject(item, id, reason) {
+        try {
+            await api(`/api/profiles/admin/videos/${id}/reject/`, {
+                method: 'POST', body: JSON.stringify({ reason }),
+            });
+            item.remove();
+            checkEmpty();
+        } catch (err) {
+            alert(err.message);
+        }
+    }
+
+    async function loadHistory(item, id) {
+        const box = item.querySelector('.p-mod-history');
+        if (!box.hidden) { box.hidden = true; return; }
+        try {
+            const { history } = await api(`/api/profiles/admin/videos/${id}/history/`);
+            box.innerHTML = history.map(h => `<li>${new Date(h.created_at).toLocaleString('fr-FR')}
+                &mdash; ${h.old_status || 'creation'} &rarr; ${h.new_status}
+                (${h.actor || h.source}) ${h.reason ? ': ' + h.reason : ''}</li>`).join('');
+            box.hidden = false;
+        } catch (err) {
+            alert(err.message);
+        }
+    }
+
+    function checkEmpty() {
+        empty.hidden = list.children.length > 0;
+    }
+
+    async function load() {
+        try {
+            const { videos } = await api('/api/profiles/admin/videos/pending/');
+            videos.forEach(renderItem);
+            checkEmpty();
+        } catch (err) {
+            list.innerHTML = `<p class="p-empty">${err.message}</p>`;
+        }
+    }
+
+    load();
+})();
+</script>
+{% endblock %}

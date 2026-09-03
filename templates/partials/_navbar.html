@@ -10,6 +10,7 @@
             <a href="/profile/" class="btn-ghost">MON PROFIL</a>
             <a href="/questionnaires/" class="btn-ghost">QUESTIONNAIRES</a>
             {% if can_manage %}<a href="/questionnaires/manage/" class="btn-ghost">ADMINISTRATION</a>{% endif %}
+            {% if capabilities.moderate %}<a href="/profiles/admin/videos/" class="btn-ghost">MODÉRATION VIDÉO</a>{% endif %}
             <a href="/logout" class="btn-ghost">DÉCONNEXION</a>
             <a href="/profiles/edit/" class="btn-primary-sm">MODIFIER MON PROFIL</a>
         {% else %}
