@@ -8,8 +8,26 @@
         <a href="/profiles/" class="btn-ghost">RECHERCHER DES PROFILS</a>
         {% if user.is_authenticated %}
             <a href="/profile/" class="btn-ghost">MON PROFIL</a>
+            <a href="/messages/" class="btn-ghost">MESSAGES</a>
             <a href="/questionnaires/" class="btn-ghost">QUESTIONNAIRES</a>
             {% if can_manage %}<a href="/questionnaires/manage/" class="btn-ghost">ADMINISTRATION</a>{% endif %}
+            {% if capabilities.moderate %}<a href="/profiles/admin/videos/" class="btn-ghost">MODÉRATION VIDÉO</a>{% endif %}
+
+            <div class="relative">
+                <button type="button" id="notif-bell" class="notif-bell" aria-label="Notifications" aria-expanded="false">
+                    🔔<span id="notif-badge" class="notif-badge" hidden>0</span>
+                </button>
+                <div id="notif-panel" class="notif-panel" hidden>
+                    <div class="notif-header">
+                        <strong>Notifications</strong>
+                        <button type="button" id="notif-mark-all" class="link-btn">Tout marquer comme lu</button>
+                    </div>
+                    <ul id="notif-list" class="notif-list">
+                        <li class="notif-empty">Chargement…</li>
+                    </ul>
+                </div>
+            </div>
+
             <a href="/logout" class="btn-ghost">DÉCONNEXION</a>
             <a href="/profiles/edit/" class="btn-primary-sm">MODIFIER MON PROFIL</a>
         {% else %}
@@ -18,3 +36,95 @@
         {% endif %}
     </nav>
 </div>
+
+{% if user.is_authenticated %}
+<script>
+(() => {
+    const csrftoken = document.querySelector('meta[name="csrf-token"]').content;
+    const bell  = document.getElementById('notif-bell');
+    const badge = document.getElementById('notif-badge');
+    const panel = document.getElementById('notif-panel');
+    const list  = document.getElementById('notif-list');
+
+    async function api(url, options = {}) {
+        const response = await fetch(url, {
+            ...options,
+            headers: { 'X-CSRFToken': csrftoken, 'Content-Type': 'application/json' },
+        });
+        return response.json();
+    }
+
+    function setBadge(count) {
+        if (count > 0) {
+            badge.textContent = count > 99 ? '99+' : count;
+            badge.hidden = false;
+        } else {
+            badge.hidden = true;
+        }
+    }
+
+    function renderList(notifications) {
+        if (notifications.length === 0) {
+            list.innerHTML = '<li class="notif-empty">Aucune notification pour le moment.</li>';
+            return;
+        }
+        list.innerHTML = notifications.map(n => `
+            <li>
+                <a href="${n.url || '#'}" class="notif-item ${n.read ? '' : 'is-unread'}" data-id="${n.id}">
+                    <span class="notif-item-label">${n.label}</span>
+                    <span class="notif-item-date">${new Date(n.created_at).toLocaleString('fr-FR')}</span>
+                </a>
+            </li>
+        `).join('');
+        list.querySelectorAll('.notif-item').forEach(item => {
+            item.addEventListener('click', () => {
+                if (item.classList.contains('is-unread')) {
+                    api(`/api/notifications/${item.dataset.id}/read/`, { method: 'POST' });
+                }
+            });
+        });
+    }
+
+    async function refresh() {
+        try {
+            const data = await api('/api/notifications/');
+            setBadge(data.unread_count);
+            renderList(data.notifications);
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    async function refreshCountOnly() {
+        try {
+            const { count } = await api('/api/notifications/unread-count/');
+            setBadge(count);
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    bell.addEventListener('click', () => {
+        const opening = panel.hidden;
+        panel.hidden = !opening;
+        bell.setAttribute('aria-expanded', String(opening));
+        if (opening) refresh();
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!panel.hidden && !panel.contains(e.target) && e.target !== bell) {
+            panel.hidden = true;
+            bell.setAttribute('aria-expanded', 'false');
+        }
+    });
+
+    document.getElementById('notif-mark-all').addEventListener('click', async () => {
+        await api('/api/notifications/read-all/', { method: 'POST' });
+        refresh();
+    });
+
+    refreshCountOnly();
+    setInterval(refreshCountOnly, 60000);
+})();
+</script>
+{% endif %}
