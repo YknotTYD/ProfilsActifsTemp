@@ -28,7 +28,7 @@ jobs:
 
       - name: Construire l'exécutable Linux
         run: |
-          uv run pyinstaller --onefile \
+          uv run pyinstaller --onefile --clean \
             --add-data "db.sqlite3:." \
             --add-data "collectstatic:collectstatic" \
             --add-data "templates:templates" \
