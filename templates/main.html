@@ -67,41 +67,8 @@
             Découvrez les profils actifs et réagissez à leurs vidéos de
             présentation.
           </p>
-          {% if videos_ld %}
-          <div class="feed">
-            {% for vid, liked, disliked in videos_ld %}
-            <div class="feed-item">
-              <iframe
-                src="{{ vid.url }}?autoplay=1&mute=1&playsinline=1&controls=0"
-                referrerpolicy="strict-origin-when-cross-origin"
-                allow="autoplay; encrypted-media"
-                allowfullscreen
-              >
-              </iframe>
-              <div class="feed-caption">
-                <strong>@{{ vid.user }}</strong>
-              </div>
-              <div class="feed-actions">
-                <button
-                  class="feed-react-btn react-btn {% if liked %}is-active-like{% endif %}"
-                  data-video-id="{{ vid.id }}"
-                  data-reaction="like"
-                >
-                  <span class="feed-react-icon">👍</span>
-                  <span>{{ vid.likes }}</span>
-                </button>
-                <button
-                  class="feed-react-btn react-btn {% if disliked %}is-active-dislike{% endif %}"
-                  data-video-id="{{ vid.id }}"
-                  data-reaction="dislike"
-                >
-                  <span class="feed-react-icon">👎</span>
-                  <span>{{ vid.dislikes }}</span>
-                </button>
-              </div>
-            </div>
-            {% endfor %}
-          </div>
+          {% if videos_ldl %}
+            {% include "feed.html" %}
           {% else %}
           <div class="dash-empty">
             <span class="dash-empty-icon">🎬</span>
