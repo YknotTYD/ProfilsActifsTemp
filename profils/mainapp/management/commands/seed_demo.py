@@ -48,18 +48,22 @@ DEMO_CLIPS = {
 # --------------------------------------------------------------------------- #
 
 RECRUITERS = [
-    {"username": "julie.marchand",  "first_name": "Julie",  "last_name": "Marchand"},
-    {"username": "paul.guerin",     "first_name": "Paul",   "last_name": "Guérin"},
-    {"username": "sophie.lambert",  "first_name": "Sophie", "last_name": "Lambert"},
+    {"username": "julie.marchand",  "first_name": "Julie",  "last_name": "Marchand",  "birth_date": "1990-03-11"},
+    {"username": "paul.guerin",     "first_name": "Paul",   "last_name": "Guérin",    "birth_date": "1985-11-29"},
+    {"username": "sophie.lambert",  "first_name": "Sophie", "last_name": "Lambert",   "birth_date": "1992-06-05"},
 ]
 
-ADMIN_ACCOUNT = {"username": "admin_demo", "first_name": "Compte", "last_name": "Administrateur"}
+ADMIN_ACCOUNT = {
+    "username": "admin_demo", "first_name": "Compte", "last_name": "Administrateur",
+    "birth_date": "1988-01-01",
+}
 
 # Chaque candidat : identite, profil professionnel complet, et les
 # questionnaires auxquels il/elle a repondu (cle -> reponses).
 CANDIDATES = [
     {
         "username": "camille.dubois", "first_name": "Camille", "last_name": "Dubois",
+        "birth_date": "1995-04-12",
         "headline": "Développeuse backend Python/Django",
         "summary": "Six ans d'expérience sur des architectures backend à fort trafic. "
                     "J'aime particulièrement le travail sur les API et la fiabilité des systèmes.",
@@ -103,6 +107,7 @@ CANDIDATES = [
     },
     {
         "username": "yanis.belkacem", "first_name": "Yanis", "last_name": "Belkacem",
+        "birth_date": "1998-07-22",
         "headline": "Développeur fullstack JavaScript",
         "summary": "Passionné par les interfaces réactives et les architectures Node.js. "
                     "À l'aise aussi bien côté client que côté serveur.",
@@ -140,6 +145,7 @@ CANDIDATES = [
     },
     {
         "username": "lea.girard", "first_name": "Léa", "last_name": "Girard",
+        "birth_date": "1995-11-03",
         "headline": "Data analyst",
         "summary": "J'aide les équipes métier à prendre des décisions à partir de données fiables. "
                     "Spécialisée dans la logistique et le retail.",
@@ -175,6 +181,7 @@ CANDIDATES = [
     },
     {
         "username": "thomas.perrin", "first_name": "Thomas", "last_name": "Perrin",
+        "birth_date": "1993-02-17",
         "headline": "Ingénieur DevOps",
         "summary": "Dix ans dans l'industrialisation des déploiements. Terrain de jeu favori : "
                     "Kubernetes et l'infrastructure as code.",
@@ -217,6 +224,7 @@ CANDIDATES = [
     },
     {
         "username": "ines.moreau", "first_name": "Inès", "last_name": "Moreau",
+        "birth_date": "1997-09-30",
         "headline": "UX/UI Designer",
         "summary": "Je conçois des interfaces utiles avant d'être belles. Forte appétence pour "
                     "la recherche utilisateur et les design systems.",
@@ -253,6 +261,7 @@ CANDIDATES = [
     },
     {
         "username": "nathan.roche", "first_name": "Nathan", "last_name": "Roche",
+        "birth_date": "1995-06-14",
         "headline": "Chef de projet marketing digital",
         "summary": "J'orchestre des campagnes multicanales, du brief à l'analyse de performance.",
         "city": "Lille", "field": pc.FIELD_MARKETING,
@@ -289,6 +298,7 @@ CANDIDATES = [
     },
     {
         "username": "sarah.benali", "first_name": "Sarah", "last_name": "Benali",
+        "birth_date": "1999-12-05",
         "headline": "Développeuse mobile iOS/Android",
         "summary": "Je construis des applications mobiles fluides, du prototype au déploiement en store.",
         "city": "Marseille", "field": pc.FIELD_SOFTWARE,
@@ -323,6 +333,7 @@ CANDIDATES = [
     },
     {
         "username": "hugo.faure", "first_name": "Hugo", "last_name": "Faure",
+        "birth_date": "1994-08-19",
         "headline": "Business Developer B2B",
         "summary": "Sept ans en développement commercial, du premier rendez-vous à la signature.",
         "city": "Strasbourg", "field": pc.FIELD_SALES,
@@ -350,6 +361,7 @@ CANDIDATES = [
     },
     {
         "username": "chloe.lefevre", "first_name": "Chloé", "last_name": "Lefèvre",
+        "birth_date": "1997-01-27",
         "headline": "Data scientist",
         "summary": "Je conçois des modèles qui passent réellement en production, pas seulement "
                     "dans un notebook.",
@@ -391,6 +403,7 @@ CANDIDATES = [
     },
     {
         "username": "maxime.girard", "first_name": "Maxime", "last_name": "Girard",
+        "birth_date": "1994-05-09",
         "headline": "Développeur backend Java",
         "summary": "Sept ans sur des systèmes bancaires critiques. Rigueur et couverture de tests "
                     "avant tout.",
@@ -430,6 +443,7 @@ CANDIDATES = [
     },
     {
         "username": "manon.roussel", "first_name": "Manon", "last_name": "Roussel",
+        "birth_date": "1997-03-16",
         "headline": "Chargée de recrutement",
         "summary": "Spécialisée dans le recrutement technique et l'expérience candidat.",
         "city": "Nice", "field": pc.FIELD_HR,
@@ -457,6 +471,7 @@ CANDIDATES = [
     },
     {
         "username": "adam.kacimi", "first_name": "Adam", "last_name": "Kacimi",
+        "birth_date": "1996-10-08",
         "headline": "Ingénieur QA / testeur logiciel",
         "summary": "J'automatise ce qui peut l'être et je traque les régressions avant les utilisateurs.",
         "city": "Grenoble", "field": pc.FIELD_SOFTWARE,
@@ -538,7 +553,7 @@ class Command(BaseCommand):
             first_name = ADMIN_ACCOUNT["first_name"], last_name = ADMIN_ACCOUNT["last_name"],
             is_staff = True, is_superuser = True,
         )
-        Role.objects.create(user = user, role = "Admin")
+        Role.objects.create(user = user, role = "Admin", birth_date = ADMIN_ACCOUNT["birth_date"])
         return user
 
     def _create_recruiters(self) -> list:
@@ -548,7 +563,7 @@ class Command(BaseCommand):
                 data["username"], None, DEMO_PASSWORD,
                 first_name = data["first_name"], last_name = data["last_name"],
             )
-            Role.objects.create(user = user, role = "Recruiter")
+            Role.objects.create(user = user, role = "Recruiter", birth_date = data["birth_date"])
             users.append(user)
         return users
 
@@ -559,7 +574,7 @@ class Command(BaseCommand):
                 data["username"], None, DEMO_PASSWORD,
                 first_name = data["first_name"], last_name = data["last_name"],
             )
-            Role.objects.create(user = user, role = "JobSeeker")
+            Role.objects.create(user = user, role = "JobSeeker", birth_date = data["birth_date"])
             users.append(user)
         return users
 
