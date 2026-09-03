@@ -45,7 +45,6 @@ jobs:
       - name: Generate build-only secret key
         run: |
           SECRET_KEY=$(uv run python -c 'import secrets; print(secrets.token_urlsafe(50))')
-          echo "DJANGO_SECRET_KEY=$SECRET_KEY" >> "$GITHUB_ENV"
           echo "DJANGO_SECRET_KEY=$SECRET_KEY" >> .env
     
       - name: Django system check
