@@ -225,6 +225,35 @@ class SearchVisibilityTests(TestCase):
             self.assertNotIn("privee", usernames(result))
 
 
+class SearchExcludesNonCandidatesTests(TestCase):
+    """La recherche de candidats n'a de sens que pour des demandeurs d'emploi."""
+
+    def setUp(self):
+        self.candidate = make_profile("candidat", visibility = c.VISIBILITY_PUBLIC)
+        add_skill(self.candidate, "Java")
+
+    def test_an_admin_account_with_a_profile_is_excluded(self):
+        admin = make_admin("admin-avec-profil")
+        profile = make_profile(user = admin, visibility = c.VISIBILITY_PUBLIC)
+        add_skill(profile, "Java")
+
+        result = search(ProfileQuery.from_params({"skill": "java"}))
+        self.assertNotIn(admin.username, usernames(result))
+        self.assertIn("candidat", usernames(result))
+
+    def test_a_recruiter_account_with_a_profile_is_excluded(self):
+        from profils.mainapp.models import Role
+
+        recruiter = make_user("recruteur-avec-profil")
+        Role.objects.create(user = recruiter, role = "Recruiter")
+        profile = make_profile(user = recruiter, visibility = c.VISIBILITY_PUBLIC)
+        add_skill(profile, "Java")
+
+        result = search(ProfileQuery.from_params({"skill": "java"}))
+        self.assertNotIn(recruiter.username, usernames(result))
+        self.assertIn("candidat", usernames(result))
+
+
 class RankingTests(TestCase):
     """Section 14 : mieux couvrir, mieux maitriser et plus d'experience remonte."""
 

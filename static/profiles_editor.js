@@ -551,15 +551,28 @@
     /* Videos                                                             */
     /* --------------------------------------------------------------- */
 
+    /* section 1 : statut -> ce que l'utilisateur voit, et ce qu'il peut
+     * encore faire depuis cet etat. Les badges reprennent les couleurs
+     * deja utilisees ailleurs dans l'app (.p-ok/.p-info/.p-warn/.p-ko). */
+    const VIDEO_STATUS_LABELS = {
+        PENDING:   ['En attente de moderation', 'p-warn'],
+        APPROVED:  ['Validee', 'p-info'],
+        PUBLISHED: ['Publiee', 'p-ok'],
+        REJECTED:  ['Refusee', 'p-ko'],
+        HIDDEN:    ['Masquee', 'p-badge'],
+        DRAFT:     ['Brouillon', 'p-badge'],
+        PROCESSING: ['En traitement', 'p-badge'],
+    };
+
     async function renderVideos(root) {
         root.innerHTML = '';
         const panel = qEl('div', { class: 'p-panel' });
         root.appendChild(panel);
         panel.appendChild(qEl('h2', { text: 'Videos' }));
         panel.appendChild(qEl('p', { class: 'p-help' }, [
-            "L'upload video n'est pas encore disponible dans cette version. ",
-            'Vous pouvez des a present preparer la fiche de vos videos : titre, ',
-            'description et competences presentees.',
+            'Une video soumise par lien passe en moderation avant de pouvoir etre ',
+            "publiee : sa validation ne la rend jamais publique toute seule, c'est ",
+            'a vous de le confirmer une fois validee.',
         ]));
 
         const list = qEl('div');
@@ -570,32 +583,62 @@
             list.innerHTML = '';
             if (!videos.length) list.appendChild(qEl('p', { class: 'p-empty', text: 'Aucune video pour le moment.' }));
             for (const video of videos) {
+                const [label, badgeClass] = VIDEO_STATUS_LABELS[video.status] || [video.status, 'p-badge'];
+                const rowChildren = [
+                    qEl('strong', { text: video.title }),
+                    qEl('div', { class: 'p-badge ' + badgeClass, text: label }),
+                ];
+                if (video.status === 'REJECTED' && video.rejection_reason) {
+                    rowChildren.push(qEl('div', { class: 'p-muted', text: 'Motif : ' + video.rejection_reason }));
+                }
+
+                const actions = [];
+                if (video.requires_user_action === 'CONFIRM_PUBLICATION') {
+                    actions.push(qEl('button', {
+                        type: 'button', class: 'p-btn small p-primary', text: 'Publier',
+                        onclick: async () => {
+                            await saved(QAPI.post(`/api/profiles/me/videos/${video.id}/publish/`, {}));
+                            refresh();
+                        },
+                    }));
+                }
+                if (video.status === 'REJECTED') {
+                    actions.push(qEl('button', {
+                        type: 'button', class: 'p-btn small', text: 'Re-soumettre',
+                        onclick: async () => {
+                            await saved(QAPI.post(`/api/profiles/me/videos/${video.id}/resubmit/`, {}));
+                            refresh();
+                        },
+                    }));
+                }
+                actions.push(qEl('button', {
+                    type: 'button', class: 'p-btn small p-danger', text: 'Supprimer',
+                    onclick: async () => { await saved(QAPI.del(`/api/profiles/me/videos/${video.id}/`)); refresh(); },
+                }));
+
                 list.appendChild(qEl('div', { class: 'p-row' }, [
-                    qEl('div', { class: 'p-row-main' }, [
-                        qEl('strong', { text: video.title }),
-                        qEl('div', { class: 'p-muted', text: video.status }),
-                    ]),
-                    qEl('button', {
-                        type: 'button', class: 'p-btn small p-danger', text: 'Supprimer',
-                        onclick: async () => { await saved(QAPI.del(`/api/profiles/me/videos/${video.id}/`)); refresh(); },
-                    }),
+                    qEl('div', { class: 'p-row-main' }, rowChildren),
+                    qEl('div', { class: 'p-actions' }, actions),
                 ]));
             }
         }
 
         const titleInput = qEl('input', { type: 'text', placeholder: 'Titre de la video' });
+        const urlInput   = qEl('input', { type: 'url', placeholder: 'https://exemple.com/ma-video.mp4' });
         let skillNames = [];
         panel.appendChild(qEl('div', { class: 'p-add-row', style: 'display:block' }, [
             qEl('div', { class: 'p-field' }, [qEl('label', { text: 'Titre' }), titleInput]),
+            qEl('div', { class: 'p-field' }, [qEl('label', { text: 'Lien de la video' }), urlInput]),
             renderSkillPicker([], (names) => { skillNames = names; }),
             qEl('button', {
-                type: 'button', class: 'p-btn p-primary', text: 'Ajouter la fiche', style: 'margin-top:.5rem',
+                type: 'button', class: 'p-btn p-primary', text: 'Soumettre a la moderation', style: 'margin-top:.5rem',
                 onclick: async () => {
-                    if (!titleInput.value.trim()) return;
+                    if (!titleInput.value.trim() || !urlInput.value.trim()) return;
                     await saved(QAPI.post('/api/profiles/me/videos/', {
-                        title: titleInput.value.trim(), skills: skillNames, status: 'DRAFT',
+                        title: titleInput.value.trim(), file_url: urlInput.value.trim(), skills: skillNames,
                     }));
                     titleInput.value = '';
+                    urlInput.value = '';
                     refresh();
                 },
             }),

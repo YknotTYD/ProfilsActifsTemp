@@ -108,7 +108,7 @@ a:hover { color: var(--blue-mid); }
 }
 .p-cover {
     position: relative;
-    height: clamp(7rem, 18vw, 11rem);
+    height: clamp(9rem, 22vw, 13rem);
     background: var(--blue);
     background-size: cover; background-position: center;
     /* .p-hero fait deja overflow:hidden + border-radius, mais les enfants
@@ -177,6 +177,14 @@ a:hover { color: var(--blue-mid); }
     align-items: end;
 }
 .p-avatar {
+    /* `.p-cover` est `position:relative` pour son propre bouton d'edition ;
+       sans etre positionne a son tour, l'avatar -- pourtant plus loin dans
+       le flux -- se retrouve peint SOUS la banniere au lieu de deborder
+       par dessus (regle de peinture CSS : un element positionne passe
+       toujours devant un element statique, meme arrive apres lui dans le
+       DOM). `position:relative` ici, sans z-index, suffit a le faire
+       peindre au-dessus. */
+    position: relative;
     width: clamp(5.5rem, 14vw, 8rem); aspect-ratio: 1;
     border-radius: 50%; border: 4px solid var(--paper);
     margin-top: clamp(-3.5rem, -7vw, -2.75rem);

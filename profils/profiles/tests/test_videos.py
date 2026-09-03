@@ -13,7 +13,7 @@ from django.contrib.auth.models import AnonymousUser
 from django.test import Client, TestCase
 
 from profils.profiles import constants as c
-from profils.profiles import moderation, services
+from profils.profiles import moderation, serializers, services
 from profils.profiles.feed import video_candidates, videos_for_skills
 from profils.profiles.http import BadRequest
 from profils.profiles.models import (
@@ -146,6 +146,30 @@ class VideoSkillTests(TestCase):
 
         slugs = sorted(link.skill.slug for link in video.skill_links.all())
         self.assertEqual(slugs, ["go", "grpc"])
+
+
+class VideoStatsPrivacyTests(TestCase):
+    """Section 6 : "le public ne doit jamais pouvoir connaitre... les
+    statistiques" de reactions.
+    """
+
+    def test_the_default_serializer_never_exposes_stats(self):
+        video = add_video(make_profile("videaste"), status = c.VIDEO_PUBLISHED)
+        payload = serializers.video(video)
+        self.assertNotIn("stats", payload)
+
+    def test_the_owner_and_admin_view_still_includes_stats(self):
+        video = add_video(make_profile("videaste"), status = c.VIDEO_PUBLISHED)
+        payload = serializers.video(video, include_moderation = True)
+        self.assertIn("stats", payload)
+
+    def test_a_visitor_never_receives_stats_from_the_public_route(self):
+        profile = make_profile("videaste", visibility = c.VISIBILITY_PUBLIC)
+        add_video(profile, status = c.VIDEO_PUBLISHED)
+
+        response = Client().get(f"/api/profiles/{profile.username}/videos/")
+        payload  = json.loads(response.content)
+        self.assertNotIn("stats", payload["videos"][0])
 
 
 class VideoVisibilityTests(TestCase):

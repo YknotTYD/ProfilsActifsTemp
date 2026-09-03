@@ -20,7 +20,6 @@
                 <div id="notif-panel" class="notif-panel" hidden>
                     <div class="notif-header">
                         <strong>Notifications</strong>
-                        <button type="button" id="notif-mark-all" class="link-btn">Tout marquer comme lu</button>
                     </div>
                     <ul id="notif-list" class="notif-list">
                         <li class="notif-empty">Chargement…</li>
@@ -85,11 +84,16 @@
         });
     }
 
-    async function refresh() {
+    async function openPanel() {
         try {
             const data = await api('/api/notifications/');
-            setBadge(data.unread_count);
             renderList(data.notifications);
+            // ouvrir le panneau vaut lecture : personne ne veut cliquer un
+            // deuxieme bouton pour "vraiment" marquer comme lu.
+            if (data.unread_count > 0) {
+                setBadge(0);
+                await api('/api/notifications/read-all/', { method: 'POST' });
+            }
         } catch (err) {
             console.error(err);
         }
@@ -108,7 +112,7 @@
         const opening = panel.hidden;
         panel.hidden = !opening;
         bell.setAttribute('aria-expanded', String(opening));
-        if (opening) refresh();
+        if (opening) openPanel();
     });
 
     document.addEventListener('click', (e) => {
@@ -116,11 +120,6 @@
             panel.hidden = true;
             bell.setAttribute('aria-expanded', 'false');
         }
-    });
-
-    document.getElementById('notif-mark-all').addEventListener('click', async () => {
-        await api('/api/notifications/read-all/', { method: 'POST' });
-        refresh();
     });
 
     refreshCountOnly();

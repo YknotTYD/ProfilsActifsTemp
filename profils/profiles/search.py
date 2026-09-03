@@ -242,7 +242,14 @@ def base_queryset(viewer):
     Le `searchable = True` est ici et nulle part ailleurs : c'est la seule
     facon de garantir qu'aucun chemin de recherche ne l'oublie. Il n'y a
     volontairement pas de derogation pour les administrateurs.
+
+    La recherche de candidats n'a de sens que pour des demandeurs d'emploi :
+    un recruteur ou un administrateur qui se serait cree un profil (pour
+    tester, ou parce que rien ne l'en empeche) n'a rien a faire dans les
+    resultats d'une recherche de candidats.
     """
+    from django.db.models import Q
+
     from .models import ProfessionalProfile
     from .visibility import rank
 
@@ -253,6 +260,10 @@ def base_queryset(viewer):
     return (
         ProfessionalProfile.objects
         .filter(search_config__searchable = True, visibility__in = allowed)
+        .exclude(
+            Q(user__is_staff = True) | Q(user__is_superuser = True)
+            | Q(user__role__role__in = ("Recruiter", "Admin"))
+        )
         .select_related("user", "search_config", "visibility_config")
     )
 

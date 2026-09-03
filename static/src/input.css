@@ -452,35 +452,50 @@
     @apply px-4 py-6 text-center text-sm text-[#9b9b9b];
   }
 
-  /* Messagerie */
+  /* Messagerie -- une seule fenetre de discussion (fil + barre de saisie),
+     dans l'esprit d'une appli de messagerie plutot que deux blocs de page
+     separes. */
+  .msg-window {
+    @apply flex flex-col bg-white border border-[#ececec] rounded-lg overflow-hidden;
+    height: min(65vh, 640px);
+  }
   .msg-thread {
-    @apply max-h-[55vh] overflow-y-auto;
+    @apply flex-1 overflow-y-auto px-4 py-4;
   }
   .msg-list {
-    @apply list-none m-0 p-0 flex flex-col gap-3;
+    @apply list-none m-0 p-0 flex flex-col gap-1.5;
   }
   .msg-bubble {
-    @apply max-w-[75%] rounded-lg px-4 py-2.5 border border-[#ececec];
+    @apply max-w-[75%] px-4 py-2;
+    border-radius: 18px;
   }
   .msg-mine {
-    @apply ml-auto bg-primary text-white border-transparent;
+    @apply ml-auto bg-link text-white;
+    border-bottom-right-radius: 4px;
   }
   .msg-theirs {
-    @apply mr-auto bg-bg;
-  }
-  .msg-author {
-    @apply block text-[11px] font-title font-bold tracking-[0.03em] opacity-70;
+    @apply mr-auto bg-[#e9e9eb] text-text;
+    border-bottom-left-radius: 4px;
   }
   .msg-body {
-    @apply mt-0.5 whitespace-pre-line text-[15px];
+    @apply m-0 whitespace-pre-line text-[15px] leading-snug;
   }
   .msg-date {
-    @apply block mt-1 text-[11px] opacity-60;
+    @apply block mt-1 text-[10px] opacity-60;
   }
-  .msg-compose {
-    @apply mt-4 flex flex-col items-end gap-2;
+  .msg-bar {
+    @apply flex items-center gap-2 border-t border-[#ececec] bg-white p-3;
   }
-  .msg-compose textarea {
-    @apply w-full;
+  .msg-input {
+    @apply flex-1 rounded-full border border-[#d9d9d9] px-4 py-2 text-[15px] bg-white text-text font-body;
+  }
+  .msg-input:focus {
+    @apply outline-none border-2 border-primary px-[15px] py-[7px];
+  }
+  .msg-send {
+    @apply flex items-center justify-center w-9 h-9 rounded-full bg-primary text-white text-base leading-none cursor-pointer border-0 shrink-0;
+  }
+  .msg-send:hover {
+    @apply bg-[#14294d];
   }
 }

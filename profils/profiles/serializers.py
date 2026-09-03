@@ -144,8 +144,10 @@ def link(row) -> dict:
 
 def video(row, *, include_moderation: bool = False) -> dict:
     """`include_moderation` n'est jamais a `True` sur une route publique :
-    le motif de refus et l'identite de qui a modere ne regardent que le
-    proprietaire et les administrateurs (sections 1 et "Securite").
+    le motif de refus, l'identite de qui a modere, et les statistiques de
+    reactions ne regardent que le proprietaire et les administrateurs
+    (sections 1, 6 et "Securite" -- "le public ne doit jamais pouvoir
+    connaitre... les statistiques correspondantes").
     """
     payload = {
         "id":               row.id,
@@ -161,15 +163,15 @@ def video(row, *, include_moderation: bool = False) -> dict:
         "tags":             row.tags,
         "created_at":       _iso(row.created_at),
         "published_at":     _iso(row.published_at),
-        "stats": {
-            "views":  row.view_count,
-            "likes":  row.like_count,
-            "shares": row.share_count,
-        },
         "skills": _linked_skills(row),
     }
     if include_moderation:
         payload.update({
+            "stats": {
+                "views":  row.view_count,
+                "likes":  row.like_count,
+                "shares": row.share_count,
+            },
             "rejection_reason":     row.rejection_reason,
             "moderated_at":         _iso(row.moderated_at),
             "moderated_by":         row.moderated_by.username if row.moderated_by_id else None,

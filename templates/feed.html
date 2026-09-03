@@ -12,7 +12,7 @@
         <video src="{{ vid.file.url }}" autoplay muted playsinline loop></video>
     {% endif %}
     <div class="feed-caption">
-      <strong>@{{ vid.user }}</strong>
+      <a href="/profile/{{ vid.user }}/"><strong>@{{ vid.user }}</strong></a>
     </div>
     <div class="feed-actions">
       <button
@@ -21,7 +21,7 @@
         data-reaction="like"
       >
         <span class="feed-react-icon">👍</span>
-        <span>{{ vid.likes|default:0 }}</span>
+        {% if role == "Admin" %}<span>{{ vid.likes|default:0 }}</span>{% endif %}
       </button>
       <button
         class="feed-react-btn react-btn {% if disliked %}is-active-dislike{% endif %}"
@@ -29,8 +29,17 @@
         data-reaction="dislike"
       >
         <span class="feed-react-icon">👎</span>
-        <span>{{ vid.dislikes|default:0 }}</span>
+        {% if role == "Admin" %}<span>{{ vid.dislikes|default:0 }}</span>{% endif %}
       </button>
+      {% if role == "Recruiter" %}
+      <form method="post" action="/messages/start/" class="feed-message-form">
+        {% csrf_token %}
+        <input type="hidden" name="recipient" value="{{ vid.user }}">
+        <button type="submit" class="feed-react-btn" title="Contacter @{{ vid.user }}">
+          <span class="feed-react-icon">✉️</span>
+        </button>
+      </form>
+      {% endif %}
     </div>
   </div>
   {% endfor %}
