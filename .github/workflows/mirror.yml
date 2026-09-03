@@ -12,4 +12,4 @@ jobs:
         run: |
           git clone --mirror https://github.com/YknotTYD/ProfilsActifsTemp repo-mirror
           cd repo-mirror
-          git push https://${{ secrets.MIRROR_TOKEN }}@github.com/EpitechPGE3-2026/G-SVR-500-NCY-5-1-survivor-4
+          git push https://${{ secrets.MIRROR_TOKEN }}@github.com/EpitechPGE3-2026/G-SVR-500-NCY-5-1-survivor-4 '+refs/heads/*:refs/heads/*' '+refs/tags/*:refs/tags/*' --prune
