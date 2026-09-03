@@ -1,0 +1,27 @@
+{% extends "profiles/base.html" %}
+{% block title %}Messages{% endblock %}
+
+{% block content %}
+<div class="p-pagehead">
+    <h1>Messages</h1>
+    <p class="p-muted">Les recruteurs peuvent vous contacter depuis votre profil ou l'une de vos
+       videos publiees ; vous pouvez toujours leur repondre ici.</p>
+</div>
+
+<div class="p-panel">
+    {% if conversations %}
+    <ul class="notif-list">
+        {% for conv in conversations %}
+        <li>
+            <a href="/messages/{{ conv.id }}/" class="notif-item">
+                <span class="notif-item-label">@{{ conv.other_username }}</span>
+                <span class="notif-item-date">{{ conv.preview }}</span>
+            </a>
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p class="p-empty">Aucune conversation pour le moment.</p>
+    {% endif %}
+</div>
+{% endblock %}

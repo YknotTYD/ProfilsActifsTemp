@@ -78,6 +78,11 @@
             Découvrez les profils actifs et réagissez à leurs vidéos de
             présentation.
           </p>
+          {% if role == "Admin" %}
+          <p class="mt-2">
+            <a href="/profiles/admin/videos/" class="btn-ghost">Modération des vidéos de profil →</a>
+          </p>
+          {% endif %}
           {% if videos_ld %}
             {% include "feed.html" %}
           {% else %}

@@ -14,7 +14,7 @@ from profils.profiles import services
 
 from .factories import (
     add_certification, add_education, add_experience, add_language, add_project,
-    add_skill, add_video, make_profile, make_user,
+    add_skill, add_video, make_admin, make_profile, make_user,
 )
 
 
@@ -117,6 +117,27 @@ class EditorPageTests(TestCase):
         response = client.get("/profiles/edit/")
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Modifier mon profil")
+
+
+class AdminVideosPageTests(TestCase):
+    """`/profiles/admin/videos/` : la meme garde que la console questionnaires."""
+
+    def test_requires_authentication(self):
+        response = Client().get("/profiles/admin/videos/")
+        self.assertEqual(response.status_code, 302)
+
+    def test_a_regular_user_gets_404_not_403(self):
+        client = Client()
+        client.force_login(make_user("candidat"))
+        response = client.get("/profiles/admin/videos/")
+        self.assertEqual(response.status_code, 404)
+
+    def test_an_admin_can_open_it(self):
+        client = Client()
+        client.force_login(make_admin())
+        response = client.get("/profiles/admin/videos/")
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Moderation des videos de profil")
 
 
 class RedirectTests(TestCase):

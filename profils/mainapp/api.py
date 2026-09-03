@@ -140,8 +140,9 @@ def react(request: HttpRequest) -> HttpResponse:
         return HttpResponse(status = 400)
 
     prev_reaction = Reaction.objects.filter(user = request.user, video = vid).first()
+    is_new_reaction = prev_reaction is None or prev_reaction.reaction != body["reaction"]
 
-    if prev_reaction is None or prev_reaction.reaction != body["reaction"]:
+    if is_new_reaction:
         Reaction.objects.create(
             user     = request.user,
             video    = vid,
@@ -150,6 +151,21 @@ def react(request: HttpRequest) -> HttpResponse:
 
     if prev_reaction:
         prev_reaction.delete()
+
+    # section 5 : "like recu", "dislike recu" -- pas de notification pour
+    # une reaction qu'on retire, ni pour une reaction a sa propre video.
+    if is_new_reaction and vid.user_id != request.user.id:
+        from profils.notifications import services as notifications
+        from profils.notifications import types as notification_types
+
+        notif_type = (
+            notification_types.VIDEO_LIKED if body["reaction"] == "like"
+            else notification_types.VIDEO_DISLIKED
+        )
+        notifications.notify(
+            vid.user, notif_type, target = vid,
+            url = f"/profile/{vid.user.username}/",
+        )
 
     return HttpResponse(status = 200)
 

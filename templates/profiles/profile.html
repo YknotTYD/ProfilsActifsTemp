@@ -59,6 +59,13 @@ la page ne la contient pas.
                 <a class="p-btn p-primary" href="/profiles/edit/">Modifier mon profil</a>
                 <a class="p-btn" href="/profile/{{ p.profile.username }}/?preview=public">Voir en visiteur</a>
             {% else %}
+                {% if can_message %}
+                <form method="post" action="/messages/start/">
+                    {% csrf_token %}
+                    <input type="hidden" name="recipient" value="{{ p.profile.username }}">
+                    <button type="submit" class="p-btn p-primary">Contacter ce candidat</button>
+                </form>
+                {% endif %}
                 <a class="p-btn" href="/profiles/">Rechercher d'autres profils</a>
             {% endif %}
         </div>

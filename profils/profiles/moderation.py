@@ -22,10 +22,25 @@ pour un appel interne qui ne feint pas d'avoir une identite (scripts, tests).
 from django.db    import transaction
 from django.utils import timezone
 
+from profils.notifications import services as notifications
+from profils.notifications import types as notification_types
+
 from . import constants as c
 from .http import BadRequest
 from .models.video import ProfileVideo, VideoModerationEvent
 from .permissions import ProfileAccessDenied
+
+
+#: statuts qui declenchent une notification au proprietaire (section 5 :
+#: "video acceptee", "video refusee", "changement important concernant une
+#: video"). Un statut absent d'ici n'a rien a annoncer -- `DRAFT`,
+#: `PROCESSING` et `PENDING` sont des etapes internes du pipeline, pas des
+#: evenements pour l'utilisateur.
+_NOTIFICATION_FOR_STATUS = {
+    c.VIDEO_APPROVED: notification_types.VIDEO_APPROVED,
+    c.VIDEO_REJECTED: notification_types.VIDEO_REJECTED,
+    c.VIDEO_HIDDEN:   notification_types.VIDEO_HIDDEN,
+}
 
 
 class ForbiddenTransition(ProfileAccessDenied):
@@ -99,4 +114,13 @@ def transition_video(video: ProfileVideo, to_status: str, *, actor: str,
         new_status = to_status,
         reason     = reason,
     )
+
+    notif_type = _NOTIFICATION_FOR_STATUS.get(to_status)
+    if notif_type is not None:
+        notifications.notify(
+            video.profile.user, notif_type, target = video,
+            url = f"/profile/{video.profile.username}/",
+            title = video.title, reason = reason,
+        )
+
     return video
