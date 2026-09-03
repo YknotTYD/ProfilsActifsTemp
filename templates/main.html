@@ -29,85 +29,52 @@
 
       <div class="dash-grid">
         {% if role == "JobSeeker" %}
-        <div class="dash-panel">
-          <h2 class="dash-panel-title">Votre vidéo de présentation</h2>
-          <p class="dash-panel-desc">
-            Ajoutez le lien de votre vidéo pour la partager avec les
-            recruteurs qui consultent votre profil.
-          </p>
-          <form
-            method="post"
-            action="/api/upload/video/?camefrom=/"
-            class="dash-form"
-          >
-            {% csrf_token %}
-            <div class="field">
-              <input
-                id="video-url"
-                name="url"
-                placeholder=" "
-                autocomplete="off"
-                required
-                class="peer field-input"
-              />
-              <label for="video-url" class="field-label"
-                >URL de votre vidéo</label
-              >
-            </div>
-            <button type="submit" class="btn-primary">UPLOADER</button>
-          </form>
-        </div>
+        <form
+          method="post"
+          action="/api/upload/video/?camefrom=/"
+          class="grid gap-[14px] mt-[14px]"
+        >
+          {% csrf_token %}
+          <div class="field">
+            <input
+              id="video-url"
+              name="url"
+              placeholder=" "
+              autocomplete="off"
+              required
+              class="peer field-input"
+            />
+            <label for="video-url" class="field-label"
+              >URL de votre vidéo de présentation</label
+            >
+          </div>
+          <button type="submit" class="btn-primary">UPLOADER</button>
+        </form>
+
+{% include "upload.html" %}
+
         {% elif role == "Recruiter" %}
-        <div class="dash-panel">
-          <h2 class="dash-panel-title">Vidéos des candidats</h2>
-          <p class="dash-panel-desc">
-            Découvrez les profils actifs et réagissez à leurs vidéos de
-            présentation.
-          </p>
-          {% if videos_ld %}
-          <div class="feed">
-            {% for vid, liked, disliked in videos_ld %}
-            <div class="feed-item">
-              <iframe
-                src="{{ vid.url }}?autoplay=1&mute=1&playsinline=1&controls=0"
-                referrerpolicy="strict-origin-when-cross-origin"
-                allow="autoplay; encrypted-media"
-                allowfullscreen
-              >
-              </iframe>
-              <div class="feed-caption">
-                <strong>@{{ vid.user }}</strong>
-              </div>
-              <div class="feed-actions">
-                <button
-                  class="feed-react-btn react-btn {% if liked %}is-active-like{% endif %}"
-                  data-video-id="{{ vid.id }}"
-                  data-reaction="like"
-                >
-                  <span class="feed-react-icon">👍</span>
-                  <span>{{ vid.likes }}</span>
-                </button>
-                <button
-                  class="feed-react-btn react-btn {% if disliked %}is-active-dislike{% endif %}"
-                  data-video-id="{{ vid.id }}"
-                  data-reaction="dislike"
-                >
-                  <span class="feed-react-icon">👎</span>
-                  <span>{{ vid.dislikes }}</span>
-                </button>
-              </div>
-            </div>
-            {% endfor %}
-          </div>
+
+          {% if videos_ldl %}
+            {% include "feed.html" %}
           {% else %}
-          <div class="dash-empty">
-            <span class="dash-empty-icon">🎬</span>
-            <p>
-              Aucune vidéo pour le moment. Revenez plus tard pour découvrir
-              les candidats.
-            </p>
-          </div>
+          <p class="text-center text-[#4a4a4a] mt-5">
+            Aucune vidéo pour le moment.
+          </p>
           {% endif %}
+
+        {% endif %}
+
+        <div class="foot">
+          <button
+            type="button"
+            onclick="
+              document.getElementById('logout-modal').style.display = 'flex'
+            "
+            class="link-btn"
+          >
+            Se déconnecter
+          </button>
         </div>
         {% endif %}
       </div>

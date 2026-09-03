@@ -1,6 +1,9 @@
 from django.contrib import admin
 from django.db import models
 from django.contrib.auth.models import User
+from django.core.validators import FileExtensionValidator
+from django.db.models.signals import post_delete
+from django.dispatch import receiver
 from . import constants
 
 # TODO: constructors for models
@@ -33,11 +36,18 @@ class VideoLink(models.Model):
 class VideoFile(models.Model):
 
     user = models.ForeignKey(User, on_delete = models.CASCADE)
-    file = None
+    file = models.FileField(
+        upload_to = 'videos/',
+        validators = [FileExtensionValidator(allowed_extensions = ['mp4', 'mov', 'avi', 'webm'])]
+    )
 
     def __str__(self):
         return f"VideoFile<{self.user}>"
 
+@receiver(post_delete, sender = VideoFile)
+def delete_videofile_on_delete(sender, instance, **kwargs):
+    if instance.file:
+        instance.file.delete(save = False)
 
 class Reaction(models.Model):
 
@@ -58,4 +68,5 @@ VideoLink.dislikes = property(get_dislikes)
 
 admin.site.register(Role)
 admin.site.register(VideoLink)
+admin.site.register(VideoFile)
 admin.site.register(Reaction)

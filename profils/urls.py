@@ -19,19 +19,24 @@ from django.contrib import admin
 from django.urls    import path, include
 from .mainapp       import views
 from .mainapp       import api
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
-    path('admin/',            admin.site.urls),
-    path("",                  views.main),
-    path("quiz/",             views.quiz),
-    path("cgu/",              views.cgu),
-    path("register/",         views.register),
-    path("login/",            views.login),
-    path("logout/",           views.logout),
-    path("api/register/",     api.register),
-    path("api/login/",        api.login),
-    path("api/upload/video/", api.video_upload),
-    path("api/react/",        api.react),
-    path("",                  include("profils.questionnaires.urls")),
-    path("",                  include("profils.profiles.urls")),
+    path('admin/',                admin.site.urls),
+    path("",                      views.main),
+    path("quiz/",                 views.quiz),
+    path("cgu/",                  views.cgu),
+    path("register/",             views.register),
+    path("login/",                views.login),
+    path("logout/",               views.logout),
+    path("api/register/",         api.register),
+    path("api/login/",            api.login),
+    path("api/upload/video/",     api.video_upload),
+    path("api/upload/videofile/", api.videofile_upload),
+    path("api/react/",            api.react),
+    path("",                      include("profils.questionnaires.urls")),
+    path("",                      include("profils.profiles.urls")),
 ]
+
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

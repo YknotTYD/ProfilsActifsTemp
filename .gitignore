@@ -7,3 +7,6 @@ node_modules
 .claude/
 .env
 collectstatic/**
+media/**
+!media/**/
+!media/videos/.gitkeep
