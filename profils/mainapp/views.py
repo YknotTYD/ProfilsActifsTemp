@@ -43,29 +43,51 @@ def get_videos(request: HttpResponse) -> list[tuple[int, int]]:
     videos = [(vid, l, d, 1) for vid, (l, d) in zip(videos, liked_disliked)]
     return videos + get_video_filepaths(request)
 
+def _my_video_status(user):
+    """Statut de la video de presentation de `user`, cote pipeline
+    `profiles.ProfileVideo` -- celui que sert `/profiles/me/video/`.
+
+    Le formulaire d'upload de la page d'accueil postait autrefois vers
+    `mainapp.VideoLink`, un second systeme de moderation invisible du
+    panneau d'administration dedie. Le tableau de bord affiche desormais un
+    resume tire de la meme source que la page de gestion, pour qu'il n'y ait
+    plus qu'un seul endroit ou une video de presentation existe.
+    """
+    from profils.profiles import constants as pc
+    from profils.profiles import services as profile_services
+    from profils.profiles.models import ProfileVideo
+
+    profile = profile_services.get_profile(user)
+    rows = list(
+        ProfileVideo.objects.filter(profile = profile, is_presentation = True)
+            .exclude(status__in = (pc.VIDEO_DELETED, pc.VIDEO_HIDDEN))
+            .order_by("-created_at")
+    )
+    return {
+        "current": next((v for v in rows if v.status == pc.VIDEO_PUBLISHED), None),
+        "pending": next((v for v in rows if v.status != pc.VIDEO_PUBLISHED), None),
+    }
+
 def main(request: HttpRequest) -> HttpResponse:
 
-    my_videos = (
-        VideoLink.objects.filter(user = request.user).order_by("-id")
-            if request.user.is_authenticated else []
+    role = (
+        str(Role.objects.filter(user = request.user).first())
+            if request.user.is_authenticated else "None"
     )
 
     return render(
         request,
         "main.html",
         {
-            "user":
-                request.user,
-            "role":
-                str(Role.objects.filter(user = request.user).first())
-                    if request.user.is_authenticated else "None",
-            "videos_ld":
-                get_videos(request),
+            "user":  request.user,
+            "role":  role,
+            "videos_ld": get_videos(request),
             # section 1 : "l'utilisateur doit pouvoir consulter a tout moment
-            # le statut de ses videos" -- la plus recente suffit ici, le
-            # formulaire au-dessus n'en propose qu'une a la fois.
-            "my_video":
-                my_videos[0] if my_videos else None,
+            # le statut de ses videos". Uniquement pour un demandeur d'emploi :
+            # `get_profile` cree un profil professionnel s'il n'en a pas
+            # encore, ce qu'on ne veut surtout pas declencher pour un
+            # recruteur ou un administrateur de passage sur la page d'accueil.
+            "my_video_status": _my_video_status(request.user) if role == "JobSeeker" else None,
         }
     )
 

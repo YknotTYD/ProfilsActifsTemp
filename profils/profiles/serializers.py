@@ -238,11 +238,12 @@ def public_profile(profile, viewer) -> dict:
     """
     from .visibility import visible_videos
 
-    allowed = visible_sections(viewer, profile)
+    allowed  = visible_sections(viewer, profile)
+    is_owner = audience_of(viewer, profile) >= c.AUDIENCE_OWNER
     payload = {
         "profile":  identity(profile),
         "sections": allowed,
-        "is_owner": audience_of(viewer, profile) >= c.AUDIENCE_OWNER,
+        "is_owner": is_owner,
         "visibility": profile.visibility,
     }
 
@@ -276,8 +277,11 @@ def public_profile(profile, viewer) -> dict:
     if allowed[c.SECTION_AVAILABILITY]:
         payload["availability"] = availability(profile)
     if allowed[c.SECTION_VIDEOS]:
+        # section 6 : les statistiques de reactions ne regardent que le
+        # proprietaire et les administrateurs -- exactement ce que dit deja
+        # `is_owner` ici (voir `visibility.audience_of`).
         payload["videos"] = [
-            video(row) for row in
+            video(row, include_moderation = is_owner) for row in
             visible_videos(viewer, profile).prefetch_related("skill_links__skill")
         ]
 

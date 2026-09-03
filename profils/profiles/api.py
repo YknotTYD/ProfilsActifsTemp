@@ -22,7 +22,7 @@ from .models import (
 )
 from .search import ProfileQuery, search as run_search
 from .skills import resolve_skill
-from .visibility import PreviewViewer, assert_can_view, visible_videos
+from .visibility import PreviewViewer, assert_can_view, audience_of, visible_videos
 
 
 # --------------------------------------------------------------------------- #
@@ -107,11 +107,12 @@ def profile_videos(request, username):
         return fail("profil introuvable", "not_found", 404)
 
     assert_can_view(request.user, profile)
-    viewer = _viewer(request, profile)
-    rows   = visible_videos(viewer, profile).prefetch_related("skill_links__skill")
+    viewer   = _viewer(request, profile)
+    is_owner = audience_of(viewer, profile) >= c.AUDIENCE_OWNER
+    rows     = visible_videos(viewer, profile).prefetch_related("skill_links__skill")
     return ok({
         "username": profile.username,
-        "videos":   [serializers.video(row) for row in rows],
+        "videos":   [serializers.video(row, include_moderation = is_owner) for row in rows],
     })
 
 

@@ -15,6 +15,7 @@ urlpatterns = [
     # ------------------------------------------------------------------ #
     path("profiles/",              views.search_page,        name = "p_search"),
     path("profiles/edit/",         views.editor_page,        name = "p_editor"),
+    path("profiles/me/video/",     views.my_video_page,      name = "p_my_video"),
     path("profile/",               views.my_profile_redirect, name = "p_me"),
     path("profile/<str:username>/", views.profile_page,      name = "p_profile"),
     path("profiles/admin/videos/", views.admin_videos_page,  name = "p_admin_videos"),

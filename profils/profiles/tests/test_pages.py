@@ -47,7 +47,7 @@ class ProfilePageTests(TestCase):
 
         response = self.client.get(f"/profile/{self.owner.username}/")
         self.assertEqual(response.status_code, 200)
-        for text in ("Java", "Developpeur", "Certifications", "Projets", "Videos", "GitHub"):
+        for text in ("Java", "Developpeur", "Certifications", "Projets", "Video de presentation", "GitHub"):
             self.assertContains(response, text, msg_prefix = text)
 
     def test_a_hidden_section_produces_no_html_at_all(self):
@@ -117,6 +117,76 @@ class EditorPageTests(TestCase):
         response = client.get("/profiles/edit/")
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Modifier mon profil")
+
+
+class MyVideoPageTests(TestCase):
+    """`/profiles/me/video/` : une seule video de presentation a la fois."""
+
+    def setUp(self):
+        self.profile = make_profile("candidat")
+        self.owner   = self.profile.user
+        self.admin   = make_admin()
+        self.client  = Client()
+        self.client.force_login(self.owner)
+
+    def test_requires_authentication(self):
+        response = Client().get("/profiles/me/video/")
+        self.assertEqual(response.status_code, 302)
+
+    def test_renders_the_empty_state(self):
+        response = self.client.get("/profiles/me/video/")
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "pas encore de video de presentation")
+
+    def test_submitting_a_link_creates_a_pending_video(self):
+        response = self.client.post("/profiles/me/video/", {
+            "action": "submit", "title": "Ma video", "file_url": "https://exemple.test/v.mp4",
+        })
+        self.assertRedirects(response, "/profiles/me/video/")
+
+        from profils.profiles.models import ProfileVideo
+        video = ProfileVideo.objects.get(profile = self.profile)
+        self.assertEqual(video.status, "PENDING")
+
+    def test_an_empty_link_shows_an_error_instead_of_crashing(self):
+        response = self.client.post("/profiles/me/video/", {
+            "action": "submit", "title": "Ma video", "file_url": "",
+        }, follow = True)
+        self.assertEqual(response.status_code, 200)
+
+        from profils.profiles.models import ProfileVideo
+        self.assertFalse(ProfileVideo.objects.filter(profile = self.profile).exists())
+
+    def test_the_full_lifecycle_shows_the_old_video_until_confirmation(self):
+        from profils.profiles import services
+
+        old = services.submit_video_link(self.profile, {
+            "title": "Ancienne", "file_url": "https://exemple.test/old.mp4",
+        })
+        services.approve_video(old, user = self.admin)
+        services.publish_presentation_video(old, user = self.owner)
+
+        response = self.client.get("/profiles/me/video/")
+        self.assertContains(response, "Ancienne")
+
+        self.client.post("/profiles/me/video/", {
+            "action": "submit", "title": "Nouvelle", "file_url": "https://exemple.test/new.mp4",
+        })
+        response = self.client.get("/profiles/me/video/")
+        self.assertContains(response, "Ancienne")
+        self.assertContains(response, "Nouvelle")
+
+        new = old.replaced_by.get()
+        services.approve_video(new, user = self.admin)
+
+        response = self.client.get("/profiles/me/video/")
+        self.assertContains(response, "Ancienne")
+        self.assertContains(response, "Publier et remplacer")
+
+        self.client.post("/profiles/me/video/", {"action": "publish"})
+        response = self.client.get("/profiles/me/video/")
+        self.assertContains(response, "Nouvelle")
+        self.assertNotContains(response, "Ancienne")
 
 
 class AdminVideosPageTests(TestCase):

@@ -51,7 +51,7 @@ class EmptySectionTests(TestCase):
     def test_the_page_renders_the_empty_state(self):
         response = self.client.get(f"/profile/{self.profile.username}/")
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Videos")
+        self.assertContains(response, "Video de presentation")
 
 
 class VideoModelTests(TestCase):
@@ -169,6 +169,30 @@ class VideoStatsPrivacyTests(TestCase):
 
         response = Client().get(f"/api/profiles/{profile.username}/videos/")
         payload  = json.loads(response.content)
+        self.assertNotIn("stats", payload["videos"][0])
+
+    def test_the_owner_does_see_their_own_stats_on_their_profile_page(self):
+        profile = make_profile("videaste", visibility = c.VISIBILITY_PUBLIC)
+        add_video(profile, status = c.VIDEO_PUBLISHED)
+
+        client = Client()
+        client.force_login(profile.user)
+        response = json.loads(client.get(f"/api/profiles/{profile.username}/videos/").content)
+        self.assertIn("stats", response["videos"][0])
+
+    def test_the_owner_sees_stats_via_the_full_profile_payload_too(self):
+        profile = make_profile("videaste", visibility = c.VISIBILITY_PUBLIC)
+        add_video(profile, status = c.VIDEO_PUBLISHED)
+
+        payload = serializers.public_profile(profile, profile.user)
+        self.assertIn("stats", payload["videos"][0])
+
+    def test_a_visitor_does_not_see_stats_via_the_full_profile_payload(self):
+        profile = make_profile("videaste", visibility = c.VISIBILITY_PUBLIC)
+        add_video(profile, status = c.VIDEO_PUBLISHED)
+        visitor = make_user("passant")
+
+        payload = serializers.public_profile(profile, visitor)
         self.assertNotIn("stats", payload["videos"][0])
 
 
