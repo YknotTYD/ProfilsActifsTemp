@@ -114,6 +114,40 @@ PROFESSIONAL_FIELDS = (
 
 
 # --------------------------------------------------------------------------- #
+# Couleur de banniere du profil
+# --------------------------------------------------------------------------- #
+#: choix simple d'une teinte plutot qu'une image : pas d'hebergement de
+#: fichiers, et une bannière lisible sans URL a fournir. La valeur est le nom
+#: du degrade, tenu a jour dans `static/profiles.css` (`.p-cover[data-cover]`).
+
+COVER_NAVY   = "navy"
+COVER_OCRE   = "ocre"
+COVER_TEAL   = "teal"
+COVER_FOREST = "forest"
+COVER_PURPLE = "purple"
+COVER_ROSE   = "rose"
+COVER_SKY    = "sky"
+COVER_SUNSET = "sunset"
+COVER_SLATE  = "slate"
+COVER_INDIGO = "indigo"
+
+COVER_COLORS = (
+    (COVER_NAVY,   "Marine"),
+    (COVER_OCRE,   "Ocre"),
+    (COVER_TEAL,   "Sarcelle"),
+    (COVER_FOREST, "Foret"),
+    (COVER_PURPLE, "Violet"),
+    (COVER_ROSE,   "Rose"),
+    (COVER_SKY,    "Ciel"),
+    (COVER_SUNSET, "Coucher de soleil"),
+    (COVER_SLATE,  "Ardoise"),
+    (COVER_INDIGO, "Indigo"),
+)
+
+DEFAULT_COVER_COLOR = COVER_NAVY
+
+
+# --------------------------------------------------------------------------- #
 # Disponibilite et recherche d'emploi (section 10)
 # --------------------------------------------------------------------------- #
 

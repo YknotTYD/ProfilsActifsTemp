@@ -71,24 +71,42 @@
         root.appendChild(panel);
 
         const grid = qEl('div', { class: 'p-grid' });
-        panel.append(qEl('h2', { text: 'Informations generales' }), grid);
 
         const patch = (field) => (value) => saved(QAPI.put('/api/profiles/me/', { [field]: value }));
+
+        const photoField = QForm.text('Photo (URL)', profile.photo_url, patch('photo_url'));
+        const photoInput = photoField.querySelector('input');
+
+        const avatar = qEl('div', { class: 'p-editor-avatar' });
+        function refreshAvatar(url) {
+            avatar.style.backgroundImage = url ? `url('${url}')` : 'none';
+            avatar.textContent = url ? '' : (profile.first_name || profile.username || '?')[0].toUpperCase();
+        }
+        refreshAvatar(profile.photo_url);
+        photoInput.addEventListener('input', () => refreshAvatar(photoInput.value));
+
+        const photoRow = qEl('div', { class: 'p-editor-photo' }, [
+            avatar,
+            qEl('a', {
+                href: '#', text: 'Modifier la photo',
+                onclick: (e) => { e.preventDefault(); photoInput.focus(); },
+            }),
+        ]);
+
+        panel.append(qEl('h2', { text: 'Informations generales' }), photoRow, grid);
 
         grid.append(
             QForm.text('Prenom', profile.first_name, patch('first_name')),
             QForm.text('Nom', profile.last_name, patch('last_name')),
-            QForm.text('Titre professionnel', profile.headline, patch('headline'), {
-                example: 'Developpeur backend Java',
-            }),
+            QForm.text('Titre professionnel', profile.headline, patch('headline')),
             QForm.select('Domaine professionnel', profile.professional_field, choices('fields'),
                         patch('professional_field'), { blank: '—' }),
             QForm.text('Ville', profile.location.city, patch('location_city')),
             QForm.text('Region', profile.location.region, patch('location_region')),
             QForm.text('Pays (code ISO)', profile.location.country, patch('location_country'), {
-                example: 'FR', placeholder: 'FR',
+                placeholder: 'FR',
             }),
-            QForm.text('Photo (URL)', profile.photo_url, patch('photo_url')),
+            photoField,
             QForm.text('Couverture (URL)', profile.cover_url, patch('cover_url')),
         );
 
@@ -501,17 +519,17 @@
             QForm.text('Disponible a partir du', profile.available_from, patch('available_from'), { type: 'date' }),
         );
 
-        panel.appendChild(qEl('div', { class: 'p-field' }, [
-            qEl('label', { class: 'p-label', text: 'Mode de travail' }),
-            ...['REMOTE', 'HYBRID', 'ONSITE'].map((mode, i) => QForm.check(
+        panel.append(
+            qEl('div', { class: 'p-label', text: 'Mode de travail', style: 'margin-bottom:.5rem' }),
+            qEl('div', { class: 'q-field-group' }, ['REMOTE', 'HYBRID', 'ONSITE'].map((mode, i) => QForm.check(
                 choices('work_modes')[i][1], availability.work_modes.includes(mode),
                 (checked) => patch({ REMOTE: 'open_to_remote', HYBRID: 'open_to_hybrid', ONSITE: 'open_to_onsite' }[mode])(checked),
-            )),
-        ]));
+            ))),
+        );
 
-        panel.appendChild(qEl('div', { class: 'p-field' }, [
-            qEl('label', { class: 'p-label', text: 'Types de contrat recherches' }),
-            ...choices('contract_types').map(([value, label]) => QForm.check(
+        panel.append(
+            qEl('div', { class: 'p-label', text: 'Types de contrat recherches', style: 'margin-bottom:.5rem' }),
+            qEl('div', { class: 'q-field-group' }, choices('contract_types').map(([value, label]) => QForm.check(
                 label, availability.contract_types.includes(value),
                 async (checked) => {
                     const current = new Set(availability.contract_types);
@@ -519,8 +537,8 @@
                     availability.contract_types = [...current];
                     await saved(QAPI.put('/api/profiles/me/', { contract_types: [...current] }));
                 },
-            )),
-        ]));
+            ))),
+        );
 
         grid.append(
             QForm.check('Mobile geographiquement', profile.willing_to_relocate, patch('willing_to_relocate')),

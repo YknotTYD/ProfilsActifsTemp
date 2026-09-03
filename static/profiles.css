@@ -1,33 +1,16 @@
 /* profiles.css
  *
- * Profils professionnels. Reprend l'identite du module questionnaires
- * (bleu #1B3A6B, ocre #C8842B, Marianne + Spectral) pour que le site reste
- * d'un seul tenant, avec un vocabulaire visuel plus proche d'un reseau
- * social : entete en banniere, pastilles de niveau, frise du parcours,
- * grille de miniatures video.
+ * Profils professionnels. Reprend l'identite visuelle du reste du site
+ * ProfilsActifs (bleu #1B3A6B, jaune d'action #F6D179, Marianne) pour que
+ * les pages profils se sentent comme une continuite du site, avec un
+ * vocabulaire visuel plus proche d'un reseau social : entete en banniere,
+ * pastilles de niveau, frise du parcours, grille de miniatures video.
  *
- * Les jetons sont redeclares ici plutot qu'importes : les deux feuilles ne
- * sont jamais chargees ensemble, et le module reste autonome, comme
- * `questionnaires` l'est de `mainapp`.
+ * La police Marianne et l'entete sont deja fournies par static/style.css,
+ * charge avant cette feuille sur les pages profils : on reutilise ses
+ * jetons de couleur pour rester coherent, et on ne redeclare ici que le
+ * vocabulaire propre aux profils.
  */
-
-@import url('https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,500;0,600;1,400&display=swap');
-
-@font-face {
-    font-family: "Marianne";
-    src: url("https://cdn.jsdelivr.net/npm/@gouvfr/dsfr@1.13.0/dist/fonts/Marianne-Regular.woff2") format("woff2");
-    font-weight: 400; font-style: normal; font-display: swap;
-}
-@font-face {
-    font-family: "Marianne";
-    src: url("https://cdn.jsdelivr.net/npm/@gouvfr/dsfr@1.13.0/dist/fonts/Marianne-Medium.woff2") format("woff2");
-    font-weight: 500; font-style: normal; font-display: swap;
-}
-@font-face {
-    font-family: "Marianne";
-    src: url("https://cdn.jsdelivr.net/npm/@gouvfr/dsfr@1.13.0/dist/fonts/Marianne-Bold.woff2") format("woff2");
-    font-weight: 700; font-style: normal; font-display: swap;
-}
 
 :root {
     --blue:        #1B3A6B;
@@ -41,10 +24,14 @@
     --ocre-pale:   #FDF4E7;
     --ocre-line:   #EBD3A9;
 
+    --cta:         #F6D179;
+    --cta-hover:   #F0C65E;
+    --cta-text:    #262626;
+
     --paper:       #FFFFFF;
-    --ground:      #F7F8FA;
+    --ground:      #F5F4F2;
     --sunk:        #EEF1F5;
-    --ink:         #1A2233;
+    --ink:         #262626;
     --muted:       #5A6577;
     --faint:       #8792A3;
     --line:        #DFE4EC;
@@ -57,10 +44,10 @@
     --warn:        #9A6700;
     --warn-pale:   #FFF7E3;
 
-    --font-title: "Marianne", "Segoe UI", system-ui, -apple-system, sans-serif;
-    --font-body:  "Spectral", Georgia, "Times New Roman", serif;
+    --font-title: "Marianne", "Helvetica Neue", Arial, sans-serif;
+    --font-body:  "Marianne", "Helvetica Neue", Arial, sans-serif;
 
-    --radius: 6px;
+    --radius: 8px;
     --shadow: 0 1px 2px rgba(26, 34, 51, .06), 0 4px 12px rgba(26, 34, 51, .05);
 }
 
@@ -96,26 +83,9 @@ a:hover { color: var(--blue-mid); }
 }
 
 /* --------------------------------------------------------------------- */
-/* En-tete du site                                                        */
+/* En-tete du site : fournie par partials/_navbar.html (.brand-header /   */
+/* .wordmark / .btn-ghost de style.css), commune a toutes les pages.      */
 /* --------------------------------------------------------------------- */
-
-.p-header { background: var(--blue); color: #fff; border-bottom: 4px solid var(--ocre); }
-.p-header > div {
-    max-width: 76rem; margin: 0 auto;
-    padding: .85rem clamp(1rem, 4vw, 2rem);
-    display: flex; align-items: center; justify-content: space-between; gap: 1rem;
-    flex-wrap: wrap;
-}
-.p-brand {
-    font-family: var(--font-title); font-weight: 700; font-size: 1.15rem;
-    color: #fff; text-decoration: none; letter-spacing: -.01em;
-}
-.p-header nav { display: flex; gap: .35rem; flex-wrap: wrap; }
-.p-header nav a {
-    color: #E4EBF5; text-decoration: none; font-family: var(--font-title);
-    font-size: .88rem; padding: .35rem .7rem; border-radius: var(--radius);
-}
-.p-header nav a:hover { background: rgba(255,255,255,.12); color: #fff; }
 
 .p-main {
     max-width: 76rem; margin: 0 auto;
@@ -132,10 +102,70 @@ a:hover { color: var(--blue-mid); }
     box-shadow: var(--shadow); margin-bottom: 1.5rem;
 }
 .p-cover {
+    position: relative;
     height: clamp(7rem, 18vw, 11rem);
-    background: linear-gradient(120deg, var(--blue-dark), var(--blue-mid) 65%, var(--ocre));
+    background: var(--blue);
     background-size: cover; background-position: center;
+    /* .p-hero fait deja overflow:hidden + border-radius, mais les enfants
+       positionnes en absolute (bouton + popover de couleur) forcent souvent
+       .p-cover sur son propre calque de composition : certains navigateurs
+       laissent alors deborder 1px de couleur hors du coin arrondi du parent.
+       On redeclare le rayon ici pour que le clip soit garanti quel que soit
+       le moteur de rendu. */
+    border-radius: var(--radius) var(--radius) 0 0;
 }
+
+/* Dix teintes simples au choix, quand aucune image de couverture n'est
+   fournie. Couleurs unies, memes teintes que les pastilles du picker. */
+.p-cover[data-cover="navy"]   { background-color: #1B3A6B; }
+.p-cover[data-cover="ocre"]   { background-color: #C8842B; }
+.p-cover[data-cover="teal"]   { background-color: #14837A; }
+.p-cover[data-cover="forest"] { background-color: #2F7A41; }
+.p-cover[data-cover="purple"] { background-color: #6A3FA0; }
+.p-cover[data-cover="rose"]   { background-color: #C23A63; }
+.p-cover[data-cover="sky"]    { background-color: #2E7FC6; }
+.p-cover[data-cover="sunset"] { background-color: #D9631A; }
+.p-cover[data-cover="slate"]  { background-color: #5A6B7A; }
+.p-cover[data-cover="indigo"] { background-color: #453AA8; }
+
+/* Bouton et popover de choix de couleur, visibles pour le proprietaire */
+.p-cover-edit {
+    position: absolute; top: .7rem; right: .7rem; z-index: 2;
+    display: grid; place-items: center;
+    width: 2.1rem; height: 2.1rem; border-radius: 50%;
+    background: rgba(255, 255, 255, .92); box-shadow: var(--shadow);
+    cursor: pointer; transition: transform .12s;
+}
+.p-cover-edit:hover { transform: scale(1.06); background: #fff; }
+.p-cover-edit svg { width: 1.15rem; height: 1.15rem; }
+
+.p-cover-picker {
+    /* Repose sur .p-cover-edit (top:.7rem, hauteur 2.1rem) et doit tenir dans
+       la hauteur mini de .p-cover (7rem) sur tous les ecrans : top+hauteur
+       propre ne doivent jamais depasser ~6.5rem. */
+    position: absolute; top: 2.9rem; right: .7rem; z-index: 3;
+    display: grid; grid-template-columns: repeat(5, 1.15rem); gap: .35rem;
+    background: var(--paper); border-radius: var(--radius); padding: .45rem;
+    box-shadow: var(--shadow);
+}
+.p-cover-picker[hidden] { display: none; }
+
+.p-swatch {
+    width: 1.15rem; height: 1.15rem; border-radius: 50%;
+    border: none; cursor: pointer; padding: 0;
+}
+.p-swatch[data-cover-color="navy"]   { background: #1B3A6B; }
+.p-swatch[data-cover-color="ocre"]   { background: #C8842B; }
+.p-swatch[data-cover-color="teal"]   { background: #14837A; }
+.p-swatch[data-cover-color="forest"] { background: #2F7A41; }
+.p-swatch[data-cover-color="purple"] { background: #6A3FA0; }
+.p-swatch[data-cover-color="rose"]   { background: #C23A63; }
+.p-swatch[data-cover-color="sky"]    { background: #2E7FC6; }
+.p-swatch[data-cover-color="sunset"] { background: #D9631A; }
+.p-swatch[data-cover-color="slate"]  { background: #5A6B7A; }
+.p-swatch[data-cover-color="indigo"] { background: #453AA8; }
+.p-swatch:hover { transform: scale(1.1); }
+.p-swatch.is-active { box-shadow: 0 0 0 2px var(--paper), 0 0 0 4px var(--cta); }
 .p-hero-body {
     padding: 0 clamp(1rem, 3vw, 1.75rem) 1.5rem;
     display: grid; grid-template-columns: auto 1fr; gap: 0 1.25rem;
@@ -185,7 +215,7 @@ a:hover { color: var(--blue-mid); }
 .p-panel > h2 {
     display: flex; align-items: baseline; justify-content: space-between; gap: .75rem;
     padding-bottom: .5rem; margin-bottom: .9rem;
-    border-bottom: 2px solid var(--blue-line); flex-wrap: wrap;
+    border-bottom: 2px solid var(--line); flex-wrap: wrap;
 }
 .p-panel > h2 .p-count { font-size: .8rem; color: var(--faint); font-weight: 500; }
 
@@ -360,9 +390,23 @@ a:hover { color: var(--blue-mid); }
 /* Formulaires, boutons, pastilles                                        */
 /* --------------------------------------------------------------------- */
 
-.p-field { display: grid; gap: .25rem; margin-bottom: .9rem; }
-.p-field > label, .p-label { font-family: var(--font-title); font-weight: 500; font-size: .88rem; }
-.p-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0 1.1rem; }
+.p-field {
+    display: grid; gap: .15rem; margin-bottom: .9rem;
+    border: 1px solid var(--line-firm); border-radius: var(--radius);
+    padding: .5rem .75rem .55rem; background: var(--paper);
+}
+.p-field:focus-within { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(27, 58, 107, .12); }
+.p-field > label, .p-label {
+    font-family: var(--font-title); font-weight: 600; font-size: .72rem;
+    color: var(--muted); letter-spacing: .01em;
+}
+.p-field > input, .p-field > select, .p-field > textarea {
+    border: none; padding: 0; background: transparent; width: 100%;
+    font-family: var(--font-body); font-size: .95rem; color: var(--ink); line-height: 1.4;
+}
+.p-field > input:focus, .p-field > select:focus, .p-field > textarea:focus { outline: none; box-shadow: none; }
+.p-field > textarea { resize: vertical; min-height: 4.5rem; }
+.p-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; align-items: start; margin-bottom: 1rem; }
 .p-help { font-size: .84rem; color: var(--muted); margin: .2rem 0 0; }
 
 input[type="text"], input[type="number"], input[type="date"], input[type="search"],
@@ -385,22 +429,23 @@ select { cursor: pointer; }
 
 .p-btn {
     display: inline-flex; align-items: center; gap: .4rem;
-    font-family: var(--font-title); font-size: .88rem; font-weight: 500;
-    padding: .48rem .9rem; border-radius: var(--radius);
+    font-family: var(--font-title); font-size: .88rem; font-weight: 700;
+    letter-spacing: .02em;
+    padding: .5rem 1rem; border-radius: var(--radius);
     border: 1px solid var(--line-firm); background: var(--paper); color: var(--ink);
     text-decoration: none; cursor: pointer; white-space: nowrap;
     transition: background .12s, border-color .12s;
 }
 .p-btn:hover { background: var(--sunk); border-color: var(--blue-mid); color: var(--ink); }
-.p-primary { background: var(--blue); border-color: var(--blue); color: #fff; }
-.p-primary:hover { background: var(--blue-dark); border-color: var(--blue-dark); color: #fff; }
+.p-primary { background: var(--cta); border-color: var(--cta); color: var(--cta-text); }
+.p-primary:hover { background: var(--cta-hover); border-color: var(--cta-hover); color: var(--cta-text); }
 .p-accent { background: var(--ocre); border-color: var(--ocre); color: #fff; }
 .p-accent:hover { background: var(--ocre-text); border-color: var(--ocre-text); color: #fff; }
 .p-danger { background: var(--paper); border-color: var(--ko); color: var(--ko); }
 .p-danger:hover { background: var(--ko-pale); }
 .p-ghost { background: transparent; border-color: transparent; color: var(--blue); }
 .p-ghost:hover { background: var(--blue-pale); border-color: transparent; }
-.p-btn.small { font-size: .8rem; padding: .3rem .6rem; }
+.p-btn.small { font-size: .8rem; padding: .32rem .65rem; }
 .p-btn[disabled], .p-disabled { opacity: .45; cursor: not-allowed; pointer-events: none; }
 
 .p-actions { display: flex; gap: .5rem; flex-wrap: wrap; align-items: center; }
@@ -423,15 +468,85 @@ select { cursor: pointer; }
 }
 .p-callout.warn { background: var(--ocre-pale); border-color: var(--ocre-line); border-left-color: var(--ocre); }
 
-/* Onglets de l'editeur */
-.p-tabs { display: flex; gap: .15rem; flex-wrap: wrap; border-bottom: 2px solid var(--blue-line); margin-bottom: 1.5rem; }
-.p-tab {
-    font-family: var(--font-title); font-size: .9rem; font-weight: 500;
-    background: transparent; border: none; border-bottom: 3px solid transparent;
-    color: var(--muted); padding: .6rem .95rem; cursor: pointer; margin-bottom: -2px;
+/* Editeur de profil : sidebar de navigation + panneau de contenu */
+.p-pagehead { margin-bottom: 1.25rem; }
+.p-pagehead h1 { margin-bottom: .25rem; }
+
+.p-editor-photo { display: flex; align-items: center; gap: 1rem; margin: .75rem 0 1.25rem; }
+.p-editor-avatar {
+    width: 4rem; height: 4rem; border-radius: 50%; flex-shrink: 0;
+    background: var(--blue-pale) center/cover no-repeat;
+    display: grid; place-items: center; overflow: hidden;
+    font-family: var(--font-title); font-weight: 700; font-size: 1.4rem; color: var(--blue);
 }
-.p-tab:hover { color: var(--blue); background: var(--blue-pale); }
-.p-tab-active { color: var(--blue); border-bottom-color: var(--ocre); font-weight: 700; }
+.p-editor-photo a { font-family: var(--font-title); font-weight: 600; font-size: .92rem; color: var(--color-link); }
+.p-editor-photo a:hover { color: var(--color-link-hover); }
+
+.p-editor-layout { display: grid; grid-template-columns: 15rem minmax(0, 1fr); gap: 1.5rem; align-items: start; }
+
+.p-tabs {
+    display: grid; gap: .15rem;
+    background: var(--paper); border: 1px solid var(--line);
+    border-radius: var(--radius); padding: .6rem;
+    position: sticky; top: 1rem;
+}
+.p-tab {
+    display: block; width: 100%; text-align: left;
+    font-family: var(--font-title); font-size: .88rem; font-weight: 600;
+    background: transparent; border: none; border-radius: var(--radius);
+    color: var(--ink); padding: .55rem .75rem; cursor: pointer;
+}
+.p-tab:hover { background: var(--sunk); }
+.p-tab-active { background: var(--cta); color: var(--cta-text); }
+
+@media (max-width: 55rem) {
+    .p-editor-layout { grid-template-columns: minmax(0, 1fr); }
+    .p-tabs {
+        grid-auto-flow: column; overflow-x: auto; position: static;
+        justify-content: start;
+    }
+    .p-tab { white-space: nowrap; }
+}
+
+/* Champs de l'editeur (QForm) : le libelle vit dans la meme boite que la
+   valeur, comme un champ de reglages classique - pas au-dessus, separe. */
+.q-field-group { display: grid; gap: 1rem; align-items: start; margin-bottom: 1rem; }
+.q-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; align-items: start; margin-bottom: 1rem; }
+
+.q-field {
+    display: grid; gap: .15rem;
+    border: 1px solid var(--line-firm); border-radius: var(--radius);
+    padding: .5rem .75rem .55rem; background: var(--paper);
+}
+.q-field:focus-within { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(27, 58, 107, .12); }
+.q-field > label:not(.q-check), .q-label {
+    font-family: var(--font-title); font-size: .72rem; font-weight: 600;
+    color: var(--muted); letter-spacing: .01em;
+}
+.q-field .q-req { color: var(--ko); }
+.q-field > input, .q-field > select, .q-field > textarea {
+    border: none; padding: 0; background: transparent; width: 100%;
+    font-family: var(--font-body); font-size: .95rem; color: var(--ink); line-height: 1.4;
+}
+.q-field > input:focus, .q-field > select:focus, .q-field > textarea:focus { outline: none; box-shadow: none; }
+.q-field > textarea { resize: vertical; min-height: 4.5rem; }
+.q-field > select { cursor: pointer; }
+.q-help { font-size: .82rem; color: var(--muted); margin-top: .35rem; }
+.q-example {
+    font-size: .82rem; color: var(--ocre-text); background: var(--ocre-pale);
+    padding: .4rem .6rem; border-radius: var(--radius); margin-top: .35rem;
+}
+.q-example b { font-weight: 700; }
+
+.q-check { display: flex; gap: .55rem; align-items: flex-start; cursor: pointer; }
+.q-check input { width: auto; margin: .25rem 0 0; flex-shrink: 0; accent-color: var(--blue); }
+.q-field > label.q-check { font-size: .88rem; font-weight: 400; color: var(--ink); }
+.q-check > span { font-family: var(--font-title); font-size: .88rem; }
+
+.p-add-row {
+    display: flex; gap: .5rem; align-items: center; flex-wrap: wrap;
+    margin-top: .6rem; padding-top: .6rem; border-top: 1px solid var(--line);
+}
 
 .p-row {
     display: flex; gap: .6rem; align-items: center; flex-wrap: wrap;
@@ -447,6 +562,7 @@ select { cursor: pointer; }
     background: var(--paper); border: 1px solid var(--line);
     border-radius: 999px; padding: .3rem .75rem; white-space: nowrap;
 }
+.p-save-state[data-state="idle"] { display: none; }
 .p-dot { width: .55rem; height: .55rem; border-radius: 50%; background: var(--faint); flex-shrink: 0; }
 .p-save-state[data-state="saving"] { color: var(--warn); border-color: var(--ocre-line); }
 .p-save-state[data-state="saving"] .p-dot { background: var(--ocre); animation: p-pulse 1.1s ease-in-out infinite; }

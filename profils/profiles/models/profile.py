@@ -40,6 +40,11 @@ class ProfessionalProfile(models.Model):
     photo_url = models.CharField(max_length = 1024, blank = True, default = "")
     cover_url = models.CharField(max_length = 1024, blank = True, default = "")
 
+    #: teinte de la banniere quand aucune image de couverture n'est fournie.
+    cover_color = models.CharField(
+        max_length = 20, choices = c.COVER_COLORS, blank = True, default = c.DEFAULT_COVER_COLOR,
+    )
+
     # -- localisation generale ---------------------------------------------- #
     location_city    = models.CharField(max_length = 120, blank = True, default = "")
     location_region  = models.CharField(max_length = 120, blank = True, default = "")

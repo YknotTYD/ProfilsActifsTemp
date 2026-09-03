@@ -45,6 +45,7 @@ def profile_page(request, username):
         "contracts":  dict(c.CONTRACT_TYPES),
         "work_modes": dict(c.WORK_MODES),
         "link_kinds": dict(c.LINK_KINDS),
+        "cover_colors": c.COVER_COLORS,
     })
 
 

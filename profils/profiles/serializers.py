@@ -179,8 +179,9 @@ def identity(profile) -> dict:
         "last_name":  profile.user.last_name,
         "headline":   profile.headline,
         "summary":    profile.summary,
-        "photo_url":  profile.photo_url,
-        "cover_url":  profile.cover_url,
+        "photo_url":    profile.photo_url,
+        "cover_url":    profile.cover_url,
+        "cover_color":  profile.cover_color or c.DEFAULT_COVER_COLOR,
         "location": {
             "city":    profile.location_city,
             "region":  profile.location_region,

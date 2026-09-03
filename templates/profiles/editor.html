@@ -16,7 +16,7 @@ est revalide par le serveur qui repond avec l'etat sauvegarde.
     </p>
 </div>
 
-<div class="p-actions" style="justify-content:space-between;margin-bottom:1rem">
+<div class="p-editor-layout">
     <nav class="p-tabs" id="p-tabs">
         <button class="p-tab p-tab-active" data-tab="general">Informations generales</button>
         <button class="p-tab" data-tab="skills">Competences</button>
@@ -29,19 +29,24 @@ est revalide par le serveur qui repond avec l'etat sauvegarde.
         <button class="p-tab" data-tab="videos">Videos</button>
         <button class="p-tab" data-tab="privacy">Confidentialite</button>
     </nav>
-    <span class="p-save-state" id="p-save" data-state="idle"><span class="p-dot"></span><span id="p-save-label">Pret</span></span>
-</div>
 
-<div id="p-tab-general" class="p-tabpanel"></div>
-<div id="p-tab-skills" class="p-tabpanel" hidden></div>
-<div id="p-tab-experiences" class="p-tabpanel" hidden></div>
-<div id="p-tab-education" class="p-tabpanel" hidden></div>
-<div id="p-tab-certifications" class="p-tabpanel" hidden></div>
-<div id="p-tab-languages" class="p-tabpanel" hidden></div>
-<div id="p-tab-projects" class="p-tabpanel" hidden></div>
-<div id="p-tab-availability" class="p-tabpanel" hidden></div>
-<div id="p-tab-videos" class="p-tabpanel" hidden></div>
-<div id="p-tab-privacy" class="p-tabpanel" hidden></div>
+    <div>
+        <div class="p-actions" style="justify-content:flex-end;margin-bottom:1rem">
+            <span class="p-save-state" id="p-save" data-state="idle"><span class="p-dot"></span><span id="p-save-label">Pret</span></span>
+        </div>
+
+        <div id="p-tab-general" class="p-tabpanel"></div>
+        <div id="p-tab-skills" class="p-tabpanel" hidden></div>
+        <div id="p-tab-experiences" class="p-tabpanel" hidden></div>
+        <div id="p-tab-education" class="p-tabpanel" hidden></div>
+        <div id="p-tab-certifications" class="p-tabpanel" hidden></div>
+        <div id="p-tab-languages" class="p-tabpanel" hidden></div>
+        <div id="p-tab-projects" class="p-tabpanel" hidden></div>
+        <div id="p-tab-availability" class="p-tabpanel" hidden></div>
+        <div id="p-tab-videos" class="p-tabpanel" hidden></div>
+        <div id="p-tab-privacy" class="p-tabpanel" hidden></div>
+    </div>
+</div>
 
 {{ meta|json_script:"p-meta" }}
 {% endblock %}

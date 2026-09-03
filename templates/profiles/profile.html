@@ -13,16 +13,21 @@ la page ne la contient pas.
 
 {% block content %}
 
-{% if preview %}
-<div class="p-callout warn">
-    <b>Previsualisation.</b> Vous voyez votre profil tel qu'il apparait
-    {% if preview == "public" %}a un visiteur non connecte{% else %}a un utilisateur inscrit{% endif %}.
-    <a href="/profile/{{ p.profile.username }}/">Revenir a ma vue</a>
-</div>
-{% endif %}
+
 
 <article class="p-hero">
-    <div class="p-cover" {% if p.profile.cover_url %}style="background-image:url('{{ p.profile.cover_url }}')"{% endif %}></div>
+    <div class="p-cover" data-cover="{{ p.profile.cover_color|default:'navy' }}" {% if p.profile.cover_url %}style="background-image:url('{{ p.profile.cover_url }}')"{% endif %}>
+        {% if is_owner %}
+            <button type="button" class="p-cover-edit" id="p-cover-edit-btn" title="Changer la couleur de la banniere" aria-label="Changer la couleur de la banniere" aria-expanded="false">
+                <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#1C3A6B"><path d="M480-80q-82 0-155-31.5t-127.5-86Q143-252 111.5-325T80-480q0-83 32.5-156t88-127Q256-817 330-848.5T488-880q80 0 151 27.5t124.5 76q53.5 48.5 85 115T880-518q0 115-70 176.5T640-280h-74q-9 0-12.5 5t-3.5 11q0 12 15 34.5t15 51.5q0 50-27.5 74T480-80Zm0-400Zm-177 23q17-17 17-43t-17-43q-17-17-43-17t-43 17q-17 17-17 43t17 43q17 17 43 17t43-17Zm120-160q17-17 17-43t-17-43q-17-17-43-17t-43 17q-17 17-17 43t17 43q17 17 43 17t43-17Zm200 0q17-17 17-43t-17-43q-17-17-43-17t-43 17q-17 17-17 43t17 43q17 17 43 17t43-17Zm120 160q17-17 17-43t-17-43q-17-17-43-17t-43 17q-17 17-17 43t17 43q17 17 43 17t43-17ZM480-160q9 0 14.5-5t5.5-13q0-14-15-33t-15-57q0-42 29-67t71-25h70q66 0 113-38.5T800-518q0-121-92.5-201.5T488-800q-136 0-232 93t-96 227q0 133 93.5 226.5T480-160Z"/></svg>
+            </button>
+            <div class="p-cover-picker" id="p-cover-picker" hidden>
+                {% for key, label in cover_colors %}
+                <button type="button" class="p-swatch {% if p.profile.cover_color == key %}is-active{% endif %}" data-cover-color="{{ key }}" title="{{ label }}" aria-label="{{ label }}"></button>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
     <div class="p-hero-body">
         <div class="p-avatar">
             {% if p.profile.photo_url %}
@@ -53,9 +58,6 @@ la page ne la contient pas.
             {% if is_owner %}
                 <a class="p-btn p-primary" href="/profiles/edit/">Modifier mon profil</a>
                 <a class="p-btn" href="/profile/{{ p.profile.username }}/?preview=public">Voir en visiteur</a>
-                <span class="p-badge {% if p.visibility == 'PUBLIC' %}p-ok{% else %}p-info{% endif %}">
-                    Profil {{ p.visibility }}
-                </span>
             {% else %}
                 <a class="p-btn" href="/profiles/">Rechercher d'autres profils</a>
             {% endif %}
@@ -270,4 +272,57 @@ la page ne la contient pas.
 </div>
 </div>
 
+{% endblock %}
+
+{% block scripts %}
+{% if is_owner %}
+<script>
+(() => {
+    const editBtn = document.getElementById('p-cover-edit-btn');
+    const picker  = document.getElementById('p-cover-picker');
+    const cover   = document.querySelector('.p-cover');
+    if (!editBtn || !picker || !cover) return;
+
+    const csrftoken = document.querySelector('meta[name="csrf-token"]').content;
+
+    editBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const open = picker.hidden;
+        picker.hidden = !open;
+        editBtn.setAttribute('aria-expanded', String(open));
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!picker.hidden && !picker.contains(e.target) && e.target !== editBtn) {
+            picker.hidden = true;
+            editBtn.setAttribute('aria-expanded', 'false');
+        }
+    });
+
+    picker.querySelectorAll('.p-swatch').forEach((swatch) => {
+        swatch.addEventListener('click', () => {
+            const color = swatch.dataset.coverColor;
+
+            fetch('/api/profiles/me/', {
+                method: 'PATCH',
+                headers: {
+                    'X-CSRFToken': csrftoken,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ cover_color: color }),
+            })
+                .then((res) => { if (!res.ok) throw new Error('save failed'); })
+                .then(() => {
+                    cover.dataset.cover = color;
+                    picker.querySelectorAll('.p-swatch').forEach((s) => s.classList.remove('is-active'));
+                    swatch.classList.add('is-active');
+                    picker.hidden = true;
+                    editBtn.setAttribute('aria-expanded', 'false');
+                })
+                .catch((err) => console.error(err));
+        });
+    });
+})();
+</script>
+{% endif %}
 {% endblock %}

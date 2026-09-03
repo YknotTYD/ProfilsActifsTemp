@@ -148,6 +148,8 @@ _PROFILE_FIELDS = {
     "summary":             lambda p: _text(p, "summary", maximum = 5000),
     "photo_url":           lambda p: _url(p, "photo_url", maximum = 1024),
     "cover_url":           lambda p: _url(p, "cover_url", maximum = 1024),
+    "cover_color":         lambda p: _choice(p, "cover_color", c.COVER_COLORS,
+                                             default = c.DEFAULT_COVER_COLOR),
     "location_city":       lambda p: _text(p, "location_city", maximum = 120),
     "location_region":     lambda p: _text(p, "location_region", maximum = 120),
     "location_country":    lambda p: _text(p, "location_country", maximum = 2).upper(),
