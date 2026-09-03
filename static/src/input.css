@@ -333,12 +333,15 @@
     scroll-snap-align: start;
     scroll-snap-stop: always;
   }
-  .feed-item iframe {
+  .feed-item iframe,
+  .feed-item video {
     position: absolute;
     inset: 0;
     width: 100%;
     height: 100%;
     border: 0;
+    object-fit: cover;
+    background: #000;
   }
   .feed-item::after {
     content: '';
@@ -352,11 +355,29 @@
     );
   }
   .feed-caption {
-    @apply absolute left-3 bottom-4 z-10 max-w-[70%] text-white;
+    @apply absolute left-3 bottom-4 z-10 flex flex-col gap-1 max-w-[72%] text-white;
     text-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
   }
-  .feed-caption strong {
-    @apply block text-sm font-semibold;
+  .feed-author {
+    @apply flex items-center gap-2 text-white no-underline;
+  }
+  .feed-author:hover,
+  .feed-author:visited,
+  .feed-author:active {
+    @apply text-white no-underline;
+  }
+  .feed-author strong {
+    @apply text-sm font-semibold text-white;
+  }
+  .feed-avatar {
+    @apply flex items-center justify-center shrink-0 w-9 h-9 rounded-full object-cover bg-white/20 text-white text-xs font-semibold uppercase;
+    border: 1.5px solid rgba(255, 255, 255, 0.8);
+  }
+  .feed-title {
+    @apply text-xs text-white/85 line-clamp-2;
+  }
+  .feed-views {
+    @apply cursor-default;
   }
   .feed-actions {
     @apply absolute right-3 bottom-4 z-10 flex flex-col items-center gap-4;

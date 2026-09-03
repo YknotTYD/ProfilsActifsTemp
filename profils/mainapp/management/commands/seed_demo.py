@@ -21,7 +21,7 @@ from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand
 from django.db import transaction
 
-from profils.mainapp.models import Reaction, Role, VideoLink
+from profils.mainapp.models import Role
 from profils.profiles import constants as pc
 from profils.profiles import services as profile_services
 from profils.questionnaires import constants as qc
@@ -108,6 +108,7 @@ CANDIDATES = [
     {
         "username": "yanis.belkacem", "first_name": "Yanis", "last_name": "Belkacem",
         "birth_date": "1998-07-22",
+        "video": "sintel",
         "headline": "Développeur fullstack JavaScript",
         "summary": "Passionné par les interfaces réactives et les architectures Node.js. "
                     "À l'aise aussi bien côté client que côté serveur.",
@@ -299,6 +300,7 @@ CANDIDATES = [
     {
         "username": "sarah.benali", "first_name": "Sarah", "last_name": "Benali",
         "birth_date": "1999-12-05",
+        "video": "elephants_dream",
         "headline": "Développeuse mobile iOS/Android",
         "summary": "Je construis des applications mobiles fluides, du prototype au déploiement en store.",
         "city": "Marseille", "field": pc.FIELD_SOFTWARE,
@@ -854,34 +856,34 @@ class Command(BaseCommand):
         attempt_services.finish_attempt(attempt)
 
     # ------------------------------------------------------------------ #
-    # Feed "mainapp" (videos par lien, likes/dislikes)
+    # Feed video : reactions de demonstration
     # ------------------------------------------------------------------ #
 
     def _seed_mainapp_feed(self, candidates: list):
-        clips = list(DEMO_CLIPS.values())
-        # `mainapp.VideoLink` ne porte pas de titre, seulement une URL : ces
-        # quatre candidats republient sur l'ancien feed de demonstration.
-        posters = [u for u, d in zip(candidates, CANDIDATES)
-                  if d["username"] in ("camille.dubois", "yanis.belkacem", "sarah.benali", "adam.kacimi")]
+        """Reactions des recruteurs sur les videos publiees du feed.
 
-        videos = []
-        for user, clip in zip(posters, clips):
-            # deja moderees : une donnee de demonstration doit apparaitre
-            # dans le feed sans qu'on rejoue la moderation a la main.
-            videos.append(VideoLink.objects.create(
-                user = user, url = clip, status = "APPROVED",
-            ))
+        Le feed est servi par `profiles.ProfileVideo` (pile video unifiee) :
+        les recruteurs de demonstration reagissent directement dessus, pour
+        que les compteurs ne soient pas tous a zero a la premiere ouverture.
+        """
+        from profils.profiles import engagement
+        from profils.profiles.models import ProfileVideo
 
         recruiters = list(User.objects.filter(username__in = [r["username"] for r in RECRUITERS]))
-        reaction_pattern = [
-            ("like", "like", "dislike"),
-            ("like", "like", "like"),
-            ("dislike", "like", "like"),
-            ("like", "dislike", "like"),
-        ]
-        for video, pattern in zip(videos, reaction_pattern):
-            for recruiter, reaction in zip(recruiters, pattern):
-                Reaction.objects.create(user = recruiter, video = video, reaction = reaction)
+        reaction_cycle = ["like", "like", "dislike", "like", "like"]
+
+        published = (
+            ProfileVideo.objects
+            .filter(status = pc.VIDEO_PUBLISHED)
+            .select_related("profile__user")
+            .order_by("id")
+        )
+        for index, video in enumerate(published):
+            for offset, recruiter in enumerate(recruiters):
+                engagement.set_reaction(
+                    video, recruiter, reaction_cycle[(index + offset) % len(reaction_cycle)],
+                )
+                engagement.register_view(video, user = recruiter)
 
     # ------------------------------------------------------------------ #
 

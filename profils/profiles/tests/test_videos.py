@@ -555,3 +555,87 @@ class PresentationReplacementTests(TestCase):
         )
         with self.assertRaises(Exception):
             second.save()
+
+
+class FeedPlaybackTests(TestCase):
+    """`profiles.feed.playback` : lien d'integration vs fichier."""
+
+    def test_a_youtube_watch_url_becomes_an_embed_iframe(self):
+        from profils.profiles.feed import playback
+        mode, url = playback(c.VIDEO_SOURCE_LINK, "https://www.youtube.com/watch?v=abc123XYZ")
+        self.assertEqual(mode, "iframe")
+        self.assertEqual(url, "https://www.youtube.com/embed/abc123XYZ")
+
+    def test_an_embed_url_is_kept_as_an_iframe(self):
+        from profils.profiles.feed import playback
+        self.assertEqual(
+            playback(c.VIDEO_SOURCE_LINK, "https://www.youtube.com/embed/abc123XYZ"),
+            ("iframe", "https://www.youtube.com/embed/abc123XYZ"),
+        )
+
+    def test_a_bare_mp4_link_is_served_as_a_file(self):
+        from profils.profiles.feed import playback
+        self.assertEqual(
+            playback(c.VIDEO_SOURCE_LINK, "https://cdn.example.test/clip.mp4?t=1"),
+            ("file", "https://cdn.example.test/clip.mp4?t=1"),
+        )
+
+
+class FeedEngagementTests(TestCase):
+    """Vues et reactions du feed video (`profiles.engagement` + API)."""
+
+    def setUp(self):
+        self.author  = make_profile("auteur", visibility = c.VISIBILITY_PUBLIC)
+        self.video   = add_video(self.author, title = "Ma presentation",
+                                 file_url = "https://www.youtube.com/embed/xyz")
+        self.watcher = make_user("spectateur")
+        self.client  = Client()
+        self.client.force_login(self.watcher)
+
+    def _react(self, reaction):
+        return self.client.post(
+            f"/api/profiles/videos/{self.video.id}/react/",
+            data = json.dumps({"reaction": reaction}), content_type = "application/json",
+        )
+
+    def test_a_like_is_counted_and_toggles_off_on_a_second_click(self):
+        self._react("like")
+        self.video.refresh_from_db()
+        self.assertEqual(self.video.like_count, 1)
+
+        self._react("like")
+        self.video.refresh_from_db()
+        self.assertEqual(self.video.like_count, 0)
+
+    def test_a_like_then_a_dislike_replaces_it(self):
+        self._react("like")
+        payload = json.loads(self._react("dislike").content)
+        self.assertEqual(payload["reaction"], "dislike")
+        self.assertEqual(payload["likes"], 0)
+
+    def test_a_new_reaction_notifies_the_author(self):
+        from profils.notifications.models import Notification
+        self._react("like")
+        notif = Notification.objects.get(recipient = self.author.user)
+        self.assertEqual(notif.url, "/profiles/me/video/")
+
+    def test_reacting_to_ones_own_video_does_not_notify(self):
+        from profils.notifications.models import Notification
+        self.client.force_login(self.author.user)
+        self._react("like")
+        self.assertFalse(Notification.objects.filter(recipient = self.author.user).exists())
+
+    def test_a_view_is_counted_once_per_user(self):
+        url = f"/api/profiles/videos/{self.video.id}/view/"
+        self.client.post(url)
+        self.client.post(url)
+        self.video.refresh_from_db()
+        self.assertEqual(self.video.view_count, 1)
+
+    def test_an_invalid_reaction_is_rejected(self):
+        self.assertEqual(self._react("meh").status_code, 400)
+
+    def test_a_hidden_video_cannot_be_reacted_to(self):
+        self.video.status = c.VIDEO_DRAFT
+        self.video.save()
+        self.assertEqual(self._react("like").status_code, 404)

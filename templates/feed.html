@@ -1,41 +1,60 @@
-<div class="feed mt-5">
-  {% for vid, liked, disliked, is_link in videos_ld %}
-  <div class="feed-item">
-    {% if is_link %}
+{% comment %}
+Feed vertical du tableau de bord recruteur / admin. Une seule source :
+`profiles.ProfileVideo` publiees (voir `profiles.feed.dashboard_feed_items`).
+{% endcomment %}
+<div class="feed mt-5" id="feed">
+  {% for item in feed_items %}
+  <div class="feed-item" data-video-id="{{ item.id }}" data-mode="{{ item.mode }}">
+    {% if item.mode == "iframe" %}
     <iframe
-      src="{{ vid.url }}?autoplay=1&mute=1&playsinline=1&controls=0"
+      src="{{ item.url }}?autoplay=1&mute=1&playsinline=1&controls=0"
       referrerpolicy="strict-origin-when-cross-origin"
       allow="autoplay; encrypted-media"
       allowfullscreen
     ></iframe>
     {% else %}
-        <video src="{{ vid.file.url }}" autoplay muted playsinline loop></video>
+    <video src="{{ item.url }}" autoplay muted playsinline loop></video>
     {% endif %}
+
     <div class="feed-caption">
-      <a href="/profile/{{ vid.user }}/"><strong>@{{ vid.user }}</strong></a>
+      <a href="/profile/{{ item.username }}/" class="feed-author">
+        {% if item.photo_url %}
+        <img class="feed-avatar" src="{{ item.photo_url }}" alt="" />
+        {% else %}
+        <span class="feed-avatar feed-avatar--fallback">{{ item.initials }}</span>
+        {% endif %}
+        <strong>{{ item.display_name }}</strong>
+      </a>
+      {% if item.title %}<span class="feed-title">{{ item.title }}</span>{% endif %}
     </div>
+
     <div class="feed-actions">
       <button
-        class="feed-react-btn react-btn {% if liked %}is-active-like{% endif %}"
-        data-video-id="{{ vid.id }}"
+        class="feed-react-btn react-btn {% if item.liked %}is-active-like{% endif %}"
+        data-video-id="{{ item.id }}"
         data-reaction="like"
       >
         <span class="feed-react-icon">👍</span>
-        {% if role == "Admin" %}<span>{{ vid.likes|default:0 }}</span>{% endif %}
+        <span class="feed-react-count" data-count="like">{% if role == "Admin" %}{{ item.likes|default:0 }}{% endif %}</span>
       </button>
       <button
-        class="feed-react-btn react-btn {% if disliked %}is-active-dislike{% endif %}"
-        data-video-id="{{ vid.id }}"
+        class="feed-react-btn react-btn {% if item.disliked %}is-active-dislike{% endif %}"
+        data-video-id="{{ item.id }}"
         data-reaction="dislike"
       >
         <span class="feed-react-icon">👎</span>
-        {% if role == "Admin" %}<span>{{ vid.dislikes|default:0 }}</span>{% endif %}
       </button>
+      {% if role == "Admin" %}
+      <span class="feed-react-btn feed-views" title="Vues">
+        <span class="feed-react-icon">👁</span>
+        <span>{{ item.views|default:0 }}</span>
+      </span>
+      {% endif %}
       {% if role == "Recruiter" %}
       <form method="post" action="/messages/start/" class="feed-message-form">
         {% csrf_token %}
-        <input type="hidden" name="recipient" value="{{ vid.user }}">
-        <button type="submit" class="feed-react-btn" title="Contacter @{{ vid.user }}">
+        <input type="hidden" name="recipient" value="{{ item.username }}" />
+        <button type="submit" class="feed-react-btn" title="Contacter {{ item.display_name }}">
           <span class="feed-react-icon">✉️</span>
         </button>
       </form>

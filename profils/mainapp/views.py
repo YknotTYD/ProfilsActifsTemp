@@ -3,45 +3,25 @@ from django.http.request        import HttpRequest
 from django.http.response       import HttpResponse
 from django.shortcuts           import render, redirect
 from django.contrib.auth        import logout as logout_
-from .models                    import Role, VideoLink, VideoFile, Reaction
+from .models                    import Role
 from django.utils               import timezone
 from . import constants
 
 # TODO: deleting
 # TODO: support for multiple languages
 # TODO: @api_view stuff
-# TODO: video -> videolink
 
-def get_video_filepaths(request: HttpRequest) -> list:
-    # `VideoFile` n'a pas encore de champ de moderation (voir models.py) :
-    # tant qu'il n'existe pas, un fichier televerse ne doit pas atterrir
-    # dans le feed recruteur/admin sans avoir ete verifie -- exactement ce
-    # que la moderation des VideoLink existe pour empecher. A rebrancher des
-    # que VideoFile aura son propre statut.
-    return []
-
-def get_videos(request: HttpResponse) -> list[tuple[int, int]]:
+def get_videos(request: HttpRequest) -> list[dict]:
     """Videos du feed recruteur/admin.
 
-    Filtre sur `APPROVED` : une video en attente ou refusee n'a rien a faire
-    devant un recruteur (section 1, "une video n'est jamais publique avant
-    validation").
+    Sert desormais une seule source, `profiles.ProfileVideo` publiees et
+    visibles du spectateur : l'upload video est unifie sur la pile moderee,
+    donc une video envoyee par un candidat apparait ici des sa publication.
+    L'ancien `mainapp.VideoLink` n'alimente plus le feed.
     """
+    from profils.profiles.feed import dashboard_feed_items
 
-    videos = [vid for vid in VideoLink.objects.filter(status = constants.VIDEO_LINK_APPROVED)]
-    liked_disliked = [(0, 0)] * len(videos)
-
-    if request.user.is_authenticated:
-        reactions = [
-            Reaction.objects.filter(user=request.user, video=vid).first() for vid in videos
-        ]
-        liked_disliked = [
-            (r.reaction == "like", r.reaction == "dislike") if r else (False, False)
-                for r in reactions
-        ]
-
-    videos = [(vid, l, d, 1) for vid, (l, d) in zip(videos, liked_disliked)]
-    return videos + get_video_filepaths(request)
+    return dashboard_feed_items(request.user)
 
 def _my_video_status(user):
     """Statut de la video de presentation de `user`, cote pipeline
@@ -81,7 +61,7 @@ def main(request: HttpRequest) -> HttpResponse:
         {
             "user":  request.user,
             "role":  role,
-            "videos_ld": get_videos(request),
+            "feed_items": get_videos(request) if role in ("Recruiter", "Admin") else [],
             # section 1 : "l'utilisateur doit pouvoir consulter a tout moment
             # le statut de ses videos". Uniquement pour un demandeur d'emploi :
             # `get_profile` cree un profil professionnel s'il n'en a pas

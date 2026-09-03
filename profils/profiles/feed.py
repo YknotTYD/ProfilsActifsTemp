@@ -23,6 +23,9 @@ from django.db.models import Q
 from . import constants as c
 from .visibility import rank
 
+#: nombre de videos ramenees pour le feed du tableau de bord recruteur/admin.
+DASHBOARD_FEED_LIMIT = 50
+
 
 def _visible_video_filter(viewer) -> Q:
     """Conditions de visibilite communes a toutes les lectures de videos."""
@@ -80,3 +83,94 @@ def videos_for_skills(skill_ids, viewer = None):
         .prefetch_related("skill_links__skill")
         .order_by("-published_at", "-id")
     )
+
+
+def dashboard_feed(viewer):
+    """Videos du feed vertical du tableau de bord (recruteur / admin).
+
+    Une seule source : les `ProfileVideo` publiees et visibles du spectateur.
+    L'ancien `mainapp.VideoLink` n'alimente plus le feed -- l'upload video est
+    unifie sur la pile moderee, et une video envoyee par un candidat doit donc
+    y apparaitre des sa publication (ce que l'ancien double circuit empechait).
+    """
+    from .models import ProfileVideo
+
+    return (
+        ProfileVideo.objects
+        .filter(_visible_video_filter(viewer))
+        .select_related("profile", "profile__user")
+        .order_by("-published_at", "-id")[:DASHBOARD_FEED_LIMIT]
+    )
+
+
+#: hebergeurs dont l'URL se lit dans une <iframe> plutot que dans un <video>
+_IFRAME_HINTS = ("/embed/", "player.vimeo.com", "youtube.com", "youtu.be", "dailymotion.com/embed")
+_FILE_SUFFIXES = (".mp4", ".webm", ".ogg", ".ogv", ".mov", ".m4v")
+
+
+def _youtube_embed(url: str) -> str:
+    """`watch?v=ID` ou `youtu.be/ID` -> `youtube.com/embed/ID`. Sinon inchange."""
+    import re
+    match = re.search(r"(?:v=|youtu\.be/|/shorts/)([A-Za-z0-9_-]{6,})", url)
+    return f"https://www.youtube.com/embed/{match.group(1)}" if match else url
+
+
+def playback(source_type: str, file_url: str) -> tuple[str, str]:
+    """(`mode`, `url`) pour lire une video : `mode` vaut `"iframe"` ou `"file"`.
+
+    Heuristique volontairement simple : les donnees reelles sont des liens
+    d'integration (YouTube/Vimeo). Un lien inconnu est suppose integrable
+    plutot que servi en `<video>`, ce qui echouerait silencieusement sur une
+    page distante.
+    """
+    url = (file_url or "").strip()
+    low = url.lower()
+    if source_type == c.VIDEO_SOURCE_FILE:
+        return ("file", url)
+    if "youtube.com/watch" in low or "youtu.be/" in low or "/shorts/" in low:
+        return ("iframe", _youtube_embed(url))
+    if any(hint in low for hint in _IFRAME_HINTS):
+        return ("iframe", url)
+    if low.rsplit("?", 1)[0].endswith(_FILE_SUFFIXES):
+        return ("file", url)
+    return ("iframe", url)
+
+
+def dashboard_feed_items(viewer) -> list[dict]:
+    """Feed du tableau de bord, pret a afficher.
+
+    Chaque entree porte tout ce dont le gabarit a besoin -- lecture, identite
+    de l'auteur (pseudo, nom, photo), compteurs, et l'etat de la reaction du
+    spectateur -- sans que le gabarit ait a interroger la base.
+    """
+    from .models import ProfileVideoReaction
+
+    videos = list(dashboard_feed(viewer))
+    mine   = {}
+    if viewer and getattr(viewer, "is_authenticated", False) and videos:
+        mine = dict(
+            ProfileVideoReaction.objects
+            .filter(user = viewer, video__in = videos)
+            .values_list("video_id", "reaction")
+        )
+
+    items = []
+    for video in videos:
+        mode, url = playback(video.source_type, video.file_url)
+        profile   = video.profile
+        reaction  = mine.get(video.id)
+        items.append({
+            "id":            video.id,
+            "mode":          mode,
+            "url":           url,
+            "title":         video.title,
+            "username":      profile.username,
+            "display_name":  profile.full_name or profile.username,
+            "photo_url":     profile.photo_url,
+            "initials":      profile.initials,
+            "liked":         reaction == ProfileVideoReaction.LIKE,
+            "disliked":      reaction == ProfileVideoReaction.DISLIKE,
+            "likes":         video.like_count,
+            "views":         video.view_count,
+        })
+    return items

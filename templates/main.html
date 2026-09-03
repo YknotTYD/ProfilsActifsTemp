@@ -51,8 +51,6 @@
           <a href="/profiles/me/video/" class="btn-primary inline-block mt-2">GERER MA VIDEO DE PRESENTATION</a>
         </div>
 
-        {% include "upload.html" %}
-
         {% elif role == "Recruiter" or role == "Admin" %}
         <div class="dash-panel">
           <h2 class="dash-panel-title">Vidéos des candidats</h2>
@@ -65,7 +63,7 @@
             <a href="/profiles/admin/videos/" class="btn-ghost">Modération des vidéos de profil →</a>
           </p>
           {% endif %}
-          {% if videos_ld %}
+          {% if feed_items %}
             {% include "feed.html" %}
           {% else %}
           <div class="dash-empty">
@@ -108,28 +106,6 @@
 
     {% include "partials/_footer.html" %}
 
-    <script>
-      const csrftoken = document.querySelector(
-        'meta[name="csrf-token"]',
-      ).content;
-
-      document.querySelectorAll('.react-btn').forEach((btn) => {
-        btn.addEventListener('click', () => {
-          fetch('/api/react/', {
-            method: 'POST',
-            headers: {
-              'X-CSRFToken': csrftoken,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              video_id: btn.dataset.videoId,
-              reaction: btn.dataset.reaction,
-            }),
-          })
-            .then(() => window.location.reload())
-            .catch((err) => console.error(err));
-        });
-      });
-    </script>
+    <script src="{% static 'feed.js' %}"></script>
   </body>
 </html>

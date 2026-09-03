@@ -63,6 +63,10 @@ urlpatterns = [
     path("api/profiles/me/videos/<int:pk>/publish/",  api.me_video_publish),
     path("api/profiles/me/videos/<int:pk>/resubmit/", api.me_video_resubmit),
 
+    # feed video : vues et reactions (spectateur)
+    path("api/profiles/videos/<int:pk>/view/",  api.video_view),
+    path("api/profiles/videos/<int:pk>/react/", api.video_react),
+
     # ------------------------------------------------------------------ #
     # API - moderation administrateur (spec "Moderation video, presentation,
     # messagerie et notifications")

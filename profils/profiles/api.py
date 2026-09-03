@@ -14,7 +14,7 @@ qu'il appartient bien au profil avant toute ecriture.
 from django.db.models import Q
 
 from . import constants as c
-from . import moderation, permissions, serializers, services
+from . import engagement, moderation, permissions, serializers, services
 from .http import BadRequest, api, body, fail, ok
 from .models import (
     Certification, Education, Language, ProfileVideo, Project, Skill, UserLanguage,
@@ -22,7 +22,9 @@ from .models import (
 )
 from .search import ProfileQuery, search as run_search
 from .skills import resolve_skill
-from .visibility import PreviewViewer, assert_can_view, audience_of, visible_videos
+from .visibility import (
+    PreviewViewer, assert_can_view, audience_of, can_view_video, visible_videos,
+)
 
 
 # --------------------------------------------------------------------------- #
@@ -405,6 +407,54 @@ def me_video_resubmit(request, pk):
     services.resubmit_video(video, user = request.user,
                             new_file_url = body(request).get("file_url"))
     return ok(serializers.video(video, include_moderation = True))
+
+
+# --------------------------------------------------------------------------- #
+# Videos : engagement du feed (vues, reactions)
+# --------------------------------------------------------------------------- #
+
+def _feed_video(request, pk):
+    """Video visible du spectateur, ou None -- meme reponse 404 dans les deux
+    cas, pour ne pas divulguer l'existence d'une video cachee."""
+    video = ProfileVideo.objects.filter(pk = pk).select_related("profile__user").first()
+    if video is None or not can_view_video(request.user, video):
+        return None
+    return video
+
+
+@api(("POST",), login = False)
+def video_view(request, pk):
+    """Enregistre une vue sur une video du feed (section 6 : statistiques).
+
+    Ouverte aux visiteurs anonymes -- une vue est une vue. Le dedoublonnage
+    par session evite qu'un simple rechargement regonfle le compteur.
+    """
+    video = _feed_video(request, pk)
+    if video is None:
+        return fail("video introuvable", "not_found", 404)
+
+    if not request.session.session_key:
+        request.session.save()
+    engagement.register_view(
+        video,
+        user = request.user if request.user.is_authenticated else None,
+        session_key = request.session.session_key or "",
+    )
+    return ok({"views": ProfileVideo.objects.values_list("view_count", flat = True).get(pk = pk)})
+
+
+@api(("POST",))
+def video_react(request, pk):
+    """Pose / retire / remplace un like-dislike sur une video du feed."""
+    video = _feed_video(request, pk)
+    if video is None:
+        return fail("video introuvable", "not_found", 404)
+
+    reaction = (body(request).get("reaction") or "").strip()
+    try:
+        return ok(engagement.set_reaction(video, request.user, reaction))
+    except ValueError:
+        return fail(f"reaction invalide: {reaction!r}", "invalid_field", 400)
 
 
 # --------------------------------------------------------------------------- #

@@ -179,6 +179,83 @@ class VideoModerationEvent(models.Model):
         return f"VideoModerationEvent<{self.video_id}:{self.old_status}->{self.new_status}>"
 
 
+class ProfileVideoReaction(models.Model):
+    """Reaction d'un utilisateur a une video de profil (feed video).
+
+    L'ancien `mainapp.Reaction` est lie a `mainapp.VideoLink` ; le feed etant
+    desormais servi par `ProfileVideo` (une seule pile video, moderee), les
+    reactions le suivent ici. Une seule reaction par (video, utilisateur) :
+    re-cliquer le meme bouton la retire, cliquer l'autre la remplace -- c'est
+    la vue qui applique cette bascule, la contrainte garantit juste l'unicite.
+
+    `ProfileVideo.like_count` est le compteur denormalise tenu a jour a chaque
+    ecriture (affiche au proprietaire et a l'admin, section 6).
+    """
+
+    LIKE    = "like"
+    DISLIKE = "dislike"
+    REACTIONS = ((LIKE, "J'aime"), (DISLIKE, "Je n'aime pas"))
+
+    video = models.ForeignKey(
+        ProfileVideo, on_delete = models.CASCADE, related_name = "reactions",
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete = models.CASCADE, related_name = "+",
+    )
+    reaction   = models.CharField(max_length = 8, choices = REACTIONS)
+    created_at = models.DateTimeField(auto_now_add = True)
+
+    class Meta:
+        constraints = (
+            models.UniqueConstraint(
+                fields = ("video", "user"), name = "one_reaction_per_video_per_user",
+            ),
+        )
+        indexes = (models.Index(fields = ["video", "reaction"]),)
+
+    def __str__(self):
+        return f"ProfileVideoReaction<{self.video_id}:{self.user_id}:{self.reaction}>"
+
+
+class ProfileVideoView(models.Model):
+    """Une vue enregistree d'une video de profil (section 6 : statistiques).
+
+    Une ligne par (spectateur, video) -- un rechargement de page ne regonfle
+    pas le compteur. Le spectateur connecte est identifie par `user`, le
+    visiteur anonyme par sa cle de session. `ProfileVideo.view_count` est le
+    total denormalise, incremente uniquement quand une nouvelle ligne est
+    reellement creee.
+    """
+
+    video = models.ForeignKey(
+        ProfileVideo, on_delete = models.CASCADE, related_name = "views",
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null = True, blank = True,
+        on_delete = models.SET_NULL, related_name = "+",
+    )
+    session_key = models.CharField(max_length = 40, blank = True, default = "")
+    created_at  = models.DateTimeField(auto_now_add = True)
+
+    class Meta:
+        constraints = (
+            models.UniqueConstraint(
+                fields = ("video", "user"),
+                condition = Q(user__isnull = False),
+                name = "one_view_per_video_per_user",
+            ),
+            models.UniqueConstraint(
+                fields = ("video", "session_key"),
+                condition = Q(user__isnull = True) & ~Q(session_key = ""),
+                name = "one_view_per_video_per_session",
+            ),
+        )
+        indexes = (models.Index(fields = ["video", "-created_at"]),)
+
+    def __str__(self):
+        return f"ProfileVideoView<{self.video_id}:{self.user_id or self.session_key}>"
+
+
 class ProfileVideoSkill(SkillLink):
     """Competence mise en avant par une video (section 17).
 
