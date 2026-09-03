@@ -1,0 +1,40 @@
+name: Build and Package
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout du code
+        uses: actions/checkout@v4
+
+      - name: Installer uv
+        uses: astral-sh/setup-uv@v3
+
+      - name: Installer Python
+        run: uv python install 3.12
+
+      - name: Installer les dépendances
+        run: uv sync --frozen
+
+      - name: Collecter les fichiers statiques
+        run: uv run python manage.py collectstatic --noinput
+
+      - name: Appliquer les migrations et charger les données de démo
+        run: |
+          uv run python manage.py migrate
+          uv run python manage.py loaddata demo_users.json
+
+      - name: Créer l'archive de build
+        run: |
+          mkdir build_output
+          tar -czf build_output/app.tar.gz --exclude='.git' --exclude='build_output' .
+
+      - name: Publier l'artefact
+        uses: actions/upload-artifact@v4
+        with:
+          name: django-app-build
+          path: build_output/app.tar.gz
