@@ -79,6 +79,9 @@
 
 body.q-body {
     margin: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
     background: var(--ground);
     color: var(--ink);
     font-family: var(--font-body);
@@ -115,6 +118,8 @@ a:hover { color: var(--blue-mid); }
 .q-main {
     max-width: 76rem; margin: 0 auto;
     padding: clamp(1.5rem, 4vw, 2.5rem) clamp(1rem, 4vw, 2rem) 5rem;
+    width: 100%;
+    flex: 1;
 }
 
 /* fil d'ariane */

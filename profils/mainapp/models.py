@@ -18,8 +18,9 @@ def strings_to_choice_char_fields(strings: tuple[str]) -> models.CharField:
 
 class Role(models.Model):
 
-    user = models.ForeignKey(User, on_delete = models.CASCADE)
-    role = strings_to_choice_char_fields(constants.ROLES)
+    user       = models.ForeignKey(User, on_delete = models.CASCADE)
+    role       = strings_to_choice_char_fields(constants.ROLES)
+    birth_date = models.DateField(null = True, blank = True)
 
     def __str__(self) -> str:
         return self.role

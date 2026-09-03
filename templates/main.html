@@ -19,10 +19,15 @@
 
     {% if user.is_authenticated %}
     <div class="dashboard-page">
-      <div class="card">
-        <h1 class="card-title">Bienvenue {{ user.username }}</h1>
-        <p class="text-center text-[#4a4a4a]">Vous êtes {{ role }}.</p>
+      <div class="dash-hero">
+        <div class="dash-avatar">{{ user.username|slice:":1"|upper }}</div>
+        <div>
+          <h1 class="dash-hero-name">Bienvenue {{ user.username }}</h1>
+          <span class="dash-role">{{ role }}</span>
+        </div>
+      </div>
 
+      <div class="dash-grid">
         {% if role == "JobSeeker" %}
         <form
           method="post"
@@ -71,32 +76,9 @@
             Se déconnecter
           </button>
         </div>
+        {% endif %}
       </div>
-    </div>
 
-    <div id="logout-modal" class="modal-overlay">
-      <div class="modal-card">
-        <h2 class="font-title font-extrabold text-2xl text-primary">
-          Déconnexion
-        </h2>
-        <p class="mt-4 text-[17px] text-text">
-          Êtes-vous sûr de vouloir vous déconnecter ?
-        </p>
-        <div class="mt-8 flex items-center justify-end gap-6">
-          <button
-            type="button"
-            onclick="
-              document.getElementById('logout-modal').style.display = 'none'
-            "
-            class="btn-ghost"
-          >
-            ANNULER
-          </button>
-          <a href="/logout" class="btn-primary-sm px-6 py-3 text-sm"
-            >SE DÉCONNECTER</a
-          >
-        </div>
-      </div>
     </div>
     {% else %}
     <div class="home-hero">

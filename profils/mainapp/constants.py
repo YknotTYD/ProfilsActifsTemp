@@ -6,3 +6,4 @@ ROLES = ("Recruiter", "JobSeeker", "Admin")
 REACTIONS = ("like", "dislike")
 
 VIDEOFILE_STORAGE_PATH = "videos/"
+MINIMUM_REGISTRATION_AGE = 18
