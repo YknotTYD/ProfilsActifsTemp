@@ -19,6 +19,8 @@ from django.contrib import admin
 from django.urls    import path, include
 from .mainapp       import views
 from .mainapp       import api
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/',                admin.site.urls),
@@ -36,3 +38,5 @@ urlpatterns = [
     path("",                      include("profils.questionnaires.urls")),
     path("",                      include("profils.profiles.urls")),
 ]
+
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

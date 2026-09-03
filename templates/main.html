@@ -48,46 +48,17 @@
 
 {% include "upload.html" %}
 
-        {% elif role == "Recruiter" %} {% if videos_ld %}
-        <div class="feed mt-5">
-          {% for vid, liked, disliked in videos_ld %}
-          <div class="feed-item">
-            <iframe
-              src="{{ vid.url }}?autoplay=1&mute=1&playsinline=1&controls=0"
-              referrerpolicy="strict-origin-when-cross-origin"
-              allow="autoplay; encrypted-media"
-              allowfullscreen
-            >
-            </iframe>
-            <div class="feed-caption">
-              <strong>@{{ vid.user }}</strong>
-            </div>
-            <div class="feed-actions">
-              <button
-                class="feed-react-btn react-btn {% if liked %}is-active-like{% endif %}"
-                data-video-id="{{ vid.id }}"
-                data-reaction="like"
-              >
-                <span class="feed-react-icon">👍</span>
-                <span>{{ vid.likes }}</span>
-              </button>
-              <button
-                class="feed-react-btn react-btn {% if disliked %}is-active-dislike{% endif %}"
-                data-video-id="{{ vid.id }}"
-                data-reaction="dislike"
-              >
-                <span class="feed-react-icon">👎</span>
-                <span>{{ vid.dislikes }}</span>
-              </button>
-            </div>
-          </div>
-          {% endfor %}
-        </div>
-        {% else %}
-        <p class="text-center text-[#4a4a4a] mt-5">
-          Aucune vidéo pour le moment.
-        </p>
-        {% endif %} {% endif %}
+        {% elif role == "Recruiter" %}
+
+          {% if videos_ldl %}
+            {% include "feed.html" %}
+          {% else %}
+          <p class="text-center text-[#4a4a4a] mt-5">
+            Aucune vidéo pour le moment.
+          </p>
+          {% endif %}
+
+        {% endif %}
 
         <div class="foot">
           <button

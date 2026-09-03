@@ -1,0 +1,37 @@
+<div class="feed mt-5">
+  {% for vid, liked, disliked, is_link in videos_ldl %}
+  <div class="feed-item">
+    {% if is_link %}
+    <iframe
+      src="{{ vid.url }}?autoplay=1&mute=1&playsinline=1&controls=0"
+      referrerpolicy="strict-origin-when-cross-origin"
+      allow="autoplay; encrypted-media"
+      allowfullscreen
+    ></iframe>
+    {% else %}
+        <video src="{{ vid.file.url }}" autoplay muted playsinline loop></video>
+    {% endif %}
+    <div class="feed-caption">
+      <strong>@{{ vid.user }}</strong>
+    </div>
+    <div class="feed-actions">
+      <button
+        class="feed-react-btn react-btn {% if liked %}is-active-like{% endif %}"
+        data-video-id="{{ vid.id }}"
+        data-reaction="like"
+      >
+        <span class="feed-react-icon">👍</span>
+        <span>{{ vid.likes|default:0 }}</span>
+      </button>
+      <button
+        class="feed-react-btn react-btn {% if disliked %}is-active-dislike{% endif %}"
+        data-video-id="{{ vid.id }}"
+        data-reaction="dislike"
+      >
+        <span class="feed-react-icon">👎</span>
+        <span>{{ vid.dislikes|default:0 }}</span>
+      </button>
+    </div>
+  </div>
+  {% endfor %}
+</div>

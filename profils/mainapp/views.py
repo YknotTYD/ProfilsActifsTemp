@@ -3,22 +3,25 @@ from django.http.request        import HttpRequest
 from django.http.response       import HttpResponse
 from django.shortcuts           import render, redirect
 from django.contrib.auth        import logout as logout_
-from .models                    import Role, VideoLink, Reaction
+from .models                    import Role, VideoLink, VideoFile, Reaction
 
 # TODO: deleting
 # TODO: support for multiple languages
 # TODO: @api_view stuff
 # TODO: video -> videolink
 
-def get_videos(request: HttpResponse) -> list[tuple[VideoLink, int, int]]:
+def get_video_filepaths(request: HttpRequest) -> list:
+    files = list(VideoFile.objects.all())
+    return [(f, False, False, 0) for f in files]
+
+def get_videos(request: HttpRequest) -> list[tuple]:
 
     videos = [vid for vid in VideoLink.objects.all()]
-    liked_disliked = [(0, 0)] * len(videos)
+    liked_disliked = [(False, False)] * len(videos)
 
-    if request.user.is_authenticated:        
-
+    if request.user.is_authenticated:
         reactions = [
-            Reaction.objects.filter(user = request.user, video = vid).first() for vid in videos
+            Reaction.objects.filter(user=request.user, video=vid).first() for vid in videos
         ]
         liked_disliked = [
             (r.reaction == "like", r.reaction == "dislike") if r else (False, False)
@@ -26,7 +29,7 @@ def get_videos(request: HttpResponse) -> list[tuple[VideoLink, int, int]]:
         ]
 
     videos = [(vid, l, d, 1) for vid, (l, d) in zip(videos, liked_disliked)]
-    return videos
+    return videos + get_video_filepaths(request)
 
 def main(request: HttpRequest) -> HttpResponse:
 
@@ -39,7 +42,7 @@ def main(request: HttpRequest) -> HttpResponse:
             "role":
                 str(Role.objects.filter(user = request.user).first())
                     if request.user.is_authenticated else "None",
-            "videos_ld":
+            "videos_ldl":
                 get_videos(request)
 
         }
