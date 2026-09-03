@@ -60,6 +60,35 @@
             />
             <label for="reg-password" class="field-label">Mot de passe</label>
           </div>
+          <div class="field">
+            <input
+              id="reg-password-confirm"
+              name="password_confirm"
+              type="password"
+              autocomplete="new-password"
+              placeholder=" "
+              required
+              class="peer field-input"
+            />
+            <label for="reg-password-confirm" class="field-label"
+              >Confirmer le mot de passe</label
+            >
+          </div>
+          <div class="field">
+            <input
+              id="reg-birth-date"
+              name="birth_date"
+              type="date"
+              value="{{ birth_date }}"
+              max="{{ max_birth_date|date:'Y-m-d' }}"
+              placeholder=" "
+              required
+              class="peer field-input"
+            />
+            <label for="reg-birth-date" class="field-label"
+              >Date de naissance</label
+            >
+          </div>
           <div>
             <label for="reg-role" class="field-select-label">Vous êtes</label>
             <select
