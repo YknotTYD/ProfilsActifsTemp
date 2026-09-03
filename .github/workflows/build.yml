@@ -34,6 +34,9 @@ jobs:
             --add-data "templates:templates" \
             run_server.py
 
+      - name: Rendre l'exécutable exécutable
+        run: chmod +x dist/run_server
+
       - name: Publier l'artefact
         uses: actions/upload-artifact@v4
         with:
