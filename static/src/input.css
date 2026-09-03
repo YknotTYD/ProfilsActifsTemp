@@ -269,7 +269,7 @@
     @apply max-w-[640px] mx-auto px-[26px] pt-[10px] pb-[70px];
   }
 
-  /* Feed vidéos (recruteur) — inspiré de static/feedapp */
+  /* Feed vidéos (recruteur) - inspiré de static/feedapp */
   .feed {
     @apply relative mx-auto overflow-y-scroll overscroll-y-contain rounded-[25px] bg-black;
     width: 100%;
