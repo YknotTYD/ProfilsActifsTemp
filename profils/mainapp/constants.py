@@ -4,3 +4,5 @@
 
 ROLES = ("Recruiter", "JobSeeker", "Admin")
 REACTIONS = ("like", "dislike")
+
+MINIMUM_REGISTRATION_AGE = 18

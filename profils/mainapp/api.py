@@ -6,9 +6,30 @@ from django.contrib.auth        import authenticate, login as login_
 from .models                    import Role, VideoLink, Reaction
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
+from django.utils.dateparse import parse_date
+from django.utils import timezone
 from . import constants
 from urllib.parse import urlencode
 import json
+
+
+def _age_on(birth_date, today):
+    """Age en annees revolues a la date `today`.
+
+    Un simple `today.year - birth_date.year` compterait un an de trop tant que
+    l'anniversaire de l'annee en cours n'est pas encore passe.
+    """
+    had_birthday_this_year = (today.month, today.day) >= (birth_date.month, birth_date.day)
+    return today.year - birth_date.year - (0 if had_birthday_this_year else 1)
+
+
+def _register_error(message: str, request: HttpRequest):
+    query = urlencode({
+        "error":      message,
+        "username":   request.POST.get("username", ""),
+        "birth_date": request.POST.get("birth_date", ""),
+    })
+    return redirect(f"/register/?{query}")
 
 # TODO: RESTful email on login/logout
 # TODO: RESTful login/logout
@@ -17,18 +38,30 @@ import json
 
 def register(request: HttpRequest) -> HttpResponse:
 
-    if "username" not in request.POST or "password" not in request.POST or "is_recruiter" not in request.POST:
+    required = ("username", "password", "password_confirm", "birth_date", "is_recruiter")
+    if any(field not in request.POST for field in required):
         return redirect("/")
 
     if User.objects.filter(username = request.POST["username"]).first():
-        query = urlencode({"error": "Ce nom d'utilisateur est déjà pris.", "username": request.POST["username"]})
-        return redirect(f"/register/?{query}")
+        return _register_error("Ce nom d'utilisateur est déjà pris.", request)
+
+    if request.POST["password"] != request.POST["password_confirm"]:
+        return _register_error("Les mots de passe ne correspondent pas.", request)
 
     try:
         validate_password(request.POST["password"])
     except ValidationError as e:
-        query = urlencode({"error": " ".join(e.messages), "username": request.POST["username"]})
-        return redirect(f"/register/?{query}")
+        return _register_error(" ".join(e.messages), request)
+
+    birth_date = parse_date(request.POST["birth_date"])
+    if birth_date is None:
+        return _register_error("Date de naissance invalide.", request)
+
+    if _age_on(birth_date, timezone.localdate()) < constants.MINIMUM_REGISTRATION_AGE:
+        return _register_error(
+            f"Vous devez avoir au moins {constants.MINIMUM_REGISTRATION_AGE} ans pour créer un compte.",
+            request,
+        )
 
     user = User.objects.create_user(
         request.POST["username"],
@@ -36,10 +69,8 @@ def register(request: HttpRequest) -> HttpResponse:
         request.POST["password"]
     )
 
-    if request.POST["is_recruiter"] == "1":
-        Role(user = user, role = "Recruiter").save()
-    else:
-        Role(user = user, role = "JobSeeker").save()
+    role = "Recruiter" if request.POST["is_recruiter"] == "1" else "JobSeeker"
+    Role(user = user, role = role, birth_date = birth_date).save()
 
     auth_user = authenticate(request, username = request.POST["username"], password = request.POST["password"])
     login_(request, auth_user)
