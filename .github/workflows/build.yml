@@ -30,7 +30,7 @@ jobs:
         run: |
           uv run pyinstaller --onefile \
             --add-data "db.sqlite3:." \
-            --add-data "staticfiles:staticfiles" \
+            --add-data "collectstatic:collectstatic" \
             --add-data "templates:templates" \
             run_server.py
 
