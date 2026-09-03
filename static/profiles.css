@@ -86,8 +86,8 @@ a:hover { color: var(--blue-mid); }
 }
 
 /* --------------------------------------------------------------------- */
-/* En-tete du site : fournie par partials/_navbar.html (.brand-header /   */
-/* .wordmark / .btn-ghost de style.css), commune a toutes les pages.      */
+/* En-tete du site : fournie par partials/_navbar.html (.topbar & co,     */
+/* definis dans style.css), commune a toutes les pages.                   */
 /* --------------------------------------------------------------------- */
 
 .p-main {

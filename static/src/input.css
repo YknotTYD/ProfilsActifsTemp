@@ -88,20 +88,84 @@
 }
 
 @layer components {
-  /* Bloc-marque */
-  .brand-header {
-    @apply sticky top-0 z-50 flex flex-wrap items-center justify-between gap-3 bg-bg px-4 py-4 sm:px-[26px] sm:py-6 border-b border-[#ececec];
+  /* ------------------------------------------------------------------ */
+  /* Barre de navigation (partials/_navbar.html)                          */
+  /* Une seule barre, meme sur toutes les pages, dans le bleu nuit du     */
+  /* reste du site -- plus d'emoji ni de pastille orange.                 */
+  /* ------------------------------------------------------------------ */
+  .topbar {
+    @apply sticky top-0 z-50 flex flex-wrap items-center gap-x-5 gap-y-2 bg-primary px-4 py-3 sm:px-[26px];
   }
-  .wordmark {
-    @apply font-title font-extrabold tracking-tight leading-none text-primary text-lg sm:text-[22px];
+  .topbar-brand {
+    @apply flex items-center gap-2 font-title font-extrabold tracking-tight text-white text-[17px] no-underline;
   }
-  .brand-link {
-    @apply flex items-center gap-2.5 no-underline;
+  .topbar-brand:hover,
+  .topbar-brand:visited,
+  .topbar-brand:active {
+    @apply text-white no-underline;
   }
-  .brand-link:hover,
-  .brand-link:visited,
-  .brand-link:active {
-    @apply no-underline;
+  .topbar-brand img {
+    filter: brightness(0) invert(1);
+  }
+  .topbar-links {
+    @apply flex flex-wrap items-center gap-x-1 gap-y-1;
+  }
+  .topbar-link {
+    @apply rounded px-2.5 py-1.5 font-title font-semibold text-[13px] tracking-[0.02em] text-white/75 no-underline;
+  }
+  .topbar-link:hover {
+    @apply bg-white/10 text-white no-underline;
+  }
+  .topbar-actions {
+    @apply flex items-center gap-1.5 ml-auto;
+  }
+  .topbar-menu {
+    @apply relative;
+  }
+  .topbar-menu-btn {
+    @apply flex items-center gap-1.5 rounded px-2.5 py-1.5 bg-transparent border-0 cursor-pointer font-title font-semibold text-[13px] text-white/85;
+  }
+  .topbar-menu-btn:hover {
+    @apply bg-white/10 text-white;
+  }
+  .topbar-icon-btn {
+    @apply relative px-2;
+  }
+  .topbar-user-btn .topbar-user-name {
+    @apply hidden sm:inline max-w-[12ch] truncate;
+  }
+  .topbar-avatar {
+    @apply flex items-center justify-center shrink-0 w-6 h-6 rounded-full bg-white/20 text-white text-[11px] font-bold uppercase;
+  }
+  .topbar-caret {
+    @apply opacity-70;
+  }
+  .topbar-badge {
+    @apply absolute top-0 right-0 min-w-[1rem] h-4 px-1 rounded-full bg-cta text-primary text-[10px] font-bold leading-4 text-center;
+  }
+  .topbar-cta {
+    @apply inline-block rounded px-4 py-2 bg-cta text-text font-title font-extrabold text-xs tracking-[0.04em] no-underline;
+  }
+  .topbar-cta:hover {
+    @apply bg-cta-hover no-underline;
+  }
+  .topbar-dropdown {
+    @apply absolute right-0 top-[calc(100%+0.4rem)] min-w-[13rem] flex flex-col bg-white border border-[#d9e0ea] rounded-lg shadow-lg overflow-hidden py-1 z-50;
+  }
+  .topbar-dropdown--wide {
+    @apply w-[min(22rem,calc(100vw-2rem))] py-0;
+  }
+  .topbar-dropdown a {
+    @apply block px-3.5 py-2 text-sm text-text no-underline;
+  }
+  .topbar-dropdown a:hover {
+    @apply bg-bg no-underline;
+  }
+  .topbar-dropdown-head {
+    @apply px-3.5 py-2.5 font-title font-bold text-text text-sm border-b border-[#ececec];
+  }
+  .topbar-dropdown-tag {
+    @apply block px-3.5 pt-1.5 pb-2 text-[11px] font-title font-bold uppercase tracking-[0.05em] text-[#7a7a7a];
   }
 
   /* Boutons */
@@ -435,24 +499,9 @@
     @apply list-disc pl-5 mt-1 space-y-1;
   }
 
-  /* Centre de notifications (navbar) */
-  .notif-bell {
-    @apply relative bg-transparent border-0 p-2 cursor-pointer text-xl leading-none;
-  }
-  .notif-badge {
-    @apply absolute -top-0.5 -right-0.5 min-w-[1.1rem] h-[1.1rem] px-1 rounded-full bg-secondary text-white text-[10px] font-title font-bold leading-[1.1rem] text-center;
-  }
-  .notif-panel {
-    @apply absolute right-4 sm:right-[26px] top-[64px] w-[min(22rem,calc(100vw-2rem))] max-h-[70vh] overflow-y-auto bg-white border border-[#ececec] rounded-lg shadow-lg z-50;
-  }
-  .notif-header {
-    @apply flex items-center justify-between px-4 py-3 border-b border-[#ececec];
-  }
-  .notif-header strong {
-    @apply font-title text-text;
-  }
+  /* Centre de notifications : liste (le bouton et le panneau sont .topbar-*) */
   .notif-list {
-    @apply list-none m-0 p-0;
+    @apply list-none m-0 p-0 max-h-[60vh] overflow-y-auto;
   }
   .notif-item {
     @apply block px-4 py-3 border-b border-[#f0f0f0] no-underline text-text text-sm last:border-b-0;
