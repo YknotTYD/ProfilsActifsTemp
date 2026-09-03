@@ -15,18 +15,7 @@
     <meta name="csrf-token" content="{{ csrf_token }}" />
   </head>
   <body>
-    <div class="brand-header">
-      <a href="/" class="brand-link">
-        <img src="{% static 'logo.svg' %}" alt="" width="24" height="24" />
-        <span class="wordmark">ProfilsActifs</span>
-      </a>
-      {% if not user.is_authenticated %}
-      <div class="flex items-center gap-6">
-        <a href="/login/" class="btn-ghost">SE CONNECTER</a>
-        <a href="/register/" class="btn-primary-sm">CRÉER MON PROFIL</a>
-      </div>
-      {% endif %}
-    </div>
+    {% include "partials/_navbar.html" %}
 
     {% if user.is_authenticated %}
     <div class="dashboard-page">
@@ -140,7 +129,7 @@
       <h1 class="hero-title">Les bonnes données pour le bon recrutement.</h1>
       <p class="hero-subtitle">
         ProfilsActifs identifie et valide les compétences qui font la réussite
-        professionnelle — fini les CV qui mentent, place aux profils qui
+        professionnelle - fini les CV qui mentent, place aux profils qui
         prouvent.
       </p>
 
@@ -160,24 +149,7 @@
     </div>
     {% endif %}
 
-    <footer class="site-footer">
-      <div class="site-footer-inner">
-        <div>
-          <div class="site-footer-brand">ProfilsActifs</div>
-          <p class="site-footer-tagline">
-            Les bonnes données pour le bon recrutement.
-          </p>
-        </div>
-        <div class="site-footer-links">
-          <a href="/">Accueil</a>
-          <a href="/cgu/">CGU</a>
-          <a href="mailto:contact@profilsactifs.fr">Contact</a>
-        </div>
-      </div>
-      <div class="site-footer-bottom">
-        © {% now "Y" %} ProfilsActifs. Tous droits réservés.
-      </div>
-    </footer>
+    {% include "partials/_footer.html" %}
 
     <script>
       const csrftoken = document.querySelector(

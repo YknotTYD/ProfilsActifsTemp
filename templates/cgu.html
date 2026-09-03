@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Conditions Générales d'Utilisation — ProfilsActifs</title>
+    <title>Conditions Générales d'Utilisation - ProfilsActifs</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link
       href="https://fonts.googleapis.com/css2?family=Spectral:wght@400;500;600;700&family=Spectral:ital@1&display=swap"
@@ -14,12 +14,7 @@
     <link rel="stylesheet" href="{% static 'style.css' %}" />
   </head>
   <body>
-    <div class="brand-header">
-      <a href="/" class="brand-link">
-        <img src="{% static 'logo.svg' %}" alt="" width="24" height="24" />
-        <span class="wordmark">ProfilsActifs</span>
-      </a>
-    </div>
+    {% include "partials/_navbar.html" %}
 
     <div class="legal-page">
       <h1 class="card-title" style="text-align: left; margin-top: 10px">
@@ -93,23 +88,6 @@
       </div>
     </div>
 
-    <footer class="site-footer">
-      <div class="site-footer-inner">
-        <div>
-          <div class="site-footer-brand">ProfilsActifs</div>
-          <p class="site-footer-tagline">
-            Les bonnes données pour le bon recrutement.
-          </p>
-        </div>
-        <div class="site-footer-links">
-          <a href="/">Accueil</a>
-          <a href="/cgu/">CGU</a>
-          <a href="mailto:contact@profilsactifs.fr">Contact</a>
-        </div>
-      </div>
-      <div class="site-footer-bottom">
-        © {% now "Y" %} ProfilsActifs. Tous droits réservés.
-      </div>
-    </footer>
+    {% include "partials/_footer.html" %}
   </body>
 </html>

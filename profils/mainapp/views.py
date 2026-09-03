@@ -71,8 +71,24 @@ def logout(request: HttpRequest) -> HttpResponse:
     logout_(request)
     return redirect("/")
 
-def certification(request: HttpRequest) -> HttpResponse:
-    return render(request, "certification.html")
+def quiz(request: HttpRequest) -> HttpResponse:
+
+    if not request.user.is_authenticated:
+        return redirect("/login/")
+
+    from profils.questionnaires             import constants as qc
+    from profils.questionnaires.access      import visible_questionnaires
+    from profils.questionnaires.models      import Questionnaire
+    from profils.questionnaires.serializers import public_questionnaire
+
+    questionnaires = visible_questionnaires(
+        request.user,
+        Questionnaire.objects.exclude(status = qc.STATUS_DRAFT).select_related("current_version"),
+    )
+
+    return render(request, "quiz.html", {
+        "questionnaires": [public_questionnaire(q, request.user) for q in questionnaires],
+    })
 
 def cgu(request: HttpRequest) -> HttpResponse:
     return render(request, "cgu.html")

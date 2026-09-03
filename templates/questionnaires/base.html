@@ -1,0 +1,25 @@
+{% load static %}{% load versioned_static %}<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Questionnaires{% endblock %} - ProfilsActifs</title>
+    <link rel="stylesheet" href="{% static 'style.css' %}">
+    <link rel="stylesheet" href="{% vstatic 'questionnaires.css' %}">
+    <meta name="csrf-token" content="{{ csrf_token }}">
+</head>
+<body class="q-body">
+    {% include "partials/_navbar.html" %}
+
+    <main class="q-main">
+        {% block crumbs %}{% endblock %}
+        {% block content %}{% endblock %}
+    </main>
+
+    {% include "partials/_footer.html" %}
+
+    <script src="{% vstatic 'questionnaire_common.js' %}"></script>
+    <script src="{% vstatic 'questionnaire_fields.js' %}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

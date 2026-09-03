@@ -1,0 +1,328 @@
+{% extends "profiles/base.html" %}
+{% load profile_extras %}
+{% block title %}{{ p.profile.full_name }}{% endblock %}
+
+{% comment %}
+Page publique d'un profil.
+
+Rendue entierement cote serveur a partir de `p`, la charge utile deja expurgee
+par `serializers.public_profile`. Une section que le visiteur n'a pas le droit
+de voir est donc **absente du HTML**, et non masquee en CSS : le code source de
+la page ne la contient pas.
+{% endcomment %}
+
+{% block content %}
+
+
+
+<article class="p-hero">
+    <div class="p-cover" data-cover="{{ p.profile.cover_color|default:'navy' }}" {% if p.profile.cover_url %}style="background-image:url('{{ p.profile.cover_url }}')"{% endif %}>
+        {% if is_owner %}
+            <button type="button" class="p-cover-edit" id="p-cover-edit-btn" title="Changer la couleur de la banniere" aria-label="Changer la couleur de la banniere" aria-expanded="false">
+                <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#1C3A6B"><path d="M480-80q-82 0-155-31.5t-127.5-86Q143-252 111.5-325T80-480q0-83 32.5-156t88-127Q256-817 330-848.5T488-880q80 0 151 27.5t124.5 76q53.5 48.5 85 115T880-518q0 115-70 176.5T640-280h-74q-9 0-12.5 5t-3.5 11q0 12 15 34.5t15 51.5q0 50-27.5 74T480-80Zm0-400Zm-177 23q17-17 17-43t-17-43q-17-17-43-17t-43 17q-17 17-17 43t17 43q17 17 43 17t43-17Zm120-160q17-17 17-43t-17-43q-17-17-43-17t-43 17q-17 17-17 43t17 43q17 17 43 17t43-17Zm200 0q17-17 17-43t-17-43q-17-17-43-17t-43 17q-17 17-17 43t17 43q17 17 43 17t43-17Zm120 160q17-17 17-43t-17-43q-17-17-43-17t-43 17q-17 17-17 43t17 43q17 17 43 17t43-17ZM480-160q9 0 14.5-5t5.5-13q0-14-15-33t-15-57q0-42 29-67t71-25h70q66 0 113-38.5T800-518q0-121-92.5-201.5T488-800q-136 0-232 93t-96 227q0 133 93.5 226.5T480-160Z"/></svg>
+            </button>
+            <div class="p-cover-picker" id="p-cover-picker" hidden>
+                {% for key, label in cover_colors %}
+                <button type="button" class="p-swatch {% if p.profile.cover_color == key %}is-active{% endif %}" data-cover-color="{{ key }}" title="{{ label }}" aria-label="{{ label }}"></button>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+    <div class="p-hero-body">
+        <div class="p-avatar">
+            {% if p.profile.photo_url %}
+                <img src="{{ p.profile.photo_url }}" alt="Photo de {{ p.profile.full_name }}">
+            {% else %}
+                {{ p.profile.initials|default:"?" }}
+            {% endif %}
+        </div>
+
+        <div class="p-identity">
+            <h1>{{ p.profile.full_name }}</h1>
+            {% if p.profile.headline %}<p class="p-headline">{{ p.profile.headline }}</p>{% endif %}
+            <span class="p-username">@{{ p.profile.username }}</span>
+
+            <ul class="p-facts">
+                {% if p.profile.location.label %}<li>{{ p.profile.location.label }}</li>{% endif %}
+                {% if p.profile.professional_field_label %}<li>{{ p.profile.professional_field_label }}</li>{% endif %}
+                {% if p.profile.total_experience_months %}
+                    <li><b>{{ p.profile.total_experience_months|duration_months }}</b> d'experience</li>
+                {% endif %}
+                {% if p.availability.is_available %}
+                    <li><span class="p-badge p-ok">{{ p.availability.status_label }}</span></li>
+                {% endif %}
+            </ul>
+        </div>
+
+        <div class="p-hero-actions">
+            {% if is_owner %}
+                <a class="p-btn p-primary" href="/profiles/edit/">Modifier mon profil</a>
+                <a class="p-btn" href="/profile/{{ p.profile.username }}/?preview=public">Voir en visiteur</a>
+            {% else %}
+                <a class="p-btn" href="/profiles/">Rechercher d'autres profils</a>
+            {% endif %}
+        </div>
+    </div>
+</article>
+
+<div class="p-layout">
+<div class="p-col">
+
+    {% if p.profile.summary %}
+    <section class="p-panel">
+        <h2>A propos</h2>
+        <p class="p-summary">{{ p.profile.summary }}</p>
+    </section>
+    {% endif %}
+
+    {% if p.sections.experiences %}
+    <section class="p-panel">
+        <h2>Experiences <span class="p-count">{{ p.experiences|length }}</span></h2>
+        {% if p.experiences %}
+        <ul class="p-timeline">
+            {% for e in p.experiences %}
+            <li class="p-entry {% if e.is_current %}is-current{% endif %}">
+                <h3>{{ e.title }}</h3>
+                <div class="p-entry-org">
+                    {{ e.company }}{% if e.location_city %} · {{ e.location_city }}{% endif %}
+                </div>
+                <div class="p-entry-dates">
+                    {{ e|period }} · {{ e.duration_months|duration_months }}
+                    {% if e.contract_type %} · {{ contracts|dictkey:e.contract_type }}{% endif %}
+                </div>
+                {% if e.description %}<p class="p-entry-desc">{{ e.description }}</p>{% endif %}
+                {% if e.skills %}
+                <div class="p-skills">
+                    {% for s in e.skills %}<span class="p-skill">{{ s.name }}</span>{% endfor %}
+                </div>
+                {% endif %}
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}<p class="p-empty">Aucune experience renseignee.</p>{% endif %}
+    </section>
+    {% endif %}
+
+    {% if p.sections.education %}
+    <section class="p-panel">
+        <h2>Formations <span class="p-count">{{ p.education|length }}</span></h2>
+        {% if p.education %}
+        <ul class="p-timeline">
+            {% for e in p.education %}
+            <li class="p-entry {% if e.is_current %}is-current{% endif %}">
+                <h3>{{ e.degree|default:e.institution }}</h3>
+                <div class="p-entry-org">
+                    {{ e.institution }}{% if e.field_of_study %} · {{ e.field_of_study }}{% endif %}
+                </div>
+                <div class="p-entry-dates">
+                    {{ e|period }}
+                    {% if e.diploma_verified %}<span class="p-badge p-ok">diplome verifie</span>{% endif %}
+                </div>
+                {% if e.description %}<p class="p-entry-desc">{{ e.description }}</p>{% endif %}
+                {% if e.skills %}
+                <div class="p-skills">
+                    {% for s in e.skills %}<span class="p-skill">{{ s.name }}</span>{% endfor %}
+                </div>
+                {% endif %}
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}<p class="p-empty">Aucune formation renseignee.</p>{% endif %}
+    </section>
+    {% endif %}
+
+    {% if p.sections.projects %}
+    <section class="p-panel">
+        <h2>Projets <span class="p-count">{{ p.projects|length }}</span></h2>
+        {% if p.projects %}
+        <ul class="p-timeline">
+            {% for r in p.projects %}
+            <li class="p-entry">
+                <h3>{% if r.url %}<a href="{{ r.url }}" rel="noopener noreferrer">{{ r.title }}</a>{% else %}{{ r.title }}{% endif %}</h3>
+                {% if r.role %}<div class="p-entry-org">{{ r.role }}</div>{% endif %}
+                <div class="p-entry-dates">{{ r|period }}</div>
+                {% if r.description %}<p class="p-entry-desc">{{ r.description }}</p>{% endif %}
+                {% if r.skills %}
+                <div class="p-skills">
+                    {% for s in r.skills %}<span class="p-skill">{{ s.name }}</span>{% endfor %}
+                </div>
+                {% endif %}
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}<p class="p-empty">Aucun projet renseigne.</p>{% endif %}
+    </section>
+    {% endif %}
+
+    {% if p.sections.videos %}
+    <section class="p-panel">
+        <h2>Videos <span class="p-count">{{ p.videos|length }}</span></h2>
+        <div class="p-videos">
+            {% for v in p.videos %}
+            <figure class="p-video" {% if v.thumbnail_url %}style="background-image:url('{{ v.thumbnail_url }}')"{% endif %}>
+                {% if v.duration_seconds %}<span class="p-duration">{{ v.duration_seconds|duration_seconds }}</span>{% endif %}
+                <figcaption>{{ v.title }}</figcaption>
+            </figure>
+            {% empty %}
+            {# Etat vide : la grille annonce ce qui viendra, sans simuler de contenu. #}
+            <div class="p-video-empty">
+                <div class="p-ghosts"><i></i><i></i><i></i></div>
+                <p>
+                    {% if is_owner %}
+                        Vous n'avez pas encore de video. Les videos courtes de presentation
+                        arriveront dans une prochaine version.
+                    {% else %}
+                        {{ p.profile.full_name }} n'a pas encore publie de video.
+                    {% endif %}
+                </p>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+</div>
+<div class="p-col">
+
+    {% if p.sections.skills %}
+    <section class="p-panel">
+        <h2>Competences <span class="p-count">{{ p.skills|length }}</span></h2>
+        {% if p.skills %}
+        <div class="p-skills">
+            {% for s in p.skills %}
+            <span class="p-skill">
+                {{ s.skill.name }}
+                <span class="p-level" data-rank="{{ s.level_rank }}" title="{{ s.level_label }}">
+                    <span class="p-bars">
+                        {% for n in s.level_rank|bars %}<i class="{% if n <= s.level_rank %}on{% endif %}"></i>{% endfor %}
+                    </span>
+                    {{ s.level_label }}
+                </span>
+                {% if s.years_experience %}<span class="p-skill-years">{{ s.years_experience }} an{{ s.years_experience|pluralize }}</span>{% endif %}
+            </span>
+            {% endfor %}
+        </div>
+        {% else %}<p class="p-empty">Aucune competence renseignee.</p>{% endif %}
+    </section>
+    {% endif %}
+
+    {% if p.sections.availability and p.availability %}
+    <section class="p-panel">
+        <h2>Disponibilite</h2>
+        <p><span class="p-badge {% if p.availability.is_available %}p-ok{% else %}p-info{% endif %}">{{ p.availability.status_label }}</span></p>
+        <ul class="p-facts">
+            {% if p.availability.available_from %}<li>Disponible a partir du <b>{{ p.availability.available_from|month_year }}</b></li>{% endif %}
+            {% if p.availability.contract_types %}
+                <li>Contrats : <b>{% for code in p.availability.contract_types %}{{ contracts|dictkey:code }}{% if not forloop.last %}, {% endif %}{% endfor %}</b></li>
+            {% endif %}
+            {% if p.availability.work_modes %}
+                <li>Travail : <b>{% for code in p.availability.work_modes %}{{ work_modes|dictkey:code }}{% if not forloop.last %}, {% endif %}{% endfor %}</b></li>
+            {% endif %}
+            {% if p.availability.willing_to_relocate %}<li>Mobile geographiquement</li>{% endif %}
+            {% if p.availability.mobility_radius_km %}<li>Rayon : <b>{{ p.availability.mobility_radius_km }} km</b></li>{% endif %}
+        </ul>
+        {% if p.availability.mobility_note %}<p class="p-help">{{ p.availability.mobility_note }}</p>{% endif %}
+    </section>
+    {% endif %}
+
+    {% if p.sections.languages %}
+    <section class="p-panel">
+        <h2>Langues</h2>
+        {% if p.languages %}
+        <ul class="p-facts" style="flex-direction:column;gap:.35rem">
+            {% for l in p.languages %}
+            <li><b>{{ l.name }}</b> <span class="p-level" data-rank="{{ l.level_rank }}">{{ l.level }}</span></li>
+            {% endfor %}
+        </ul>
+        {% else %}<p class="p-empty">Aucune langue renseignee.</p>{% endif %}
+    </section>
+    {% endif %}
+
+    {% if p.sections.certifications %}
+    <section class="p-panel">
+        <h2>Certifications <span class="p-count">{{ p.certifications|length }}</span></h2>
+        {% if p.certifications %}
+        <ul class="p-timeline">
+            {% for r in p.certifications %}
+            <li class="p-entry">
+                <h3>{% if r.verification_url %}<a href="{{ r.verification_url }}" rel="noopener noreferrer">{{ r.name }}</a>{% else %}{{ r.name }}{% endif %}</h3>
+                {% if r.issuer %}<div class="p-entry-org">{{ r.issuer }}</div>{% endif %}
+                <div class="p-entry-dates">
+                    {% if r.issued_on %}Obtenue en {{ r.issued_on|month_year }}{% endif %}
+                    {% if r.is_expired %}<span class="p-badge p-warn">expiree</span>{% endif %}
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}<p class="p-empty">Aucune certification renseignee.</p>{% endif %}
+    </section>
+    {% endif %}
+
+    {% if p.sections.links and p.links %}
+    <section class="p-panel">
+        <h2>Liens</h2>
+        <ul class="p-facts" style="flex-direction:column;gap:.35rem">
+            {% for l in p.links %}
+            <li><a href="{{ l.url }}" rel="noopener noreferrer">{{ l.label }}</a> <span class="p-muted">{{ link_kinds|dictkey:l.kind }}</span></li>
+            {% endfor %}
+        </ul>
+    </section>
+    {% endif %}
+
+</div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+{% if is_owner %}
+<script>
+(() => {
+    const editBtn = document.getElementById('p-cover-edit-btn');
+    const picker  = document.getElementById('p-cover-picker');
+    const cover   = document.querySelector('.p-cover');
+    if (!editBtn || !picker || !cover) return;
+
+    const csrftoken = document.querySelector('meta[name="csrf-token"]').content;
+
+    editBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const open = picker.hidden;
+        picker.hidden = !open;
+        editBtn.setAttribute('aria-expanded', String(open));
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!picker.hidden && !picker.contains(e.target) && e.target !== editBtn) {
+            picker.hidden = true;
+            editBtn.setAttribute('aria-expanded', 'false');
+        }
+    });
+
+    picker.querySelectorAll('.p-swatch').forEach((swatch) => {
+        swatch.addEventListener('click', () => {
+            const color = swatch.dataset.coverColor;
+
+            fetch('/api/profiles/me/', {
+                method: 'PATCH',
+                headers: {
+                    'X-CSRFToken': csrftoken,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ cover_color: color }),
+            })
+                .then((res) => { if (!res.ok) throw new Error('save failed'); })
+                .then(() => {
+                    cover.dataset.cover = color;
+                    picker.querySelectorAll('.p-swatch').forEach((s) => s.classList.remove('is-active'));
+                    swatch.classList.add('is-active');
+                    picker.hidden = true;
+                    editBtn.setAttribute('aria-expanded', 'false');
+                })
+                .catch((err) => console.error(err));
+        });
+    });
+})();
+</script>
+{% endif %}
+{% endblock %}
