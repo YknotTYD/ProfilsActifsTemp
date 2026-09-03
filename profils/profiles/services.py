@@ -24,6 +24,7 @@ from django.utils.dateparse import parse_date
 from profils.questionnaires.http import BadRequest
 
 from . import constants as c
+from . import moderation
 from .models import (
     Certification, CertificationSkill, Education, EducationSkill, Language,
     ProfessionalProfile, ProfileContractType, ProfileLink, Project, ProjectSkill,
@@ -619,38 +620,55 @@ def remove_language(row: UserLanguage):
 # Videos (section 15)
 # --------------------------------------------------------------------------- #
 
+#: champs de metadonnees, jamais le statut : celui-ci ne se change plus que
+#: par `moderation.transition_video`, via les fonctions ci-dessous. Le laisser
+#: dans une charge utile librement appliquee serait un trou de securite --
+#: un simple PATCH aurait suffi a publier une video jamais moderee.
 _VIDEO_FIELDS = {
     "title":            lambda p: _text(p, "title", maximum = 160, required = True),
     "description":      lambda p: _text(p, "description", maximum = 5000),
-    "file_url":         lambda p: _url(p, "file_url", maximum = 1024),
     "thumbnail_url":    lambda p: _url(p, "thumbnail_url", maximum = 1024),
     "duration_seconds": lambda p: _int(p, "duration_seconds", maximum = 60 * 60),
-    "status":           lambda p: _choice(p, "status", c.VIDEO_STATUSES,
-                                          default = c.VIDEO_DRAFT),
     "visibility":       lambda p: _choice(p, "visibility", c.VISIBILITIES,
                                           default = c.VISIBILITY_PUBLIC),
 }
 
 
-@transaction.atomic
-def create_video(profile: ProfessionalProfile, payload: dict) -> ProfileVideo:
-    """Enregistre la fiche d'une video.
+def _clean_video_url(value: str, *, required: bool = False) -> str:
+    """Meme validation qu'un champ de formulaire (`_url`), pour un lien recu
+    a part -- soumission, re-soumission, remplacement.
+    """
+    return _url({"file_url": value}, "file_url", maximum = 1024, required = required)
 
-    L'upload et l'encodage ne sont pas de cette version (section 15) : ce qui
-    est persiste, ce sont les metadonnees et les competences associees, pour
-    que le futur feed n'ait qu'a s'y brancher.
+
+def create_video(profile: ProfessionalProfile, payload: dict) -> ProfileVideo:
+    """Primitive interne : cree une fiche video sans passer par la moderation.
+
+    Reservee aux appels de confiance (scripts, tests) -- jamais a une route
+    HTTP directement accessible a un utilisateur, puisqu'elle n'entre pas la
+    video en file d'attente. `submit_video_link` est le point d'entree reel
+    (section 1).
     """
     video = ProfileVideo(profile = profile,
                          title = _text(payload, "title", maximum = 160, required = True))
     _apply(video, payload, _VIDEO_FIELDS)
+    if "status" in payload:
+        video.status = _choice(payload, "status", c.VIDEO_STATUSES, default = c.VIDEO_DRAFT)
+    if "file_url" in payload:
+        video.file_url = _url(payload, "file_url", maximum = 1024)
     video.tags = _tags(payload)
     video.save()
     set_entry_skills(video, ProfileVideoSkill, "video", payload.get("skills"))
     return video
 
 
-@transaction.atomic
 def update_video(video: ProfileVideo, payload: dict) -> ProfileVideo:
+    """Modifie les metadonnees d'une video (titre, description, visibilite...).
+
+    Ne touche ni au statut ni au lien de lecture : voir `moderation.
+    transition_video` pour le premier, `replace_video_link` pour le second,
+    qui doit repasser par la moderation une fois la video publiee.
+    """
     _apply(video, payload, _VIDEO_FIELDS)
     if "tags" in payload:
         video.tags = _tags(payload)
@@ -667,7 +685,130 @@ def _tags(payload: dict) -> list:
     return [str(tag).strip()[:40] for tag in tags if str(tag).strip()][:20]
 
 
-def delete_video(video: ProfileVideo):
-    """Suppression logique : une video referencee par un projet doit survivre."""
-    video.status = c.VIDEO_DELETED
-    video.save(update_fields = ["status"])
+def delete_video(video: ProfileVideo, *, actor: str = c.ACTOR_OWNER, user = None):
+    """Suppression logique (section 1) : une video referencee par un projet
+    ne doit pas disparaitre sous ses pieds, et la suppression doit rester
+    tracee dans l'historique de moderation comme n'importe quel changement de
+    statut.
+    """
+    moderation.transition_video(video, c.VIDEO_DELETED, actor = actor, user = user)
+
+
+# --------------------------------------------------------------------------- #
+# Soumission et moderation (section "Moderation video, presentation,
+# messagerie et notifications")
+# --------------------------------------------------------------------------- #
+
+def submit_video_link(profile: ProfessionalProfile, payload: dict) -> ProfileVideo:
+    """Soumet une nouvelle video par lien externe (section 1).
+
+    Entre directement en file de moderation (`PENDING`) : il n'y a pas de
+    fichier a "traiter" pour un lien, donc pas de passage par `DRAFT` ni
+    `PROCESSING` -- ces deux statuts restent reserves a l'upload par fichier,
+    construit separement (voir `constants.ENABLED_VIDEO_SOURCES`).
+
+    Toute video soumise ici est une candidate a la video de presentation du
+    profil (section 2) ; le projet ne distingue pas encore d'autre categorie
+    de video, meme si le modele le permettrait deja (evolutivite, section 8).
+    """
+    video = ProfileVideo(
+        profile         = profile,
+        title           = _text(payload, "title", maximum = 160, required = True),
+        description     = _text(payload, "description", maximum = 5000),
+        source_type     = c.VIDEO_SOURCE_LINK,
+        file_url        = _url(payload, "file_url", maximum = 1024, required = True),
+        thumbnail_url   = _url(payload, "thumbnail_url", maximum = 1024),
+        duration_seconds = _int(payload, "duration_seconds", maximum = 60 * 60),
+        visibility      = _choice(payload, "visibility", c.VISIBILITIES,
+                                  default = c.VISIBILITY_PUBLIC),
+        is_presentation = True,
+        status          = c.VIDEO_PENDING,
+    )
+
+    replaces_id = payload.get("replaces")
+    if replaces_id:
+        current = ProfileVideo.objects.filter(
+            pk = replaces_id, profile = profile,
+            is_presentation = True, status = c.VIDEO_PUBLISHED,
+        ).first()
+        if current is None:
+            raise BadRequest(
+                "la video de presentation a remplacer est introuvable", "replaces_not_found",
+            )
+        video.replaces = current
+
+    video.tags = _tags(payload)
+    video.save()
+    set_entry_skills(video, ProfileVideoSkill, "video", payload.get("skills"))
+    return video
+
+
+def resubmit_video(video: ProfileVideo, *, user, new_file_url: str = None) -> ProfileVideo:
+    """Nouvelle soumission apres un refus (section 1).
+
+    Un lien de remplacement est optionnel : l'utilisateur peut vouloir
+    re-soumettre la meme video (motif juge injustement refuse) comme changer
+    de lien avant de re-tenter sa chance.
+    """
+    if new_file_url:
+        video.file_url = _clean_video_url(new_file_url)
+        video.save(update_fields = ["file_url"])
+    return moderation.transition_video(video, c.VIDEO_PENDING, actor = c.ACTOR_OWNER, user = user)
+
+
+def replace_video_link(video: ProfileVideo, new_file_url: str, *, user) -> ProfileVideo:
+    """Change le lien d'une video deja en ligne (section "Securite") :
+    renvoie systematiquement en moderation.
+
+    Sans ce garde-fou, faire valider une video anodine puis remplacer le lien
+    contournerait la moderation en une seule requete -- exactement ce que la
+    specification interdit ("une video refusee ne doit jamais etre accessible
+    publiquement" vaut aussi pour une video jamais revue du tout).
+    """
+    video.file_url = _clean_video_url(new_file_url)
+    video.save(update_fields = ["file_url"])
+    if video.status == c.VIDEO_PUBLISHED:
+        moderation.transition_video(video, c.VIDEO_PENDING, actor = c.ACTOR_OWNER, user = user)
+    return video
+
+
+@transaction.atomic
+def publish_presentation_video(video: ProfileVideo, *, user) -> ProfileVideo:
+    """Publication explicite d'une video de presentation validee (section 2).
+
+    Une validation administrateur ne publie jamais toute seule : c'est ce
+    geste, et lui seul, qui rend la video visible au public. Si une
+    presentation etait deja en ligne, elle est retiree dans la meme
+    transaction -- et *avant* que la nouvelle passe publiee, jamais apres :
+    les deux ne doivent jamais etre publiees en meme temps, y compris le
+    temps d'une transaction (voir la contrainte sur `ProfileVideo`).
+    """
+    if not video.is_presentation:
+        raise BadRequest("cette video n'est pas une video de presentation", "not_presentation")
+
+    previous = ProfileVideo.objects.filter(
+        profile = video.profile, is_presentation = True, status = c.VIDEO_PUBLISHED,
+    ).exclude(pk = video.pk).first()
+
+    if previous is not None:
+        moderation.transition_video(
+            previous, c.VIDEO_HIDDEN, actor = c.ACTOR_OWNER, user = user,
+            reason = "remplacee par une nouvelle video de presentation",
+        )
+
+    moderation.transition_video(video, c.VIDEO_PUBLISHED, actor = c.ACTOR_OWNER, user = user)
+    return video
+
+
+def approve_video(video: ProfileVideo, *, user) -> ProfileVideo:
+    """Validation administrateur (section 1) : ne publie jamais la video."""
+    return moderation.transition_video(video, c.VIDEO_APPROVED, actor = c.ACTOR_ADMIN, user = user)
+
+
+def reject_video(video: ProfileVideo, reason: str, *, user) -> ProfileVideo:
+    """Refus administrateur (section 1) : le motif est obligatoire, verifie
+    par `moderation.transition_video` lui-meme.
+    """
+    return moderation.transition_video(
+        video, c.VIDEO_REJECTED, actor = c.ACTOR_ADMIN, user = user, reason = reason,
+    )

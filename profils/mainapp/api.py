@@ -103,7 +103,20 @@ def video_upload(request: HttpRequest) -> HttpResponse:
             url = url.removeprefix("https://www.youtube.com/watch?v=")
             url = "https://www.youtube.com/embed/" + url
 
+        # `status` demarre a "PENDING" (defaut du champ) : la video entre en
+        # moderation, elle n'apparait dans aucun feed tant qu'un
+        # administrateur ne l'a pas validee (section 1).
         VideoLink.objects.create(user = request.user, url = url).save()
+
+    return redirect(request.GET.get("camefrom", "/"))
+
+def video_delete(request: HttpRequest) -> HttpResponse:
+    """Suppression par son proprietaire (section 1 : "l'utilisateur peut
+    supprimer sa video"). Un administrateur la supprime depuis /admin/.
+    """
+
+    if request.user.is_authenticated and (video_id := request.POST.get("video_id")):
+        VideoLink.objects.filter(id = video_id, user = request.user).delete()
 
     return redirect(request.GET.get("camefrom", "/"))
 
