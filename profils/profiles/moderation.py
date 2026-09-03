@@ -117,9 +117,13 @@ def transition_video(video: ProfileVideo, to_status: str, *, actor: str,
 
     notif_type = _NOTIFICATION_FOR_STATUS.get(to_status)
     if notif_type is not None:
+        # section 5 : "acces rapide a l'element concerne". Ces trois evenements
+        # (acceptee / refusee / masquee) concernent le proprietaire et le
+        # renvoient a la page ou il agit sur sa video -- re-soumettre apres un
+        # refus, confirmer la publication -- pas a sa page publique.
         notifications.notify(
             video.profile.user, notif_type, target = video,
-            url = f"/profile/{video.profile.username}/",
+            url = "/profiles/me/video/",
             title = video.title, reason = reason,
         )
 
