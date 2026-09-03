@@ -48,7 +48,7 @@ from .background import (
     WorkExperienceSkill,
 )
 from .language import Language, UserLanguage
-from .video import ProfileVideo, ProfileVideoSkill
+from .video import ProfileVideo, ProfileVideoSkill, VideoModerationEvent
 
 __all__ = [
     "ProfessionalProfile",
@@ -72,4 +72,5 @@ __all__ = [
     "UserLanguage",
     "ProfileVideo",
     "ProfileVideoSkill",
+    "VideoModerationEvent",
 ]

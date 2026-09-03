@@ -866,7 +866,11 @@ class Command(BaseCommand):
 
         videos = []
         for user, clip in zip(posters, clips):
-            videos.append(VideoLink.objects.create(user = user, url = clip))
+            # deja moderees : une donnee de demonstration doit apparaitre
+            # dans le feed sans qu'on rejoue la moderation a la main.
+            videos.append(VideoLink.objects.create(
+                user = user, url = clip, status = "APPROVED",
+            ))
 
         recruiters = list(User.objects.filter(username__in = [r["username"] for r in RECRUITERS]))
         reaction_pattern = [

@@ -45,6 +45,25 @@
           </div>
           <button type="submit" class="btn-primary">UPLOADER</button>
         </form>
+
+        {% if my_video %}
+        <div class="mt-5 text-center">
+          {% if my_video.status == "PENDING" %}
+          <p class="text-[#4a4a4a]">Votre video est en attente de moderation.</p>
+          {% elif my_video.status == "APPROVED" %}
+          <p class="text-[#4a4a4a]">Votre video a ete validee et est visible des recruteurs.</p>
+          {% elif my_video.status == "REJECTED" %}
+          <p class="text-[#4a4a4a]">
+            Votre video a ete refusee{% if my_video.rejection_reason %} : {{ my_video.rejection_reason }}{% endif %}
+          </p>
+          {% endif %}
+          <form method="post" action="/api/delete/video/?camefrom=/" class="mt-2">
+            {% csrf_token %}
+            <input type="hidden" name="video_id" value="{{ my_video.id }}" />
+            <button type="submit" class="link-btn">Supprimer ma video</button>
+          </form>
+        </div>
+        {% endif %}
         {% elif role == "Recruiter" or role == "Admin" %} {% if videos_ld %}
         <div class="feed mt-5">
           {% for vid, liked, disliked in videos_ld %}

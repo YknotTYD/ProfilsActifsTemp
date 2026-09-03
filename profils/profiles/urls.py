@@ -58,6 +58,17 @@ urlpatterns = [
 
     path("api/profiles/me/videos/",                  api.me_videos),
     path("api/profiles/me/videos/<int:pk>/",         api.me_video_item),
+    path("api/profiles/me/videos/<int:pk>/publish/",  api.me_video_publish),
+    path("api/profiles/me/videos/<int:pk>/resubmit/", api.me_video_resubmit),
+
+    # ------------------------------------------------------------------ #
+    # API - moderation administrateur (spec "Moderation video, presentation,
+    # messagerie et notifications")
+    # ------------------------------------------------------------------ #
+    path("api/profiles/admin/videos/pending/",        api.admin_video_queue),
+    path("api/profiles/admin/videos/<int:pk>/approve/", api.admin_video_approve),
+    path("api/profiles/admin/videos/<int:pk>/reject/",  api.admin_video_reject),
+    path("api/profiles/admin/videos/<int:pk>/history/", api.admin_video_history),
 
     # ------------------------------------------------------------------ #
     # API - consultation publique

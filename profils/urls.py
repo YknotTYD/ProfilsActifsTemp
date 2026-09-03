@@ -31,6 +31,7 @@ urlpatterns = [
     path("api/register/",     api.register),
     path("api/login/",        api.login),
     path("api/upload/video/", api.video_upload),
+    path("api/delete/video/", api.video_delete),
     path("api/react/",        api.react),
     path("",                  include("profils.questionnaires.urls")),
     path("",                  include("profils.profiles.urls")),

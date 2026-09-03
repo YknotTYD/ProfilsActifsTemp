@@ -13,8 +13,14 @@ from . import constants
 
 
 def get_videos(request: HttpResponse) -> list[tuple[int, int]]:
+    """Videos du feed recruteur/admin.
 
-    videos = [vid for vid in VideoLink.objects.all()]
+    Filtre sur `APPROVED` : une video en attente ou refusee n'a rien a faire
+    devant un recruteur (section 1, "une video n'est jamais publique avant
+    validation").
+    """
+
+    videos = [vid for vid in VideoLink.objects.filter(status = constants.VIDEO_LINK_APPROVED)]
     liked_disliked = [(0, 0)] * len(videos)
 
     if request.user.is_authenticated:        
@@ -33,6 +39,11 @@ def get_videos(request: HttpResponse) -> list[tuple[int, int]]:
 
 def main(request: HttpRequest) -> HttpResponse:
 
+    my_videos = (
+        VideoLink.objects.filter(user = request.user).order_by("-id")
+            if request.user.is_authenticated else []
+    )
+
     return render(
         request,
         "main.html",
@@ -43,8 +54,12 @@ def main(request: HttpRequest) -> HttpResponse:
                 str(Role.objects.filter(user = request.user).first())
                     if request.user.is_authenticated else "None",
             "videos_ld":
-                get_videos(request)
-
+                get_videos(request),
+            # section 1 : "l'utilisateur doit pouvoir consulter a tout moment
+            # le statut de ses videos" -- la plus recente suffit ici, le
+            # formulaire au-dessus n'en propose qu'une a la fois.
+            "my_video":
+                my_videos[0] if my_videos else None,
         }
     )
 
