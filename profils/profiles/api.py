@@ -542,10 +542,6 @@ def admin_video_history(request, pk):
         for event in events
     ]})
 
-pass
-
-# TODO: replace
-
 def video_file(request, pk):
     video = get_object_or_404(ProfileVideo, pk=pk, source_type=c.VIDEO_SOURCE_FILE)
 

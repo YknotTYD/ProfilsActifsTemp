@@ -813,18 +813,21 @@ def reject_video(video: ProfileVideo, reason: str, *, user) -> ProfileVideo:
         video, c.VIDEO_REJECTED, actor = c.ACTOR_ADMIN, user = user, reason = reason,
     )
 
+ALLOWED_VIDEO_CONTENT_TYPES = {
+    "video/mp4":        "mp4",
+    "video/quicktime":  "mov",
+    "video/x-msvideo":  "avi",
+    "video/webm":       "webm",
+}
 
-pass
-
-ALLOWED_VIDEO_EXTENSIONS = ("mp4", "mov", "avi", "webm")
 MAX_VIDEO_FILE_SIZE = 100 * 1024 * 1024
 
 def process_video_file(video):
     reasons = []
 
-    ext = video.file_content_type.split("/")[-1].lower()
-    if False and ext not in ALLOWED_VIDEO_EXTENSIONS: # TODO: rm
-        reasons.append(f"Format non supporté : {ext}")
+    if video.file_content_type not in ALLOWED_VIDEO_CONTENT_TYPES:
+        reasons.append(f"Format non supporté : {video.file_content_type}")
+
 
     if video.file_size and video.file_size > MAX_VIDEO_FILE_SIZE:
         reasons.append("Fichier trop volumineux")
