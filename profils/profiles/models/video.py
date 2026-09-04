@@ -1,4 +1,3 @@
-##models/video.py
 """Modele video (sections 15 a 19, et moderation).
 
 Le nom `Video` est deja pris par `mainapp.Video` (le feed de demonstration par
@@ -22,7 +21,6 @@ from django.utils import timezone
 from .. import constants as c
 from .skill import SkillLink
 
-
 class ProfileVideo(models.Model):
     """Video courte rattachee a un profil professionnel."""
 
@@ -36,27 +34,15 @@ class ProfileVideo(models.Model):
     source_type = models.CharField(
         max_length = 8, choices = c.VIDEO_SOURCES, default = c.VIDEO_SOURCE_LINK,
     )
-    #: URL de lecture -- celle fournie par l'utilisateur pour une video par
-    #: lien. Le nom est conserve tel quel (plutot que "external_url") pour ne
-    #: pas casser le feed, la recherche et les 193 tests qui le lisent deja.
     file_url      = models.CharField(max_length = 1024, blank = True, default = "")
     thumbnail_url = models.CharField(max_length = 1024, blank = True, default = "")
     duration_seconds = models.PositiveIntegerField(null = True, blank = True)
 
-    #: reserve a l'upload par fichier (en cours de construction ailleurs) :
-    #: stockage en blob brut, decide plus simple a operer qu'un volume de
-    #: fichiers pour ce projet. Ni lu ni ecrit tant que `source_type` ne vaut
-    #: pas `FILE`.
     file_blob         = models.BinaryField(null = True, blank = True, editable = False)
     file_content_type = models.CharField(max_length = 100, blank = True, default = "")
     file_size         = models.PositiveIntegerField(null = True, blank = True)
 
-    #: video de presentation du profil (section 2). Une seule peut etre a la
-    #: fois publiee pour un meme profil : voir la contrainte plus bas.
     is_presentation = models.BooleanField(default = False)
-    #: renseigne le temps d'un remplacement : la video que celle-ci doit
-    #: retirer une fois que l'utilisateur aura confirme (voir `services.
-    #: publish_presentation_video`). L'ancienne reste en ligne jusque-la.
     replaces = models.ForeignKey(
         "self", null = True, blank = True, on_delete = models.SET_NULL,
         related_name = "replaced_by",
@@ -69,9 +55,6 @@ class ProfileVideo(models.Model):
         max_length = 20, choices = c.VISIBILITIES, default = c.VISIBILITY_PUBLIC
     )
 
-    #: motif de refus (section 1) : visible du proprietaire, jamais du public.
-    #: efface des que la video quitte l'etat refusee -- un ancien motif ne
-    #: doit pas survivre a une nouvelle soumission.
     rejection_reason = models.TextField(blank = True, default = "")
     moderated_at = models.DateTimeField(null = True, blank = True)
     moderated_by = models.ForeignKey(
@@ -85,7 +68,6 @@ class ProfileVideo(models.Model):
     updated_at   = models.DateTimeField(auto_now = True)
     published_at = models.DateTimeField(null = True, blank = True)
 
-    # -- statistiques, alimentees plus tard par le feed --------------------- #
     view_count = models.PositiveIntegerField(default = 0)
     like_count = models.PositiveIntegerField(default = 0)
     share_count = models.PositiveIntegerField(default = 0)
@@ -98,11 +80,6 @@ class ProfileVideo(models.Model):
             models.Index(fields = ["visibility"]),
         )
         constraints = (
-            # la garantie "une seule presentation active par profil" (section
-            # 2) est tenue ici, pas en Python : un index partiel refuse la
-            # deuxieme ligne au niveau base, y compris entre deux requetes
-            # concurrentes, la ou une verification applicative arriverait
-            # toujours une transaction trop tard.
             models.UniqueConstraint(
                 fields    = ("profile",),
                 condition = Q(is_presentation = True, status = c.VIDEO_PUBLISHED),
@@ -114,8 +91,6 @@ class ProfileVideo(models.Model):
         return f"ProfileVideo<{self.profile_id}:{self.title}>"
 
     def save(self, *args, **kwargs):
-        # la date de publication decoule du statut ; la laisser au client
-        # ouvrirait la porte a une video "publiee hier" apparue ce matin.
         if self.status == c.VIDEO_PUBLISHED and self.published_at is None:
             self.published_at = timezone.now()
             if kwargs.get("update_fields") is not None:
@@ -151,7 +126,6 @@ class ProfileVideo(models.Model):
         mode, url = playback(self.source_type, self.file_url)
         return {"mode": mode, "url": url}
 
-
 class VideoModerationEvent(models.Model):
     """Historique de moderation d'une video (section "Historique de moderation").
 
@@ -165,15 +139,10 @@ class VideoModerationEvent(models.Model):
     video = models.ForeignKey(
         ProfileVideo, on_delete = models.CASCADE, related_name = "moderation_events",
     )
-    #: identite de l'auteur quand il y en a une (proprietaire ou admin) ; nulle
-    #: pour une transition automatique, ou pour un appel interne sans acteur
-    #: identifie (scripts, tests).
     actor = models.ForeignKey(
         settings.AUTH_USER_MODEL, null = True, blank = True,
         on_delete = models.SET_NULL, related_name = "+",
     )
-    #: type d'acteur, meme quand `actor` est nul -- c'est ce champ, pas
-    #: `actor`, qui repond a "qui a fait quoi" pour un traitement automatique.
     source = models.CharField(max_length = 8, choices = c.MODERATION_ACTORS)
 
     old_status = models.CharField(max_length = 16, choices = c.VIDEO_STATUSES, blank = True, default = "")
@@ -181,11 +150,6 @@ class VideoModerationEvent(models.Model):
     reason     = models.TextField(blank = True, default = "")
 
     created_at = models.DateTimeField(auto_now_add = True)
-    #: renseigne quand l'evenement sort de la fenetre d'historique "vivant"
-    #: (par defaut 7 jours, voir `constants.REJECTION_HISTORY_DAYS`). La ligne
-    #: n'est jamais supprimee -- elle bascule juste dans l'onglet "archives"
-    #: de la console de moderation. Pose par `archive_moderation_history` ou,
-    #: paresseusement, a la lecture de la liste des refus.
     archived_at = models.DateTimeField(null = True, blank = True)
 
     class Meta:
@@ -197,7 +161,6 @@ class VideoModerationEvent(models.Model):
 
     def __str__(self):
         return f"VideoModerationEvent<{self.video_id}:{self.old_status}->{self.new_status}>"
-
 
 class ProfileVideoReaction(models.Model):
     """Reaction d'un utilisateur a une video de profil (feed video).
@@ -236,7 +199,6 @@ class ProfileVideoReaction(models.Model):
     def __str__(self):
         return f"ProfileVideoReaction<{self.video_id}:{self.user_id}:{self.reaction}>"
 
-
 class ProfileVideoView(models.Model):
     """Une vue enregistree d'une video de profil (section 6 : statistiques).
 
@@ -274,7 +236,6 @@ class ProfileVideoView(models.Model):
 
     def __str__(self):
         return f"ProfileVideoView<{self.video_id}:{self.user_id or self.session_key}>"
-
 
 class ProfileVideoSkill(SkillLink):
     """Competence mise en avant par une video (section 17).

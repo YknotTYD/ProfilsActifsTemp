@@ -1,4 +1,3 @@
-##views.py
 """Pages des profils professionnels.
 
 Comme dans `questionnaires/views.py`, les templates ne portent aucune logique
@@ -24,16 +23,13 @@ from .permissions import ProfileAccessDenied
 from .search     import ProfileQuery
 from .visibility import can_view_profile
 
-
 def _login_required(request):
     return None if request.user.is_authenticated else redirect("/login/")
-
 
 def profile_page(request, username):
     """Page publique d'un profil : `/profile/<username>/`."""
     profile = services.profile_by_username(username)
     if profile is None or not can_view_profile(request.user, profile):
-        # meme reponse dans les deux cas : ne pas reveler qu'un profil existe
         raise Http404
 
     viewer  = _viewer(request, profile)
@@ -41,11 +37,6 @@ def profile_page(request, username):
 
     from profils.messaging.rules import can_start as can_message
 
-    # une seule vidéo de présentation compte jamais qu'une à la fois
-    # (section 2) : la page publique montre celle-là, jamais la liste
-    # brute que le propriétaire peut voir (qui inclut une éventuelle
-    # vidéo en cours de remplacement -- ça, c'est le travail de
-    # `/profiles/me/video/`, pas de cette page).
     live_video = next(
         (video for video in payload.get("videos", []) if video["status"] == c.VIDEO_PUBLISHED),
         None,
@@ -64,13 +55,8 @@ def profile_page(request, username):
         "link_kinds": dict(c.LINK_KINDS),
         "cover_colors": c.COVER_COLORS,
         "capabilities": permissions.capabilities(request.user),
-        # section 4 : un recruteur peut contacter ce candidat s'il a publie
-        # une video -- l'import est local pour que `profiles` reste
-        # chargeable sans `messaging` la ou ce bouton n'a pas de sens
-        # (l'API, par exemple).
         "can_message": can_message(request.user, profile.user),
     })
-
 
 def search_page(request):
     """Page de recherche de profils : `/profiles/`.
@@ -86,9 +72,6 @@ def search_page(request):
     try:
         query = ProfileQuery.from_params(request.GET)
     except BadRequest:
-        # un lien partage avec un filtre mal forme retombe sur une recherche
-        # vide plutot que sur une page cassee ; toute autre exception, elle,
-        # doit continuer a remonter au lieu d'etre avalee en silence.
         query = ProfileQuery()
 
     skills = Skill.objects.in_bulk(query.skill_ids)
@@ -110,7 +93,6 @@ def search_page(request):
         "capabilities":    permissions.capabilities(request.user),
     })
 
-
 def editor_page(request):
     """Interface d'edition de mon profil : `/profiles/edit/` (section 22)."""
     if response := _login_required(request):
@@ -124,7 +106,6 @@ def editor_page(request):
         "sections": c.PROFILE_SECTIONS,
         "capabilities": permissions.capabilities(request.user),
     })
-
 
 def admin_videos_page(request):
     """Console de moderation video : `/profiles/admin/videos/`.
@@ -141,7 +122,6 @@ def admin_videos_page(request):
     return render(request, "profiles/admin_videos.html", {
         "capabilities": permissions.capabilities(request.user),
     })
-
 
 def my_video_page(request):
     """Vidéo de présentation : `/profiles/me/video/`.
@@ -196,7 +176,6 @@ def my_video_page(request):
         "current": current,
         "pending": pending,
     })
-
 
 def my_profile_redirect(request):
     """`/profile/` renvoie l'utilisateur vers sa propre page.

@@ -1,4 +1,3 @@
-##tests/test_api.py
 """Contrat HTTP : administration, utilisation et etancheite des corriges."""
 
 import json
@@ -11,7 +10,6 @@ from profils.questionnaires.models import Questionnaire
 from .factories import (
     add_single_choice, draft_of, make_admin, make_questionnaire, make_user, publish,
 )
-
 
 class ApiTestCase(TestCase):
 
@@ -31,7 +29,6 @@ class ApiTestCase(TestCase):
     def put(self, client, url, payload = None):
         return client.put(url, data = json.dumps(payload or {}),
                           content_type = "application/json")
-
 
 class AdminApiTests(ApiTestCase):
 
@@ -214,7 +211,6 @@ class AdminApiTests(ApiTestCase):
         self.assertIn("attempts", stats)
         self.assertIn("by_version", stats)
 
-
 class UserApiTests(ApiTestCase):
 
     def setUp(self):
@@ -329,7 +325,6 @@ class UserApiTests(ApiTestCase):
 
         self.assertEqual(transcript["answers"][0]["question"]["text"], "Langage prefere ?")
         self.assertEqual(transcript["answers"][0]["display"], "Java")
-
 
 class PageTests(ApiTestCase):
 

@@ -1,4 +1,3 @@
-##constants.py
 """Vocabulaire partage des profils professionnels.
 
 Meme principe que `questionnaires/constants.py` : tout ce qui est un "choix"
@@ -13,10 +12,6 @@ Allonger une echelle revient donc a ajouter une constante et un rang, jamais a
 migrer des donnees.
 """
 
-# --------------------------------------------------------------------------- #
-# Niveaux de competence (section 4)
-# --------------------------------------------------------------------------- #
-
 LEVEL_BEGINNER     = "BEGINNER"
 LEVEL_INTERMEDIATE = "INTERMEDIATE"
 LEVEL_ADVANCED     = "ADVANCED"
@@ -29,7 +24,6 @@ SKILL_LEVELS = (
     (LEVEL_EXPERT,       "Expert"),
 )
 
-#: rang de chaque niveau, seul ordre qui fasse foi
 SKILL_LEVEL_RANKS = {
     LEVEL_BEGINNER:     1,
     LEVEL_INTERMEDIATE: 2,
@@ -39,15 +33,9 @@ SKILL_LEVEL_RANKS = {
 
 MAX_SKILL_LEVEL_RANK = max(SKILL_LEVEL_RANKS.values())
 
-
 def skill_level_rank(level: str) -> int:
     """Rang d'un niveau ; 0 pour un niveau inconnu ou absent."""
     return SKILL_LEVEL_RANKS.get(level, 0)
-
-
-# --------------------------------------------------------------------------- #
-# Categories de competences
-# --------------------------------------------------------------------------- #
 
 SKILL_CATEGORY_LANGUAGE  = "LANGUAGE"
 SKILL_CATEGORY_FRAMEWORK = "FRAMEWORK"
@@ -68,11 +56,6 @@ SKILL_CATEGORIES = (
     (SKILL_CATEGORY_SOFT,      "Savoir-etre"),
     (SKILL_CATEGORY_OTHER,     "Autre"),
 )
-
-
-# --------------------------------------------------------------------------- #
-# Domaines professionnels (sections 2 et 12)
-# --------------------------------------------------------------------------- #
 
 FIELD_SOFTWARE       = "SOFTWARE"
 FIELD_DATA           = "DATA"
@@ -112,14 +95,6 @@ PROFESSIONAL_FIELDS = (
     (FIELD_OTHER,          "Autre"),
 )
 
-
-# --------------------------------------------------------------------------- #
-# Couleur de banniere du profil
-# --------------------------------------------------------------------------- #
-#: choix simple d'une teinte plutot qu'une image : pas d'hebergement de
-#: fichiers, et une bannière lisible sans URL a fournir. La valeur est le nom
-#: du degrade, tenu a jour dans `static/profiles.css` (`.p-cover[data-cover]`).
-
 COVER_NAVY   = "navy"
 COVER_OCRE   = "ocre"
 COVER_TEAL   = "teal"
@@ -146,11 +121,6 @@ COVER_COLORS = (
 
 DEFAULT_COVER_COLOR = COVER_NAVY
 
-
-# --------------------------------------------------------------------------- #
-# Disponibilite et recherche d'emploi (section 10)
-# --------------------------------------------------------------------------- #
-
 AVAILABILITY_OPEN_TO_WORK          = "OPEN_TO_WORK"
 AVAILABILITY_OPEN_TO_OPPORTUNITIES = "OPEN_TO_OPPORTUNITIES"
 AVAILABILITY_CURRENTLY_EMPLOYED    = "CURRENTLY_EMPLOYED"
@@ -163,7 +133,6 @@ AVAILABILITY_STATUSES = (
     (AVAILABILITY_NOT_LOOKING,           "Pas en recherche"),
 )
 
-#: statuts consideres comme "disponible" par le filtre `available = true`
 AVAILABLE_STATUSES = (
     AVAILABILITY_OPEN_TO_WORK,
     AVAILABILITY_OPEN_TO_OPPORTUNITIES,
@@ -199,17 +168,11 @@ WORK_MODES = (
     (WORK_MODE_ONSITE, "Presentiel"),
 )
 
-#: champ booleen du profil correspondant a chaque mode de travail
 WORK_MODE_FIELDS = {
     WORK_MODE_REMOTE: "open_to_remote",
     WORK_MODE_HYBRID: "open_to_hybrid",
     WORK_MODE_ONSITE: "open_to_onsite",
 }
-
-
-# --------------------------------------------------------------------------- #
-# Visibilite (section 11)
-# --------------------------------------------------------------------------- #
 
 VISIBILITY_PUBLIC           = "PUBLIC"
 VISIBILITY_REGISTERED_USERS = "REGISTERED_USERS"
@@ -221,19 +184,16 @@ VISIBILITIES = (
     (VISIBILITY_PRIVATE,          "Prive"),
 )
 
-#: ouverture croissante : un visiteur d'audience N voit tout ce qui est <= N
 VISIBILITY_RANKS = {
     VISIBILITY_PUBLIC:           0,
     VISIBILITY_REGISTERED_USERS: 1,
     VISIBILITY_PRIVATE:          2,
 }
 
-#: audience d'un visiteur, comparee au rang ci-dessus
 AUDIENCE_ANONYMOUS  = 0
 AUDIENCE_REGISTERED = 1
 AUDIENCE_OWNER      = 2
 
-#: sections dont la visibilite se regle independamment (section 11)
 SECTION_SKILLS         = "skills"
 SECTION_EXPERIENCES    = "experiences"
 SECTION_EDUCATION      = "education"
@@ -256,15 +216,9 @@ PROFILE_SECTIONS = (
     (SECTION_LINKS,          "Liens"),
 )
 
-#: nom du champ de `ProfileVisibility` portant chaque section
 SECTION_VISIBILITY_FIELDS = {
     key: f"{key}_visibility" for key, _ in PROFILE_SECTIONS
 }
-
-
-# --------------------------------------------------------------------------- #
-# Langues (section 8)
-# --------------------------------------------------------------------------- #
 
 CEFR_A1     = "A1"
 CEFR_A2     = "A2"
@@ -289,14 +243,8 @@ LANGUAGE_LEVEL_RANKS = {
     CEFR_B2: 4, CEFR_C1: 5, CEFR_C2: 6, CEFR_NATIVE: 7,
 }
 
-
 def language_level_rank(level: str) -> int:
     return LANGUAGE_LEVEL_RANKS.get(level, 0)
-
-
-# --------------------------------------------------------------------------- #
-# Diplomes (section 6)
-# --------------------------------------------------------------------------- #
 
 DEGREE_NONE      = "NONE"
 DEGREE_SECONDARY = "SECONDARY"
@@ -321,14 +269,8 @@ DEGREE_LEVEL_RANKS = {
     DEGREE_BAC_3: 4, DEGREE_BAC_5: 5, DEGREE_BAC_8: 6,
 }
 
-
 def degree_level_rank(level: str) -> int:
     return DEGREE_LEVEL_RANKS.get(level, 0)
-
-
-# --------------------------------------------------------------------------- #
-# Liens professionnels (section 2)
-# --------------------------------------------------------------------------- #
 
 LINK_PORTFOLIO = "PORTFOLIO"
 LINK_WEBSITE   = "WEBSITE"
@@ -350,27 +292,6 @@ LINK_KINDS = (
     (LINK_OTHER,     "Autre"),
 )
 
-
-# --------------------------------------------------------------------------- #
-# Videos : moderation (spec "Moderation video, presentation, messagerie et
-# notifications", section 1 et 2)
-# --------------------------------------------------------------------------- #
-#
-# Un seul enumere pour "en cours de verification / validee / refusee / en
-# ligne", plutot que deux drapeaux croises ("validee" et "publiee") : deux
-# champs rendraient representable une video refusee et publiee, qu'il
-# faudrait ensuite interdire par une contrainte. Un seul champ rend cet etat
-# tout simplement inexistant.
-#
-#   DRAFT -> PROCESSING -> PENDING -> APPROVED -> PUBLISHED
-#                             \                       \
-#                              -> REJECTED             -> HIDDEN
-#
-# Seul PUBLISHED est visible d'un visiteur (VISIBLE_VIDEO_STATUSES). DRAFT et
-# PROCESSING sont reserves au futur upload par fichier (verification du
-# format avant d'entrer en file de moderation) : la soumission par lien de
-# cette version entre directement en PENDING, il n'y a rien a "traiter".
-
 VIDEO_DRAFT      = "DRAFT"
 VIDEO_PROCESSING = "PROCESSING"
 VIDEO_PENDING    = "PENDING"
@@ -391,11 +312,8 @@ VIDEO_STATUSES = (
     (VIDEO_DELETED,    "Supprimee"),
 )
 
-#: seul statut dans lequel une video peut etre servie a un visiteur
 VISIBLE_VIDEO_STATUSES = (VIDEO_PUBLISHED,)
 
-#: qui declenche une transition : le proprietaire, un administrateur, ou un
-#: traitement automatique (verification de lien, controle technique)
 ACTOR_OWNER  = "OWNER"
 ACTOR_ADMIN  = "ADMIN"
 ACTOR_SYSTEM = "SYSTEM"
@@ -406,10 +324,6 @@ MODERATION_ACTORS = (
     (ACTOR_SYSTEM, "Systeme"),
 )
 
-#: (statut de depart, statut d'arrivee) -> acteurs autorises. Verifie par
-#: `moderation.transition_video`, seul point d'ecriture du statut d'une
-#: video : une transition absente d'ici est refusee, jamais executee sur la
-#: foi de l'appelant.
 VIDEO_TRANSITIONS = {
     (VIDEO_DRAFT,      VIDEO_PROCESSING): {ACTOR_OWNER},
     (VIDEO_PROCESSING, VIDEO_PENDING):    {ACTOR_SYSTEM},
@@ -419,27 +333,15 @@ VIDEO_TRANSITIONS = {
     (VIDEO_REJECTED,   VIDEO_PENDING):    {ACTOR_OWNER},
     (VIDEO_APPROVED,   VIDEO_PUBLISHED):  {ACTOR_OWNER},
     (VIDEO_HIDDEN,     VIDEO_PUBLISHED):  {ACTOR_OWNER},
-    # un lien change sous une video deja publiee doit repasser par la
-    # moderation : sans cette regle, faire valider une video anodine puis
-    # remplacer le lien contournerait toute verification.
     (VIDEO_PUBLISHED,  VIDEO_PENDING):    {ACTOR_OWNER},
     (VIDEO_PUBLISHED,  VIDEO_HIDDEN):     {ACTOR_OWNER, ACTOR_ADMIN, ACTOR_SYSTEM},
 }
 
-#: DELETED est atteignable depuis n'importe quel statut (section 1 : "l'utilisateur
-#: peut supprimer sa video ; un administrateur peut egalement la supprimer") --
-#: enumerer chaque (statut, DELETED) serait un bruit pur, `moderation.py` le
-#: traite comme un cas a part avec ce meme ensemble d'acteurs.
 DELETE_ACTORS = {ACTOR_OWNER, ACTOR_ADMIN}
 
-#: statuts pour lesquels un motif est obligatoire (section 1)
 REASON_REQUIRED_STATUSES = {VIDEO_REJECTED}
 
-#: duree pendant laquelle un refus reste dans l'historique "vivant" de la
-#: console de moderation avant de basculer dans les archives. La ligne n'est
-#: jamais supprimee. Surchargeable par `settings.REJECTION_HISTORY_DAYS`.
 REJECTION_HISTORY_DAYS = 7
-
 
 def rejection_history_days() -> int:
     from django.conf import settings
@@ -453,18 +355,7 @@ VIDEO_SOURCES = (
     (VIDEO_SOURCE_FILE, "Fichier televerse"),
 )
 
-#: seul mode utilisable a la soumission pour le moment. Le modele est deja
-#: pret pour l'upload par fichier (`ProfileVideo.file_blob`, en blob brut
-#: plutot qu'un stockage disque), mais son implementation (reception,
-#: controle de format/taille/extension) est menee separement : tant qu'elle
-#: n'est pas branchee, `services.submit_video_link` reste le seul point
-#: d'entree pour une nouvelle video.
 ENABLED_VIDEO_SOURCES = (VIDEO_SOURCE_LINK,)
-
-
-# --------------------------------------------------------------------------- #
-# Recherche (sections 12 a 14)
-# --------------------------------------------------------------------------- #
 
 MATCH_MODE_AND = "AND"
 MATCH_MODE_OR  = "OR"
@@ -489,50 +380,30 @@ SORT_OPTIONS = (
 DEFAULT_PAGE_SIZE = 20
 MAX_PAGE_SIZE     = 50
 
-#: Poids du score de pertinence (section 14).
-#:
-#: Regles a preserver si ces valeurs bougent : une competence demandee de plus
-#: doit peser davantage qu'un niveau plus eleve sur une competence deja
-#: acquise, sans quoi un profil couvrant moins de competences pourrait passer
-#: devant. D'ou W_SKILL_MATCH nettement superieur a W_SKILL_LEVEL * 4.
 RANKING_WEIGHTS = {
-    "skill_match":      100,   # par competence demandee effectivement detenue
-    "skill_level":       10,   # par rang de niveau cumule sur ces competences
-    "skill_years":        4,   # par annee d'experience sur ces competences
-    "total_experience":   2,   # par annee d'experience professionnelle totale
-    "availability":      25,   # profil en recherche active ou ouvert
-    "field_match":       30,   # domaine professionnel demande
-    "language_match":    15,   # par langue demandee au niveau requis
-    "has_video":          5,   # reserve au futur feed video (section 18)
+    "skill_match":      100,
+    "skill_level":       10,
+    "skill_years":        4,
+    "total_experience":   2,
+    "availability":      25,
+    "field_match":       30,
+    "language_match":    15,
+    "has_video":          5,
 }
 
-#: plafonds, pour qu'un critere secondaire ne submerge jamais les competences
 RANKING_CAPS = {
     "skill_years":      10,
     "total_experience": 20,
 }
 
-
-# --------------------------------------------------------------------------- #
-# Permissions applicatives
-# --------------------------------------------------------------------------- #
-
 PERM_MANAGE_SKILLS   = "profiles.manage_skill_catalog"
 PERM_VIEW_PRIVATE    = "profiles.view_private_profile"
 PERM_MODERATE        = "profiles.moderate_profile"
 
-#: limites de saisie, appliquees cote serveur
 MAX_SKILLS_PER_PROFILE = 100
 MAX_YEARS_EXPERIENCE   = 60
 MAX_SKILL_NAME_LENGTH  = 80
 
-
-# --------------------------------------------------------------------------- #
-# Referentiel de langues initial (section 8)
-# --------------------------------------------------------------------------- #
-
-#: langues chargees par la migration de donnees. La table reste ouverte : une
-#: langue absente d'ici peut etre ajoutee sans migration.
 SEED_LANGUAGES = (
     ("fr", "Francais"),   ("en", "Anglais"),    ("es", "Espagnol"),
     ("de", "Allemand"),   ("it", "Italien"),    ("pt", "Portugais"),

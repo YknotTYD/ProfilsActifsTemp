@@ -1,4 +1,3 @@
-##question_types.py
 """Registre des types de questions.
 
 C'est le point d'extension principal du systeme : ajouter un type de question
@@ -25,17 +24,13 @@ from decimal  import Decimal, InvalidOperation
 from . import constants as c
 from .countries import COUNTRY_CODES, COUNTRY_NAMES
 
-
 class ConfigError(ValueError):
     """Configuration de question invalide (cote administration)."""
-
 
 class AnswerError(ValueError):
     """Reponse utilisateur invalide (cote utilisateur)."""
 
-
 _REGISTRY: dict[str, "QuestionType"] = {}
-
 
 def register(cls):
     """Decorateur d'enregistrement d'un type de question."""
@@ -50,21 +45,17 @@ def register(cls):
     _REGISTRY[instance.id] = instance
     return cls
 
-
 def get_type(type_id: str) -> "QuestionType":
     try:
         return _REGISTRY[type_id]
     except KeyError:
         raise ConfigError(f"type de question inconnu: {type_id}")
 
-
 def all_types() -> list["QuestionType"]:
     return list(_REGISTRY.values())
 
-
 def type_choices() -> list[tuple[str, str]]:
     return [(t.id, t.label) for t in _REGISTRY.values()]
-
 
 def field(key, label, kind = "text", *, help = "", example = "",
           choices = None, default = None, unit = None) -> dict:
@@ -77,14 +68,13 @@ def field(key, label, kind = "text", *, help = "", example = "",
     return {
         "key":     key,
         "label":   label,
-        "kind":    kind,            # text | number | int | bool | select | date | time | datetime | cities | countries
+        "kind":    kind,
         "help":    help,
         "example": str(example) if example != "" else "",
         "choices": choices,
         "default": default,
         "unit":    unit,
     }
-
 
 def catalog() -> list[dict]:
     """Description du catalogue, consommee par l'editeur d'administration."""
@@ -109,11 +99,6 @@ def catalog() -> list[dict]:
         for t in _REGISTRY.values()
     ]
 
-
-# --------------------------------------------------------------------------- #
-# Helpers
-# --------------------------------------------------------------------------- #
-
 def _as_decimal(raw, field = "valeur") -> Decimal:
     if isinstance(raw, bool):
         raise AnswerError(f"{field}: un booleen n'est pas un nombre")
@@ -122,17 +107,14 @@ def _as_decimal(raw, field = "valeur") -> Decimal:
     except (InvalidOperation, TypeError, ValueError):
         raise AnswerError(f"{field}: nombre invalide ({raw!r})")
 
-
 def _as_int(raw, field = "valeur") -> int:
     value = _as_decimal(raw, field)
     if value != value.to_integral_value():
         raise AnswerError(f"{field}: un entier est attendu")
     return int(value)
 
-
 def _clamp_ratio(value: float) -> float:
     return max(0.0, min(1.0, value))
-
 
 def _rule_matches(rule: dict, value) -> bool:
     """Evalue une regle de reponse attendue sur une valeur comparable."""
@@ -161,7 +143,6 @@ def _rule_matches(rule: dict, value) -> bool:
         return value <= _coerce_like(rule.get("value"), value)
     raise ConfigError(f"regle de reponse attendue inconnue: {kind!r}")
 
-
 def _coerce_like(raw, reference):
     """Aligne le type de `raw` sur celui de `reference` pour la comparaison."""
     if isinstance(reference, Decimal):
@@ -169,7 +150,6 @@ def _coerce_like(raw, reference):
     if isinstance(reference, int) and not isinstance(reference, bool):
         return _as_int(raw)
     return raw
-
 
 def evaluate_rules(expected: dict, value) -> float:
     """Evalue un bloc `{"match": "any"|"all", "rules": [...]}`."""
@@ -180,8 +160,6 @@ def evaluate_rules(expected: dict, value) -> float:
     hits  = [_rule_matches(r, value) for r in rules]
     return 1.0 if (all(hits) if match == "all" else any(hits)) else 0.0
 
-
-#: libelle lisible de chaque forme de reponse attendue
 RULE_LABELS = {
     "exact":  "Exactement cette valeur",
     "one_of": "L\'une de ces valeurs",
@@ -190,26 +168,19 @@ RULE_LABELS = {
     "max":    "Inferieure ou egale a",
 }
 
-
-# --------------------------------------------------------------------------- #
-# Classe de base
-# --------------------------------------------------------------------------- #
-
 class QuestionType:
 
     id           = ""
     family       = ""
     label        = ""
-    hint         = ""      # a quoi sert ce type, en une ligne
-    example      = ""      # exemple concret de question de ce type
-    uses_options = False   # la question porte-t-elle des QuestionOption ?
-    multiple     = False   # plusieurs options selectionnables ?
-    expected_kinds: tuple = ()   # regles de reponse attendue supportees
-    value_input  = "text"  # type de champ pour saisir une reponse attendue
-    widget       = ""      # controle de saisie a afficher au participant
-    expected_help = ""     # aide affichee au-dessus des reponses attendues
-
-    # -- administration ---------------------------------------------------- #
+    hint         = ""
+    example      = ""
+    uses_options = False
+    multiple     = False
+    expected_kinds: tuple = ()
+    value_input  = "text"
+    widget       = ""
+    expected_help = ""
 
     def config_fields(self) -> list[dict]:
         """Champs de configuration, decrits pour que l'editeur les affiche."""
@@ -266,8 +237,6 @@ class QuestionType:
     def has_expected(self, question) -> bool:
         return bool((question.expected_config or {}).get("rules"))
 
-    # -- utilisation ------------------------------------------------------- #
-
     def normalize_answer(self, question, raw) -> dict | None:
         """Retourne la valeur canonique, ou None si la reponse est vide."""
         raise NotImplementedError
@@ -306,11 +275,6 @@ class QuestionType:
             elif kind == "max":
                 parts.append(f"<= {rule.get('value')}")
         return " / ".join(parts)
-
-
-# --------------------------------------------------------------------------- #
-# Famille : choix
-# --------------------------------------------------------------------------- #
 
 class ChoiceType(QuestionType):
     """Base des types a options.
@@ -467,14 +431,12 @@ class ChoiceType(QuestionType):
             question.options.filter(is_correct = True).values_list("text", flat = True)
         )
 
-
 @register
 class SingleChoice(ChoiceType):
     id    = c.TYPE_SINGLE_CHOICE
     label = "Choix unique"
     hint    = "Une seule reponse possible parmi plusieurs."
     example = "Quelle est la capitale de la France ? -> Paris / Lyon / Marseille"
-
 
 @register
 class MultipleChoice(ChoiceType):
@@ -484,7 +446,6 @@ class MultipleChoice(ChoiceType):
     hint    = "Plusieurs reponses possibles. Le score peut etre partiel."
     example = "Lesquels de ces langages sont compiles ? -> Java, Rust, Python"
 
-
 @register
 class Checkbox(ChoiceType):
     id       = c.TYPE_CHECKBOX
@@ -493,7 +454,6 @@ class Checkbox(ChoiceType):
     hint    = "Cases a cocher, identique au choix multiple."
     example = "Quels outils utilisez-vous au quotidien ?"
 
-
 @register
 class Dropdown(ChoiceType):
     id    = c.TYPE_DROPDOWN
@@ -501,7 +461,6 @@ class Dropdown(ChoiceType):
     widget   = "dropdown"
     hint    = "Choix unique dans un menu deroulant. Pratique au-dela de 6 propositions."
     example = "Dans quel departement travaillez-vous ?"
-
 
 @register
 class MultiSelect(ChoiceType):
@@ -512,7 +471,6 @@ class MultiSelect(ChoiceType):
     hint    = "Choix multiple dans une liste deroulante."
     example = "Quelles langues parlez-vous ?"
 
-
 class FixedChoiceType(ChoiceType):
     """Type a options imposees : les options sont creees automatiquement."""
 
@@ -520,7 +478,6 @@ class FixedChoiceType(ChoiceType):
 
     def config_fields(self) -> list[dict]:
         return []
-
 
 @register
 class YesNo(FixedChoiceType):
@@ -530,7 +487,6 @@ class YesNo(FixedChoiceType):
     hint    = "Oui ou non. Les deux reponses sont creees automatiquement."
     example = "Avez-vous une voiture ?"
 
-
 @register
 class TrueFalse(FixedChoiceType):
     id            = c.TYPE_TRUE_FALSE
@@ -538,7 +494,6 @@ class TrueFalse(FixedChoiceType):
     fixed_options = (("true", "Vrai"), ("false", "Faux"))
     hint    = "Vrai ou faux. Les deux reponses sont creees automatiquement."
     example = "Python est un langage compile. -> Vrai / Faux"
-
 
 @register
 class Scale(ChoiceType):
@@ -607,11 +562,6 @@ class Scale(ChoiceType):
             return _as_int(option.value)
         except AnswerError:
             return None
-
-
-# --------------------------------------------------------------------------- #
-# Famille : valeurs numeriques
-# --------------------------------------------------------------------------- #
 
 class NumericType(QuestionType):
     """Base des types numeriques.
@@ -724,7 +674,6 @@ class NumericType(QuestionType):
         unit = value.get("unit") or ""
         return f"{value['number']}{(' ' + unit) if unit else ''}"
 
-
 @register
 class IntegerType(NumericType):
     id           = c.TYPE_INTEGER
@@ -733,14 +682,12 @@ class IntegerType(NumericType):
     hint    = "Un nombre entier, sans decimale."
     example = "Combien de collaborateurs dans votre equipe ?"
 
-
 @register
 class DecimalType(NumericType):
     id    = c.TYPE_DECIMAL
     label = "Nombre decimal"
     hint    = "Un nombre a virgule."
     example = "Quel est votre coefficient horaire ?"
-
 
 @register
 class PercentageType(NumericType):
@@ -757,7 +704,6 @@ class PercentageType(NumericType):
         config.setdefault("max", "100")
         return NumericType.validate_config(self, config)
 
-
 @register
 class TemperatureType(NumericType):
     id           = c.TYPE_TEMPERATURE
@@ -766,7 +712,6 @@ class TemperatureType(NumericType):
     default_unit = "C"
     hint    = "Une temperature, avec son unite."
     example = "Temperature de confort au bureau ? -> entre 18 et 22 C"
-
 
 @register
 class DistanceType(NumericType):
@@ -777,7 +722,6 @@ class DistanceType(NumericType):
     hint    = "Une distance, avec son unite."
     example = "A quelle distance habitez-vous du bureau ?"
 
-
 @register
 class WeightType(NumericType):
     id           = c.TYPE_WEIGHT
@@ -786,7 +730,6 @@ class WeightType(NumericType):
     default_unit = "kg"
     hint    = "Un poids, avec son unite."
     example = "Quelle charge maximale peut porter cet equipement ?"
-
 
 @register
 class HeightType(NumericType):
@@ -797,7 +740,6 @@ class HeightType(NumericType):
     hint    = "Une taille, avec son unite."
     example = "Quelle hauteur de plan de travail preferez-vous ?"
 
-
 @register
 class SpeedType(NumericType):
     id           = c.TYPE_SPEED
@@ -807,7 +749,6 @@ class SpeedType(NumericType):
     hint    = "Une vitesse, avec son unite."
     example = "Quelle vitesse maximale sur cette portion ?"
 
-
 @register
 class DurationType(NumericType):
     id           = c.TYPE_DURATION
@@ -816,11 +757,6 @@ class DurationType(NumericType):
     default_unit = "min"
     hint    = "Une duree comme quantite (secondes, minutes, heures, jours)."
     example = "Combien de temps dure votre trajet ?"
-
-
-# --------------------------------------------------------------------------- #
-# Famille : date et temps
-# --------------------------------------------------------------------------- #
 
 class TemporalType(QuestionType):
 
@@ -887,7 +823,6 @@ class TemporalType(QuestionType):
     def display(self, question, value, snapshot = None) -> str:
         return value[self.key] if self.is_answered(value) else ""
 
-
 @register
 class DateType(TemporalType):
     id    = c.TYPE_DATE
@@ -904,7 +839,6 @@ class DateType(TemporalType):
             return date.fromisoformat(str(raw))
         except ValueError:
             raise AnswerError(f"date invalide: {raw!r} (format attendu AAAA-MM-JJ)")
-
 
 @register
 class TimeType(TemporalType):
@@ -923,7 +857,6 @@ class TimeType(TemporalType):
         except ValueError:
             raise AnswerError(f"heure invalide: {raw!r} (format attendu HH:MM[:SS])")
 
-
 @register
 class DateTimeType(TemporalType):
     id    = c.TYPE_DATETIME
@@ -940,7 +873,6 @@ class DateTimeType(TemporalType):
             return datetime.fromisoformat(str(raw).replace("Z", "+00:00"))
         except ValueError:
             raise AnswerError(f"date/heure invalide: {raw!r}")
-
 
 @register
 class HourMinuteType(TemporalType):
@@ -962,7 +894,6 @@ class HourMinuteType(TemporalType):
 
     def format(self, parsed) -> str:
         return parsed.strftime("%H:%M")
-
 
 @register
 class DateRangeType(QuestionType):
@@ -1062,11 +993,6 @@ class DateRangeType(QuestionType):
     def display(self, question, value, snapshot = None) -> str:
         return f"{value['start']} -> {value['end']}" if self.is_answered(value) else ""
 
-
-# --------------------------------------------------------------------------- #
-# Famille : valeurs structurees
-# --------------------------------------------------------------------------- #
-
 class VocabularyType(QuestionType):
     """Type dont les reponses proviennent d'un vocabulaire controle."""
 
@@ -1102,7 +1028,6 @@ class VocabularyType(QuestionType):
             return ""
         return self.vocabulary(question).get(value[self.key], value[self.key])
 
-
 @register
 class CountryType(VocabularyType):
     id    = c.TYPE_COUNTRY
@@ -1136,7 +1061,6 @@ class CountryType(VocabularyType):
         if allowed:
             return {code: COUNTRY_NAMES[code] for code in allowed}
         return dict(COUNTRY_NAMES)
-
 
 @register
 class CityType(VocabularyType):
@@ -1182,7 +1106,6 @@ class CityType(VocabularyType):
     def vocabulary(self, question) -> dict:
         return {c_["code"]: c_["name"] for c_ in (question.config or {}).get("cities", [])}
 
-
 @register
 class YearType(NumericType):
     id             = c.TYPE_YEAR
@@ -1200,7 +1123,6 @@ class YearType(NumericType):
 
     def display(self, question, value, snapshot = None) -> str:
         return value["number"] if self.is_answered(value) else ""
-
 
 class OrdinalType(VocabularyType):
 
@@ -1224,7 +1146,6 @@ class OrdinalType(VocabularyType):
             raw = str(_as_int(raw))
         return VocabularyType.normalize_answer(self, question, raw)
 
-
 @register
 class MonthType(OrdinalType):
     id      = c.TYPE_MONTH
@@ -1238,7 +1159,6 @@ class MonthType(OrdinalType):
     hint    = "Un mois de l'annee."
     example = "Quel mois preferez-vous pour vos conges ?"
 
-
 @register
 class WeekdayType(OrdinalType):
     id      = c.TYPE_WEEKDAY
@@ -1250,7 +1170,6 @@ class WeekdayType(OrdinalType):
     )
     hint    = "Un jour de la semaine."
     example = "Quel jour de la semaine vous arrange le mieux ?"
-
 
 @register
 class AddressType(QuestionType):

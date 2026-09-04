@@ -1,7 +1,5 @@
-##serializers.py
 
 from . import types
-
 
 def notification(n) -> dict:
     return {

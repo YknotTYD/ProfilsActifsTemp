@@ -1,4 +1,3 @@
-##models/background.py
 """Parcours : experiences, formations, certifications, projets.
 
 Ces quatre sections ont la meme forme : une entree datee, rattachee a un
@@ -13,7 +12,6 @@ from django.utils           import timezone
 
 from .. import constants as c
 from .skill import SkillLink
-
 
 class DatedEntry(models.Model):
     """Entree datee d'un parcours, avec periode eventuellement en cours."""
@@ -36,9 +34,6 @@ class DatedEntry(models.Model):
             raise ValidationError("la date de fin precede la date de debut")
 
     def save(self, *args, **kwargs):
-        # `clean` normalise autant qu'il valide (une entree en cours n'a pas de
-        # date de fin) : il doit tourner a chaque ecriture, pas seulement sur
-        # les formulaires.
         self.clean()
         if kwargs.get("update_fields") is not None:
             kwargs["update_fields"] = {*kwargs["update_fields"], "end_date"}
@@ -53,11 +48,6 @@ class DatedEntry(models.Model):
     def duration_months(self) -> int:
         start, end = self.period()
         return max(0, (end.year - start.year) * 12 + (end.month - start.month))
-
-
-# --------------------------------------------------------------------------- #
-# Experiences professionnelles (section 5)
-# --------------------------------------------------------------------------- #
 
 class WorkExperience(DatedEntry):
 
@@ -83,7 +73,6 @@ class WorkExperience(DatedEntry):
     def __str__(self):
         return f"WorkExperience<{self.profile_id}:{self.title}>"
 
-
 class WorkExperienceSkill(SkillLink):
 
     experience = models.ForeignKey(
@@ -98,11 +87,6 @@ class WorkExperienceSkill(SkillLink):
         )
         indexes = (models.Index(fields = ["skill"]),)
 
-
-# --------------------------------------------------------------------------- #
-# Formations et diplomes (section 6)
-# --------------------------------------------------------------------------- #
-
 class Education(DatedEntry):
 
     profile = models.ForeignKey(
@@ -116,7 +100,6 @@ class Education(DatedEntry):
     field_of_study = models.CharField(max_length = 160, blank = True, default = "")
     description    = models.TextField(blank = True, default = "")
 
-    #: future preuve du diplome (section 6) : une URL en attendant un stockage
     diploma_url = models.URLField(max_length = 1024, blank = True, default = "")
     diploma_verified = models.BooleanField(default = False)
 
@@ -131,7 +114,6 @@ class Education(DatedEntry):
     def __str__(self):
         return f"Education<{self.profile_id}:{self.institution}>"
 
-
 class EducationSkill(SkillLink):
 
     education = models.ForeignKey(
@@ -145,11 +127,6 @@ class EducationSkill(SkillLink):
             ),
         )
         indexes = (models.Index(fields = ["skill"]),)
-
-
-# --------------------------------------------------------------------------- #
-# Certifications (section 7)
-# --------------------------------------------------------------------------- #
 
 class Certification(models.Model):
 
@@ -191,7 +168,6 @@ class Certification(models.Model):
     def is_expired(self) -> bool:
         return bool(self.expires_on and self.expires_on < timezone.localdate())
 
-
 class CertificationSkill(SkillLink):
 
     certification = models.ForeignKey(
@@ -206,11 +182,6 @@ class CertificationSkill(SkillLink):
         )
         indexes = (models.Index(fields = ["skill"]),)
 
-
-# --------------------------------------------------------------------------- #
-# Projets (section 9)
-# --------------------------------------------------------------------------- #
-
 class Project(models.Model):
 
     profile = models.ForeignKey(
@@ -224,7 +195,6 @@ class Project(models.Model):
     started_on = models.DateField(null = True, blank = True)
     ended_on   = models.DateField(null = True, blank = True)
 
-    #: future video de presentation (section 9), branchee sur le modele video
     video = models.ForeignKey(
         "profiles.ProfileVideo", on_delete = models.SET_NULL,
         null = True, blank = True, related_name = "projects",
@@ -248,7 +218,6 @@ class Project(models.Model):
     def save(self, *args, **kwargs):
         self.clean()
         super().save(*args, **kwargs)
-
 
 class ProjectSkill(SkillLink):
 

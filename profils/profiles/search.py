@@ -1,4 +1,3 @@
-##search.py
 """Moteur de recherche de profils (sections 12 a 14).
 
 Tout se passe en base. Les filtres sont des `WHERE`, le score est une
@@ -26,7 +25,6 @@ from profils.questionnaires.http import BadRequest
 from . import constants as c
 from . import ranking
 from .skills import find_skill
-
 
 class ProfileQuery:
     """Criteres de recherche valides.
@@ -63,8 +61,6 @@ class ProfileQuery:
         self.page      = kwargs.get("page") or 1
         self.page_size = kwargs.get("page_size") or c.DEFAULT_PAGE_SIZE
         self.weights   = kwargs.get("weights") or {}
-
-    # ------------------------------------------------------------------ #
 
     @classmethod
     def from_params(cls, params) -> "ProfileQuery":
@@ -144,11 +140,6 @@ class ProfileQuery:
             "page_size":  self.page_size,
         }
 
-
-# --------------------------------------------------------------------------- #
-# Lecture des parametres
-# --------------------------------------------------------------------------- #
-
 def _multi(params, *keys) -> list[str]:
     """Valeurs d'un parametre repete ou separe par des virgules."""
     values = []
@@ -167,7 +158,6 @@ def _multi(params, *keys) -> list[str]:
             unique.append(value)
     return unique
 
-
 def _choice(value, allowed: dict, label: str, default = None):
     if value in (None, ""):
         return default
@@ -175,10 +165,8 @@ def _choice(value, allowed: dict, label: str, default = None):
         raise BadRequest(f"valeur invalide pour {label}: {value!r}", "invalid_field")
     return value
 
-
 def _choices(values, allowed: dict, label: str) -> list:
     return [_choice(value, allowed, label) for value in values]
-
 
 def _positive_int(value, label: str, *, default = None, minimum: int = 0, maximum: int = None):
     if value in (None, ""):
@@ -191,10 +179,8 @@ def _positive_int(value, label: str, *, default = None, minimum: int = 0, maximu
         raise BadRequest(f"{label} doit valoir au moins {minimum}", "invalid_field")
     return min(number, maximum) if maximum is not None else number
 
-
 def _flag(value) -> bool:
     return str(value).lower() in ("1", "true", "yes", "on") if value is not None else False
-
 
 def _resolve_skills(references) -> tuple[list, list]:
     """Traduit des identifiants, slugs ou noms en identifiants de competence.
@@ -217,7 +203,6 @@ def _resolve_skills(references) -> tuple[list, list]:
             ids.append(skill.pk)
     return ids, unknown
 
-
 def _resolve_languages(references) -> list:
     from .models import Language
 
@@ -230,11 +215,6 @@ def _resolve_languages(references) -> list:
         if language is not None and language.pk not in ids:
             ids.append(language.pk)
     return ids
-
-
-# --------------------------------------------------------------------------- #
-# Requete
-# --------------------------------------------------------------------------- #
 
 def base_queryset(viewer):
     """Profils qu'un visiteur a le droit de trouver.
@@ -267,7 +247,6 @@ def base_queryset(viewer):
         .select_related("user", "search_config", "visibility_config")
     )
 
-
 def apply_filters(queryset, query: ProfileQuery):
     """Applique les criteres, sans toucher au classement."""
     from django.db.models import Q
@@ -275,16 +254,10 @@ def apply_filters(queryset, query: ProfileQuery):
     min_rank = c.skill_level_rank(query.min_level) if query.min_level else 0
 
     if query.skills_mode == c.MATCH_MODE_AND and query.unknown_skills:
-        # En AND, toutes les competences demandees doivent etre presentes. Une
-        # competence absente du referentiel n'est portee par personne : le
-        # resultat est vide, meme si les autres competences, elles, existent.
-        # (En OR, une competence inconnue est simplement ignoree.)
         return queryset.none()
 
     if query.skill_ids:
         if query.skills_mode == c.MATCH_MODE_AND:
-            # un filtre par competence : Django cree une jointure distincte a
-            # chaque appel, ce qui exige la presence de toutes les competences.
             for skill_id in query.skill_ids:
                 conditions = {"skills__skill_id": skill_id}
                 if min_rank:
@@ -358,16 +331,12 @@ def apply_filters(queryset, query: ProfileQuery):
 
     return queryset
 
-
-#: tri applique apres le classement ; l'identifiant ferme le tri pour que la
-#: pagination reste stable entre deux pages a score egal
 _SORTS = {
     c.SORT_RELEVANCE:  ("-relevance", "-total_experience_months", "-updated_at", "pk"),
     c.SORT_EXPERIENCE: ("-total_experience_months", "-relevance", "pk"),
     c.SORT_RECENT:     ("-updated_at", "pk"),
     c.SORT_NAME:       ("user__last_name", "user__first_name", "user__username", "pk"),
 }
-
 
 def search(query: ProfileQuery, viewer = None) -> dict:
     """Execute la recherche et renvoie une page de resultats classes."""

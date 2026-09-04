@@ -1,4 +1,3 @@
-##serializers.py
 """Conversion des modeles en structures JSON.
 
 Deux familles de fonctions, volontairement distinctes :
@@ -15,11 +14,6 @@ from .access     import result_visibility
 from .conditions import compute_visible
 from .permissions import is_questionnaire_admin
 
-
-# --------------------------------------------------------------------------- #
-# Administration
-# --------------------------------------------------------------------------- #
-
 def admin_option(option) -> dict:
     return {
         "id":          option.id,
@@ -31,7 +25,6 @@ def admin_option(option) -> dict:
         "is_correct":  option.is_correct,
         "score":       str(option.score) if option.score is not None else None,
     }
-
 
 def admin_question(question) -> dict:
     return {
@@ -50,7 +43,6 @@ def admin_question(question) -> dict:
         "is_graded":       question.is_graded,
         "options":         [admin_option(o) for o in question.options.all()],
     }
-
 
 def admin_version(version, *, with_questions: bool = False) -> dict:
     payload = {
@@ -80,7 +72,6 @@ def admin_version(version, *, with_questions: bool = False) -> dict:
         ]
     return payload
 
-
 def admin_access_rule(rule) -> dict:
     return {
         "id":          rule.id,
@@ -94,7 +85,6 @@ def admin_access_rule(rule) -> dict:
         "badge":       {"id": rule.badge_id, "code": rule.badge.code} if rule.badge_id else None,
         "description": rule.describe(),
     }
-
 
 def admin_questionnaire(questionnaire, *, detail: bool = False) -> dict:
     current = questionnaire.current_version
@@ -140,11 +130,6 @@ def admin_questionnaire(questionnaire, *, detail: bool = False) -> dict:
     }
     return payload
 
-
-# --------------------------------------------------------------------------- #
-# Cote utilisateur
-# --------------------------------------------------------------------------- #
-
 def runner_option(option) -> dict:
     """Option telle qu'affichee : jamais d'indication de justesse."""
     return {
@@ -155,7 +140,6 @@ def runner_option(option) -> dict:
         "description": option.description,
         "value":       option.value,
     }
-
 
 def runner_question(question, answer = None, *, visible: bool = True) -> dict:
     """Question telle qu'affichee, sans aucune information de correction."""
@@ -198,7 +182,6 @@ def runner_question(question, answer = None, *, visible: bool = True) -> dict:
     if handler.family == c.FAMILY_NUMERIC:
         payload["units"] = list(getattr(handler, "units", ()))
     return payload
-
 
 def runner_state(attempt) -> dict:
     """Etat complet d'une tentative, tel que consomme par l'interface."""
@@ -250,7 +233,6 @@ def runner_state(attempt) -> dict:
         "server_time": _now(),
     }
 
-
 def public_questionnaire(questionnaire, user) -> dict:
     """Carte d'un questionnaire dans la liste utilisateur."""
     from .models   import QuestionnaireAttempt, QuestionnaireResult
@@ -287,7 +269,6 @@ def public_questionnaire(questionnaire, user) -> dict:
         "can_start": _can_start(questionnaire, user),
     }
 
-
 def _can_start(questionnaire, user) -> dict:
     from .access   import AccessDenied, assert_can_start, assert_version_usable
     from .services import AttemptError, _check_attempt_quota
@@ -299,7 +280,6 @@ def _can_start(questionnaire, user) -> dict:
     except (AccessDenied, AttemptError) as exc:
         return {"allowed": False, "code": exc.code, "reason": exc.reason}
     return {"allowed": True, "code": None, "reason": None}
-
 
 def result_payload(result, viewer) -> dict:
     """Resultat filtre selon la configuration de visibilite (section 23)."""
@@ -334,7 +314,6 @@ def result_payload(result, viewer) -> dict:
         payload["answers"] = _result_answers(result, allowed, is_admin)
 
     return payload
-
 
 def _result_answers(result, allowed: dict, is_admin: bool) -> list[dict]:
     entries = {
@@ -379,7 +358,6 @@ def _result_answers(result, allowed: dict, is_admin: bool) -> list[dict]:
 
     return rows
 
-
 def attempt_summary(attempt, *, for_admin: bool = False) -> dict:
     payload = {
         "id":             attempt.id,
@@ -405,7 +383,6 @@ def attempt_summary(attempt, *, for_admin: bool = False) -> dict:
         }
     return payload
 
-
 def audit_entry(entry) -> dict:
     return {
         "id":         entry.id,
@@ -418,12 +395,8 @@ def audit_entry(entry) -> dict:
         "metadata":   entry.metadata,
     }
 
-
-# --------------------------------------------------------------------------- #
-
 def _iso(value):
     return value.isoformat() if value else None
-
 
 def _now():
     from django.utils import timezone

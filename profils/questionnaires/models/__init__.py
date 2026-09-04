@@ -1,4 +1,3 @@
-##models/__init__.py
 """Modeles du systeme de questionnaires.
 
 Le modele est normalise : questions, options et selections d'options sont de

@@ -1,4 +1,3 @@
-##ranking.py
 """Score de pertinence des resultats de recherche (section 14).
 
 Le score est une expression SQL annotee sur la requete : le tri et la
@@ -23,7 +22,6 @@ from django.db.models.functions import Coalesce, Least
 
 from . import constants as c
 
-
 def _skill_subquery(aggregate, skill_ids, min_rank: int, min_years: int = None):
     """Agregat sur les competences retenues d'un profil, en sous-requete."""
     from .models import UserSkill
@@ -43,7 +41,6 @@ def _skill_subquery(aggregate, skill_ids, min_rank: int, min_years: int = None):
         output_field = IntegerField(),
     )
 
-
 def _language_subquery(language_ids, min_rank: int):
     from .models import UserLanguage
 
@@ -58,7 +55,6 @@ def _language_subquery(language_ids, min_rank: int):
         Value(0),
         output_field = IntegerField(),
     )
-
 
 def relevance_annotations(query) -> dict:
     """Composantes du score, annotables telles quelles sur un queryset.
@@ -118,15 +114,12 @@ def relevance_annotations(query) -> dict:
         ),
     }
 
-    # plafonne les annees de competence apres coup : `Least` sur une
-    # sous-requete reste une expression, donc utilisable ici.
     annotations["capped_skill_years"] = Least(
         annotations["matched_skill_years"],
         Value(c.RANKING_CAPS["skill_years"]),
         output_field = IntegerField(),
     )
     return annotations
-
 
 def relevance_expression(weights: dict = None):
     """Combinaison ponderee des composantes annotees par `relevance_annotations`."""
@@ -143,14 +136,12 @@ def relevance_expression(weights: dict = None):
         + F("has_video")            * Value(weights["has_video"])
     )
 
-
 def annotate_relevance(queryset, query):
     """Annote `relevance` et ses composantes sur un queryset de profils."""
     annotations = relevance_annotations(query)
     return queryset.annotate(**annotations).annotate(
         relevance = relevance_expression(query.weights)
     )
-
 
 def score_breakdown(profile, query) -> dict:
     """Detail du score d'un profil annote, pour expliquer un classement.

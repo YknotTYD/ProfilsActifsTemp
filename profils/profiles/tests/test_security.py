@@ -1,4 +1,3 @@
-##tests/test_security.py
 """Securite : propriete, visibilite, fuites de donnees (section 25).
 
 Ces tests attaquent le systeme par l'API, pas par les services : c'est la
@@ -19,7 +18,6 @@ from .factories import (
     add_certification, add_education, add_experience, add_project, add_skill,
     add_video, make_admin, make_profile, make_user,
 )
-
 
 class ApiTestCase(TestCase):
     """Base des tests d'API : un client, deux comptes, un profil de chacun."""
@@ -47,7 +45,6 @@ class ApiTestCase(TestCase):
 
     def json(self, response):
         return json.loads(response.content or b"{}")
-
 
 class OwnershipTests(ApiTestCase):
     """Nul ne modifie les donnees professionnelles d'autrui."""
@@ -117,7 +114,6 @@ class OwnershipTests(ApiTestCase):
         with self.assertRaises(ProfileAccessDenied):
             assert_can_edit(None, self.profile)
 
-
 class PrivateProfileTests(ApiTestCase):
 
     def test_a_private_profile_answers_404_to_a_stranger(self):
@@ -162,7 +158,6 @@ class PrivateProfileTests(ApiTestCase):
         self.assertEqual(
             self.client.get(f"/api/profiles/{self.owner.username}/").status_code, 200
         )
-
 
 class DataLeakTests(ApiTestCase):
     """Une donnee envoyee au navigateur est une donnee divulguee."""
@@ -212,7 +207,7 @@ class DataLeakTests(ApiTestCase):
                     if row["username"] == self.owner.username)
 
         self.assertNotIn("skills", card)
-        self.assertEqual(card["match"]["skills"], 1)   # trouvable, mais muet
+        self.assertEqual(card["match"]["skills"], 1)
 
     def test_an_anonymous_visitor_gets_no_more_than_a_registered_one(self):
         services.update_profile(self.profile, {"visibility": c.VISIBILITY_PUBLIC})
@@ -222,7 +217,6 @@ class DataLeakTests(ApiTestCase):
 
         anonymous = self.json(self.client.get(f"/api/profiles/{self.owner.username}/"))
         self.assertNotIn("availability", anonymous)
-
 
 class SearchableBypassTests(ApiTestCase):
     """Section 28.5 : le drapeau `searchable` ne se contourne pas."""
@@ -266,7 +260,6 @@ class SearchableBypassTests(ApiTestCase):
         self.as_attacker()
         response = self.client.get(f"/api/profiles/{self.owner.username}/")
         self.assertEqual(response.status_code, 200)
-
 
 class InputTamperingTests(ApiTestCase):
 
@@ -316,7 +309,6 @@ class InputTamperingTests(ApiTestCase):
         ))
         self.assertNotIn("skills", payload)
 
-
 class UrlSchemeTests(ApiTestCase):
     """Un lien, une fois affiche en `<a href>`, doit rester un lien HTTP(S).
 
@@ -360,7 +352,6 @@ class UrlSchemeTests(ApiTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(self.profile.links.count(), 1)
 
-
 class MalformedInputCrashTests(ApiTestCase):
     """Une entree malformee doit repondre 400, jamais planter en 500."""
 
@@ -373,7 +364,6 @@ class MalformedInputCrashTests(ApiTestCase):
     def test_a_non_numeric_search_limit_answers_400(self):
         response = self.client.get("/api/skills/?limit=abc")
         self.assertEqual(response.status_code, 400)
-
 
 class ProfileCreationSafetyTests(TestCase):
 

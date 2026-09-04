@@ -1,4 +1,3 @@
-##countries.py
 """Liste ISO 3166-1 alpha-2 utilisee par le type de question `country`.
 
 Vocabulaire controle : une reponse de type pays ne peut etre qu'un des

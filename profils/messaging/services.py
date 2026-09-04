@@ -1,4 +1,3 @@
-##services.py
 """Ecritures metier de la messagerie. Les vues ne font que traduire en HTTP."""
 
 from django.contrib.contenttypes.models import ContentType
@@ -11,18 +10,15 @@ from . import rules
 from .http import BadRequest, MessagingAccessDenied
 from .models import Conversation, Message
 
-
 def get_conversation_between(a, b) -> Conversation | None:
     return Conversation.objects.filter(
         models.Q(initiator = a, recipient = b) | models.Q(initiator = b, recipient = a),
     ).first()
 
-
 def conversations_for(user):
     return Conversation.objects.filter(
         models.Q(initiator = user) | models.Q(recipient = user),
     ).select_related("initiator", "recipient")
-
 
 @transaction.atomic
 def start_conversation(sender, recipient, *, context = None) -> Conversation:
@@ -48,7 +44,6 @@ def start_conversation(sender, recipient, *, context = None) -> Conversation:
         conversation.context_id = context.pk
     conversation.save()
     return conversation
-
 
 def send_message(conversation: Conversation, sender, body: str) -> Message:
     if not conversation.has_participant(sender):

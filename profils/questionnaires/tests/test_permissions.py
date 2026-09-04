@@ -1,4 +1,3 @@
-##tests/test_permissions.py
 
 from django.contrib.auth.models import Permission, User
 from django.test import TestCase
@@ -14,7 +13,6 @@ from profils.questionnaires.services    import start_attempt
 from .factories import (
     add_single_choice, draft_of, make_admin, make_badge, make_questionnaire, make_user, publish,
 )
-
 
 class RoleBridgeTests(TestCase):
     """Le systeme reutilise le modele `Role` deja present dans mainapp."""
@@ -42,7 +40,7 @@ class RoleBridgeTests(TestCase):
         user = make_user("editeur")
         user.user_permissions.add(
             Permission.objects.get(codename = "publish_questionnaire"))
-        user = User.objects.get(pk = user.pk)   # vide le cache de permissions
+        user = User.objects.get(pk = user.pk)
 
         self.assertTrue(has_perm(user, c.PERM_PUBLISH))
         self.assertFalse(has_perm(user, c.PERM_INVALIDATE))
@@ -52,7 +50,6 @@ class RoleBridgeTests(TestCase):
 
         self.assertEqual(user_roles(AnonymousUser()), set())
         self.assertFalse(has_perm(AnonymousUser(), c.PERM_VIEW))
-
 
 class AccessRuleTests(TestCase):
 
@@ -185,7 +182,6 @@ class AccessRuleTests(TestCase):
     def test_draft_is_hidden_from_regular_users(self):
         draft = make_questionnaire(self.admin, title = "Brouillon")
         self.assertFalse(can_see(draft, make_user("curieux")))
-
 
 class StatusGateTests(TestCase):
 

@@ -1,4 +1,3 @@
-##http.py
 """Couche HTTP JSON du module messaging, sur le meme modele que
 `profiles/http.py` : les primitives d'enveloppe viennent de
 `questionnaires/http.py`, seul le decorateur `api` est propre au module,
@@ -13,14 +12,12 @@ from profils.questionnaires.http import BadRequest, body, fail, get_bool, get_in
 
 __all__ = ["BadRequest", "MessagingAccessDenied", "api", "body", "fail", "get_bool", "get_int", "ok"]
 
-
 class MessagingAccessDenied(Exception):
     def __init__(self, reason: str, code: str = "access_denied", status: int = 403):
         super().__init__(reason)
         self.reason = reason
         self.code = code
         self.status = status
-
 
 def api(methods = ("GET",), *, login: bool = True):
     def decorator(view):

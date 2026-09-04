@@ -1,9 +1,7 @@
-##models/language.py
 
 from django.db import models
 
 from .. import constants as c
-
 
 class Language(models.Model):
     """Langue du referentiel (section 8).
@@ -28,7 +26,6 @@ class Language(models.Model):
     def save(self, *args, **kwargs):
         self.code = (self.code or "").strip().lower()
         super().save(*args, **kwargs)
-
 
 class UserLanguage(models.Model):
     """Langue declaree par un profil, au niveau CECRL.

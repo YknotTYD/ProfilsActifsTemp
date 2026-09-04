@@ -1,4 +1,3 @@
-##models.py
 """Modele de notification (spec section 5).
 
 Une seule table sert tous les types : la cible est generique
@@ -14,7 +13,6 @@ from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 
-
 class Notification(models.Model):
 
     recipient = models.ForeignKey(
@@ -28,11 +26,7 @@ class Notification(models.Model):
     target_id = models.PositiveIntegerField(null = True, blank = True)
     target = GenericForeignKey("target_content_type", "target_id")
 
-    #: donnees d'affichage propres a cet evenement (titre de la video,
-    #: pseudo de l'expediteur...) : eviter une jointure a chaque rendu de la
-    #: liste, et garder une trace meme si la cible est ensuite supprimee.
     payload = models.JSONField(default = dict, blank = True)
-    #: acces direct a l'element concerne (section 5 : "acces rapide")
     url = models.CharField(max_length = 1024, blank = True, default = "")
 
     read_at = models.DateTimeField(null = True, blank = True)

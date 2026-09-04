@@ -1,4 +1,3 @@
-##urls.py
 """Routes des profils professionnels.
 
 Les routes d'API suivent la nomenclature de la section 21 ; les routes de
@@ -10,9 +9,6 @@ from django.urls import path
 from . import api, views
 
 urlpatterns = [
-    # ------------------------------------------------------------------ #
-    # Pages
-    # ------------------------------------------------------------------ #
     path("profiles/",              views.search_page,        name = "p_search"),
     path("profiles/edit/",         views.editor_page,        name = "p_editor"),
     path("profiles/me/video/",     views.my_video_page,      name = "p_my_video"),
@@ -20,21 +16,12 @@ urlpatterns = [
     path("profile/<str:username>/", views.profile_page,      name = "p_profile"),
     path("profiles/admin/videos/", views.admin_videos_page,  name = "p_admin_videos"),
 
-    # ------------------------------------------------------------------ #
-    # API - referentiels et vocabulaire
-    # ------------------------------------------------------------------ #
     path("api/profiles/meta/",   api.meta),
     path("api/skills/",          api.skills),
     path("api/languages/",       api.languages),
 
-    # ------------------------------------------------------------------ #
-    # API - recherche (sections 12 a 14)
-    # ------------------------------------------------------------------ #
     path("api/profiles/search/", api.search),
 
-    # ------------------------------------------------------------------ #
-    # API - mon profil
-    # ------------------------------------------------------------------ #
     path("api/profiles/me/",          api.me),
     path("api/profiles/me/privacy/",  api.me_privacy),
     path("api/profiles/me/links/",    api.me_links),
@@ -63,26 +50,15 @@ urlpatterns = [
     path("api/profiles/me/videos/<int:pk>/publish/",  api.me_video_publish),
     path("api/profiles/me/videos/<int:pk>/resubmit/", api.me_video_resubmit),
 
-    # feed video : vues et reactions (spectateur)
     path("api/profiles/videos/<int:pk>/view/",  api.video_view),
     path("api/profiles/videos/<int:pk>/react/", api.video_react),
 
-    # ------------------------------------------------------------------ #
-    # API - moderation administrateur (spec "Moderation video, presentation,
-    # messagerie et notifications")
-    # ------------------------------------------------------------------ #
     path("api/profiles/admin/videos/pending/",        api.admin_video_queue),
     path("api/profiles/admin/videos/rejected/",       api.admin_video_rejections),
     path("api/profiles/admin/videos/<int:pk>/approve/", api.admin_video_approve),
     path("api/profiles/admin/videos/<int:pk>/reject/",  api.admin_video_reject),
     path("api/profiles/admin/videos/<int:pk>/history/", api.admin_video_history),
 
-    # ------------------------------------------------------------------ #
-    # API - consultation publique
-    #
-    # Ces deux routes viennent en dernier : `<str:username>` accepterait
-    # sinon "me", "search" ou "meta" et masquerait les routes ci-dessus.
-    # ------------------------------------------------------------------ #
     path("api/profiles/<str:username>/",        api.profile_detail),
     path("api/profiles/<str:username>/videos/", api.profile_videos),
 ]

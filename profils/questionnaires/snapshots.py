@@ -1,4 +1,3 @@
-##snapshots.py
 """Instantanes des questions au moment ou l'utilisateur y repond.
 
 Objectif (section 18) : pouvoir reconstituer exactement ce que l'utilisateur
@@ -13,7 +12,6 @@ snapshot renvoye au client.
 """
 
 SNAPSHOT_FORMAT = 1
-
 
 def question_snapshot(question) -> dict:
     """Photographie d'une question et de ses options."""
@@ -41,7 +39,6 @@ def question_snapshot(question) -> dict:
         ],
     }
 
-
 def answer_snapshot(question) -> dict:
     """Snapshot stocke sur `UserAnswer`, enrichi du contexte de version."""
     version = question.version
@@ -54,7 +51,6 @@ def answer_snapshot(question) -> dict:
         "title":          version.title,
     }
     return snapshot
-
 
 def rebuild_answer(answer) -> dict:
     """Reconstruit une reponse passee a partir de son seul snapshot.
@@ -82,7 +78,6 @@ def rebuild_answer(answer) -> dict:
         "options": snapshot.get("options", []),
         "selected_option_ids": list((answer.value or {}).get("option_ids") or []),
     }
-
 
 def attempt_transcript(attempt) -> dict:
     """Reconstitution complete d'une tentative, telle qu'elle a ete vecue."""

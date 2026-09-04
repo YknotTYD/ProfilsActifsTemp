@@ -1,4 +1,3 @@
-##tests/test_sections.py
 """Experiences, formations, certifications, projets, langues (sections 5 a 9)."""
 
 from datetime import date
@@ -15,7 +14,6 @@ from .factories import (
     add_certification, add_education, add_experience, add_language, add_project,
     make_profile,
 )
-
 
 class ExperienceTests(TestCase):
 
@@ -88,7 +86,6 @@ class ExperienceTests(TestCase):
         services.delete_experience(row)
         self.assertEqual(self.profile.experiences.count(), 0)
 
-
 class TotalExperienceTests(TestCase):
     """`total_experience_months` alimente le filtre et le classement : il doit suivre."""
 
@@ -124,7 +121,6 @@ class TotalExperienceTests(TestCase):
         services.update_experience(row, {"end_date": "2022-01-01"})
         self.profile.refresh_from_db()
         self.assertEqual(self.profile.total_experience_months, 24)
-
 
 class EducationTests(TestCase):
 
@@ -167,7 +163,6 @@ class EducationTests(TestCase):
                 "institution": "X", "start_date": "2020-01-01",
                 "degree_level": "BAC_12",
             })
-
 
 class CertificationTests(TestCase):
 
@@ -213,7 +208,6 @@ class CertificationTests(TestCase):
         with self.assertRaises(BadRequest):
             services.update_skill(skill, {"certification_id": other.pk})
 
-
 class ProjectTests(TestCase):
 
     def setUp(self):
@@ -249,7 +243,6 @@ class ProjectTests(TestCase):
         row = add_project(self.profile)
         services.delete_project(row)
         self.assertEqual(self.profile.projects.count(), 0)
-
 
 class LanguageTests(TestCase):
 

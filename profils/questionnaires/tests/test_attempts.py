@@ -1,4 +1,3 @@
-##tests/test_attempts.py
 
 from datetime import timedelta
 
@@ -17,7 +16,6 @@ from .factories import (
     make_user, publish,
 )
 
-
 class AttemptBaseTest(TestCase):
 
     def setUp(self):
@@ -33,7 +31,6 @@ class AttemptBaseTest(TestCase):
     def answer_correctly(self, attempt):
         option = self.question.options.get(text = "Java")
         return save_answer(attempt, self.question.id, {"option_ids": [option.id]})
-
 
 class AttemptLifecycleTests(AttemptBaseTest):
 
@@ -95,7 +92,6 @@ class AttemptLifecycleTests(AttemptBaseTest):
         first  = finish_attempt(attempt)
         second = finish_attempt(attempt)
         self.assertEqual(first.pk, second.pk)
-
 
 class AttemptQuotaTests(AttemptBaseTest):
 
@@ -173,7 +169,6 @@ class AttemptQuotaTests(AttemptBaseTest):
         self.complete_one(self.user)
         self.assertEqual(QuestionnaireAttempt.objects.filter(user = self.user).count(), 2)
 
-
 class ExpirationTests(AttemptBaseTest):
 
     def test_attempt_expires_after_its_deadline(self):
@@ -229,7 +224,6 @@ class ExpirationTests(AttemptBaseTest):
             start_attempt(self.q, make_user("autre"))
         self.assertEqual(ctx.exception.code, "version_expired")
 
-
 class InvalidationTests(AttemptBaseTest):
 
     def test_invalidated_questionnaire_refuses_new_attempts(self):
@@ -249,7 +243,6 @@ class InvalidationTests(AttemptBaseTest):
 
         attempt.refresh_from_db()
         self.assertEqual(attempt.status, c.ATTEMPT_INVALIDATED)
-
 
 class AnswerEditingRulesTests(AttemptBaseTest):
 
@@ -284,7 +277,6 @@ class AnswerEditingRulesTests(AttemptBaseTest):
         self.assertTrue(attempt.answers.get().locked)
         with self.assertRaises(AttemptError):
             self.answer_correctly(attempt)
-
 
 class MultiQuestionProgressTests(TestCase):
 

@@ -1,4 +1,3 @@
-##tests/test_conditions.py
 
 from django.test import TestCase
 
@@ -10,7 +9,6 @@ from profils.questionnaires.services   import (
 )
 
 from .factories import draft_of, make_admin, make_questionnaire, make_user, publish
-
 
 class ConditionValidationTests(TestCase):
 
@@ -47,7 +45,6 @@ class ConditionValidationTests(TestCase):
     def test_empty_group_is_refused(self):
         with self.assertRaises(ConditionError):
             validate_condition({"op": "AND", "conditions": []}, set())
-
 
 class ConditionalDisplayTests(TestCase):
     """Q1 : avez-vous une voiture ? oui -> Q2, non -> Q3"""
@@ -116,7 +113,6 @@ class ConditionalDisplayTests(TestCase):
         save_answer(attempt, self.q2.id, {"option_ids": [self.q2.options.first().id]})
         self.assertEqual(attempt.answers.count(), 2)
 
-        # l'utilisateur change d'avis : Q2 disparait, sa reponse reste stockee
         save_answer(attempt, self.q1.id, {"option_ids": [self.no.id]})
         attempt.refresh_from_db()
 
@@ -144,7 +140,6 @@ class ConditionalDisplayTests(TestCase):
         save_answer(attempt, self.q2.id, {"option_ids": [self.q2.options.first().id]})
         result = finish_attempt(attempt)
         self.assertIsNotNone(result)
-
 
 class ConditionOperatorTests(TestCase):
 
@@ -209,7 +204,6 @@ class ConditionOperatorTests(TestCase):
         self.assertIn("Question dependante", self.visible_with(40))
         self.assertNotIn("Question dependante", self.visible_with(70))
 
-
 class MultipleChoiceConditionTests(TestCase):
 
     def test_contains_on_a_multiple_choice_question(self):
@@ -238,7 +232,6 @@ class MultipleChoiceConditionTests(TestCase):
         without = compute_visible(questions, {source.stable_key: {"option_ids": [java.id]}})
         self.assertEqual(len(without), 1)
 
-
 class CascadeVisibilityTests(TestCase):
 
     def test_a_branch_hidden_upstream_hides_its_children(self):
@@ -263,7 +256,6 @@ class CascadeVisibilityTests(TestCase):
 
         questions = list(version.questions.prefetch_related("options"))
 
-        # l'enfant a une reponse, mais la racine dit "non" : tout le sous-arbre disparait
         answers = {
             root.stable_key:  {"option_ids": [root.options.get(value = "no").id]},
             child.stable_key: {"option_ids": [child_yes.id]},

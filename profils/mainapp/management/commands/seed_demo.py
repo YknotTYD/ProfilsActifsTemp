@@ -1,4 +1,3 @@
-##management/commands/seed_demo.py
 """Jeu de donnees de demonstration.
 
 Remplit chaque ecran accessible depuis le frontend avec du contenu credible :
@@ -32,20 +31,12 @@ from profils.questionnaires.versioning import create_version, publish_version
 
 DEMO_PASSWORD = "Demo1234!"
 
-# Films sous licence Creative Commons (Blender Foundation) : reels, publics,
-# librement integrables en iframe — corrects pour tenir lieu de videos de
-# demonstration sans avoir a heberger de vrais fichiers.
 DEMO_CLIPS = {
     "big_buck_bunny":   "https://www.youtube.com/embed/aqz-KE-bpKQ",
     "sintel":           "https://www.youtube.com/embed/eRsGyueVLvQ",
     "tears_of_steel":   "https://www.youtube.com/embed/R6MlUcmOul8",
     "elephants_dream":  "https://www.youtube.com/embed/TLkA0RELQ1g",
 }
-
-
-# --------------------------------------------------------------------------- #
-# Comptes
-# --------------------------------------------------------------------------- #
 
 RECRUITERS = [
     {"username": "julie.marchand",  "first_name": "Julie",  "last_name": "Marchand",  "birth_date": "1990-03-11"},
@@ -58,8 +49,6 @@ ADMIN_ACCOUNT = {
     "birth_date": "1988-01-01",
 }
 
-# Chaque candidat : identite, profil professionnel complet, et les
-# questionnaires auxquels il/elle a repondu (cle -> reponses).
 CANDIDATES = [
     {
         "username": "camille.dubois", "first_name": "Camille", "last_name": "Dubois",
@@ -506,11 +495,8 @@ CANDIDATES = [
     },
 ]
 
-# Options des questions a choix ferme, dans l'ordre — necessaires pour
-# traduire les indices utilises dans `q1_answers`/`q2_answers` ci-dessus.
 DB_OPTIONS = ["PostgreSQL", "MongoDB", "MySQL", "Redis", "SQLite"]
 TOOLS_OPTIONS = ["Notion", "Trello", "Slack", "Jira", "Google Calendar", "Asana"]
-
 
 class Command(BaseCommand):
     help = "Peuple la base avec un jeu de donnees de demonstration credible."
@@ -528,10 +514,6 @@ class Command(BaseCommand):
 
         self._summary(candidates)
 
-    # ------------------------------------------------------------------ #
-    # Nettoyage (rejouabilite)
-    # ------------------------------------------------------------------ #
-
     def _reset(self):
         usernames = (
             [c["username"] for c in CANDIDATES]
@@ -544,10 +526,6 @@ class Command(BaseCommand):
         ).delete()
         if deleted:
             self.stdout.write(f"Anciennes donnees de demonstration supprimees ({deleted} lignes).")
-
-    # ------------------------------------------------------------------ #
-    # Comptes
-    # ------------------------------------------------------------------ #
 
     def _create_admin(self) -> User:
         user = User.objects.create_user(
@@ -579,10 +557,6 @@ class Command(BaseCommand):
             Role.objects.create(user = user, role = "JobSeeker", birth_date = data["birth_date"])
             users.append(user)
         return users
-
-    # ------------------------------------------------------------------ #
-    # Profils professionnels
-    # ------------------------------------------------------------------ #
 
     def _seed_profiles(self, users: list):
         for user, data in zip(users, CANDIDATES):
@@ -643,10 +617,6 @@ class Command(BaseCommand):
                     "thumbnail_url": "", "status": pc.VIDEO_PUBLISHED,
                     "skills": [s[0] for s in data["skills"][:3]],
                 })
-
-    # ------------------------------------------------------------------ #
-    # Questionnaires
-    # ------------------------------------------------------------------ #
 
     def _create_questionnaires(self, admin: User):
         q1 = self._build_backend_test(admin)
@@ -811,10 +781,6 @@ class Command(BaseCommand):
         )
         return {"questionnaire": questionnaire, "keys": keys}
 
-    # ------------------------------------------------------------------ #
-    # Tentatives
-    # ------------------------------------------------------------------ #
-
     def _seed_attempts(self, users: list, q1: dict, q2: dict):
         for user, data in zip(users, CANDIDATES):
             if "q1_answers" in data:
@@ -855,10 +821,6 @@ class Command(BaseCommand):
             attempt_services.save_answer(attempt, question.id, value)
         attempt_services.finish_attempt(attempt)
 
-    # ------------------------------------------------------------------ #
-    # Feed video : reactions de demonstration
-    # ------------------------------------------------------------------ #
-
     def _seed_mainapp_feed(self, candidates: list):
         """Reactions des recruteurs sur les videos publiees du feed.
 
@@ -884,8 +846,6 @@ class Command(BaseCommand):
                     video, recruiter, reaction_cycle[(index + offset) % len(reaction_cycle)],
                 )
                 engagement.register_view(video, user = recruiter)
-
-    # ------------------------------------------------------------------ #
 
     def _summary(self, candidates: list):
         self.stdout.write(self.style.SUCCESS(

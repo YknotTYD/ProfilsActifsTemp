@@ -1,4 +1,3 @@
-##tests/test_messaging.py
 """Messagerie recruteur -> candidat (spec section 4).
 
 Seuls les recruteurs peuvent demarrer une conversation, et seulement avec un
@@ -19,12 +18,10 @@ from .. import rules, services
 from ..http import BadRequest, MessagingAccessDenied
 from ..models import Conversation, Message
 
-
 def make_recruiter(username = "recruteur"):
     user = make_user(username)
     Group.objects.get_or_create(name = "recruiter")[0].user_set.add(user)
     return user
-
 
 class RulesTests(TestCase):
 
@@ -56,7 +53,6 @@ class RulesTests(TestCase):
     def test_an_anonymous_visitor_cannot_initiate_contact(self):
         from django.contrib.auth.models import AnonymousUser
         self.assertFalse(rules.can_start(AnonymousUser(), self.candidate))
-
 
 class StartConversationTests(TestCase):
 
@@ -92,7 +88,6 @@ class StartConversationTests(TestCase):
         conv = services.start_conversation(self.recruiter, self.candidate_user, context = video)
         self.assertEqual(conv.context, video)
 
-
 class SendMessageTests(TestCase):
 
     def setUp(self):
@@ -121,7 +116,6 @@ class SendMessageTests(TestCase):
         notif = Notification.objects.get(recipient = self.candidate_user)
         self.assertEqual(notif.type, notification_types.NEW_MESSAGE)
         self.assertEqual(notif.payload["sender"], self.recruiter.username)
-
 
 class MessagingPagesTests(TestCase):
 

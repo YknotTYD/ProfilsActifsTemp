@@ -13,7 +13,6 @@ from . import constants
 from urllib.parse import urlencode
 import json
 
-
 def _age_on(birth_date, today):
     """Age en annees revolues a la date `today`.
 
@@ -23,7 +22,6 @@ def _age_on(birth_date, today):
     had_birthday_this_year = (today.month, today.day) >= (birth_date.month, birth_date.day)
     return today.year - birth_date.year - (0 if had_birthday_this_year else 1)
 
-
 def _register_error(message: str, request: HttpRequest):
     query = urlencode({
         "error":      message,
@@ -31,11 +29,6 @@ def _register_error(message: str, request: HttpRequest):
         "birth_date": request.POST.get("birth_date", ""),
     })
     return redirect(f"/register/?{query}")
-
-# TODO: RESTful email on login/logout
-# TODO: RESTful login/logout
-# TODO: check @api_view
-# TODO: actual APIs with json responses
 
 def register(request: HttpRequest) -> HttpResponse:
 
@@ -103,9 +96,6 @@ def video_upload(request: HttpRequest) -> HttpResponse:
             url = url.removeprefix("https://www.youtube.com/watch?v=")
             url = "https://www.youtube.com/embed/" + url
 
-        # `status` demarre a "PENDING" (defaut du champ) : la video entre en
-        # moderation, elle n'apparait dans aucun feed tant qu'un
-        # administrateur ne l'a pas validee (section 1).
         VideoLink.objects.create(user = request.user, url = url).save()
 
     return redirect(request.GET.get("camefrom", "/"))
@@ -131,10 +121,10 @@ def react(request: HttpRequest) -> HttpResponse:
         "video_id" not in body or
         "reaction" not in body or
         body["reaction"] not in constants.REACTIONS
-    ): # invalid data
+    ):
         return HttpResponse(status = 404)
 
-    vid = VideoLink.objects.filter(id = body["video_id"]).first() # take a guess
+    vid = VideoLink.objects.filter(id = body["video_id"]).first()
 
     if vid is None:
         return HttpResponse(status = 400)
@@ -152,8 +142,6 @@ def react(request: HttpRequest) -> HttpResponse:
     if prev_reaction:
         prev_reaction.delete()
 
-    # section 5 : "like recu", "dislike recu" -- pas de notification pour
-    # une reaction qu'on retire, ni pour une reaction a sa propre video.
     if is_new_reaction and vid.user_id != request.user.id:
         from profils.notifications import services as notifications
         from profils.notifications import types as notification_types

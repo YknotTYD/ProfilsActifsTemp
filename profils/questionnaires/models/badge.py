@@ -1,10 +1,8 @@
-##models/badge.py
 
 from django.contrib.auth.models import User
 from django.db                   import models
 
 from .. import constants as c
-
 
 class Badge(models.Model):
     """Badge attribuable.
@@ -35,7 +33,6 @@ class Badge(models.Model):
 
     def __str__(self):
         return f"Badge<{self.code}>"
-
 
 class UserBadge(models.Model):
     """Badge detenu par un utilisateur.

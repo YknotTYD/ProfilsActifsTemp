@@ -1,4 +1,3 @@
-##views.py
 """Pages du systeme de questionnaires.
 
 Les templates ne portent aucune logique metier : ils recoivent l'etat initial et
@@ -16,10 +15,8 @@ from .permissions import admin_capabilities, can_manage, has_perm, is_questionna
 from .serializers import public_questionnaire, result_payload
 from .services    import current_attempt
 
-
 def _login_required(request):
     return None if request.user.is_authenticated else redirect("/login/")
-
 
 def catalog(request):
     """Liste des questionnaires accessibles a l'utilisateur."""
@@ -36,7 +33,6 @@ def catalog(request):
         "questionnaires": [public_questionnaire(q, request.user) for q in questionnaires],
         "can_manage":     can_manage(request.user),
     })
-
 
 def run(request, pk):
     """Interface de passage d'un questionnaire."""
@@ -58,7 +54,6 @@ def run(request, pk):
         "can_manage":    can_manage(request.user),
     })
 
-
 def results(request, pk):
     """Historique des resultats de l'utilisateur pour un questionnaire."""
     if redirect_to := _login_required(request):
@@ -75,18 +70,12 @@ def results(request, pk):
         "can_manage":    can_manage(request.user),
     })
 
-
-# --------------------------------------------------------------------------- #
-# Administration
-# --------------------------------------------------------------------------- #
-
 def _admin_required(request):
     if not request.user.is_authenticated:
         return redirect("/login/")
     if not can_manage(request.user):
         raise Http404
     return None
-
 
 def manage(request):
     if response := _admin_required(request):
@@ -95,7 +84,6 @@ def manage(request):
         "capabilities": admin_capabilities(request.user),
         "statuses":     dict(c.QUESTIONNAIRE_STATUSES),
     })
-
 
 def editor(request, pk):
     if response := _admin_required(request):
@@ -106,7 +94,6 @@ def editor(request, pk):
         "capabilities":  admin_capabilities(request.user),
     })
 
-
 def versions(request, pk):
     if response := _admin_required(request):
         return response
@@ -116,7 +103,6 @@ def versions(request, pk):
         "capabilities":  admin_capabilities(request.user),
     })
 
-
 def attempts(request, pk):
     if response := _admin_required(request):
         return response
@@ -125,7 +111,6 @@ def attempts(request, pk):
         "questionnaire": questionnaire,
         "capabilities":  admin_capabilities(request.user),
     })
-
 
 def preview(request, pk, number):
     """Previsualisation d'une version, telle que la verra l'utilisateur."""

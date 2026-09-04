@@ -1,4 +1,3 @@
-##rules.py
 """Regles d'ouverture d'une conversation (spec section 4).
 
 "Prevoir une architecture extensible pour ajouter d'autres regles de
@@ -22,11 +21,9 @@ from profils.profiles.permissions import is_recruiter
 
 _RULES = []
 
-
 def rule(fn):
     _RULES.append(fn)
     return fn
-
 
 def _has_a_published_video(user) -> bool:
     """Le projet a deux chemins de video en parallele (`profiles.
@@ -40,7 +37,6 @@ def _has_a_published_video(user) -> bool:
         or VideoLink.objects.filter(user = user, status = mc.VIDEO_LINK_APPROVED).exists()
     )
 
-
 @rule
 def recruiter_to_candidate_with_video(sender, recipient) -> bool:
     """Seule regle active aujourd'hui : "un recruteur peut contacter un
@@ -53,7 +49,6 @@ def recruiter_to_candidate_with_video(sender, recipient) -> bool:
         and sender.id != recipient.id
         and _has_a_published_video(recipient)
     )
-
 
 def can_start(sender, recipient) -> bool:
     if not sender or not sender.is_authenticated or recipient is None:

@@ -1,4 +1,3 @@
-##tests/test_test_mode.py
 """Mode TEST (section 24) : ne doit polluer ni les statistiques ni les badges."""
 
 from django.test import TestCase
@@ -12,7 +11,6 @@ from profils.questionnaires.versioning import publish_version, set_version_test
 from .factories import (
     add_single_choice, draft_of, make_admin, make_badge, make_questionnaire, make_user, publish,
 )
-
 
 class TestModeTests(TestCase):
 

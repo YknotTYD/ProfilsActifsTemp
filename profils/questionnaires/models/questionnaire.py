@@ -1,4 +1,3 @@
-##models/questionnaire.py
 
 import uuid
 
@@ -10,11 +9,9 @@ from django.utils                import timezone
 from .. import constants as c
 from ..question_types import get_type, type_choices
 
-
 def new_stable_key() -> str:
     """Identifiant stable, conserve d'une version a l'autre."""
     return uuid.uuid4().hex
-
 
 class Questionnaire(models.Model):
     """Identite durable d'un questionnaire.
@@ -43,11 +40,9 @@ class Questionnaire(models.Model):
         null = True, blank = True, related_name = "+"
     )
 
-    # -- fenetre de disponibilite (section 17) ------------------------------ #
     available_from  = models.DateTimeField(null = True, blank = True)
     available_until = models.DateTimeField(null = True, blank = True)
 
-    # -- regles de tentative (section 15) ----------------------------------- #
     max_attempts           = models.PositiveIntegerField(
         null = True, blank = True,
         help_text = "None = tentatives illimitees"
@@ -69,7 +64,6 @@ class Questionnaire(models.Model):
         help_text = "reporter les reponses des participants lors d'une nouvelle version"
     )
 
-    # -- regles de modification des reponses (section 16) ------------------- #
     answer_edit_mode = models.CharField(
         max_length = 20, choices = c.ANSWER_EDIT_MODES, default = c.ANSWERS_UNTIL_FINISH
     )
@@ -78,7 +72,6 @@ class Questionnaire(models.Model):
     )
     allow_back       = models.BooleanField(default = True)
 
-    # -- visibilite des resultats (section 23) ------------------------------ #
     result_visibility = models.JSONField(default = dict, blank = True)
 
     class Meta:
@@ -102,8 +95,6 @@ class Questionnaire(models.Model):
 
     def __str__(self):
         return f"Questionnaire<{self.pk}:{self.title}>"
-
-    # ------------------------------------------------------------------ #
 
     def save(self, *args, **kwargs):
         if not self.slug:
@@ -151,7 +142,6 @@ class Questionnaire(models.Model):
         if self.current_version and self.current_version.status == c.STATUS_PUBLISHED:
             return self.current_version
         return self.versions.filter(status = c.STATUS_PUBLISHED).order_by("-version_number").first()
-
 
 class QuestionnaireVersion(models.Model):
     """Contenu immuable d'un questionnaire a un instant donne.
@@ -217,8 +207,6 @@ class QuestionnaireVersion(models.Model):
             self.scoring_config = dict(c.DEFAULT_VERSION_SCORING)
         super().save(*args, **kwargs)
 
-    # ------------------------------------------------------------------ #
-
     @property
     def is_editable(self) -> bool:
         """Une version n'est modifiable qu'en brouillon et sans tentative."""
@@ -260,7 +248,6 @@ class QuestionnaireVersion(models.Model):
                 f"la version {self.version_number} n'est plus modifiable "
                 f"(statut {self.status}); creez une nouvelle version"
             )
-
 
 class Question(models.Model):
     """Question appartenant a une version.
@@ -322,7 +309,6 @@ class Question(models.Model):
         scoring = self.scoring
         return Decimal(str(scoring["weight"])) * Decimal(str(scoring["correct_score"]))
 
-
 class QuestionOption(models.Model):
     """Reponse proposee, identifiee de facon stable.
 
@@ -357,7 +343,6 @@ class QuestionOption(models.Model):
 
     def __str__(self):
         return f"O{self.pk}<{self.text}>"
-
 
 class QuestionnaireAccessRule(models.Model):
     """Regle d'acces ou de visibilite, en forme normale disjonctive.

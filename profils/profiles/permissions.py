@@ -1,4 +1,3 @@
-##permissions.py
 """Roles et propriete des ressources.
 
 Le pont vers le modele `Role` de `mainapp` existe deja dans
@@ -19,7 +18,6 @@ from . import constants as c
 ADMIN_ROLE     = "admin"
 RECRUITER_ROLE = "recruiter"
 
-
 class ProfileAccessDenied(PermissionDenied):
     """Refus d'acces, avec un motif exploitable par l'API."""
 
@@ -28,7 +26,6 @@ class ProfileAccessDenied(PermissionDenied):
         self.reason = reason
         self.code   = code
         self.status = status
-
 
 def is_platform_admin(user) -> bool:
     """Statut d'administrateur, memorise sur l'objet utilisateur.
@@ -51,16 +48,14 @@ def is_platform_admin(user) -> bool:
         cached = user.is_superuser or ADMIN_ROLE in user_roles(user)
         try:
             user._profiles_is_admin_cache = cached
-        except AttributeError:      # pragma: no cover — objet utilisateur immuable
+        except AttributeError:
             pass
     return cached
-
 
 def is_recruiter(user) -> bool:
     if not user or not user.is_authenticated:
         return False
     return RECRUITER_ROLE in user_roles(user)
-
 
 def has_perm(user, perm: str) -> bool:
     """Verifie une permission applicative."""
@@ -70,7 +65,6 @@ def has_perm(user, perm: str) -> bool:
         return True
     return user.has_perm(perm)
 
-
 def can_see_private(user) -> bool:
     """Droit de consulter un profil que son proprietaire a rendu prive.
 
@@ -79,17 +73,14 @@ def can_see_private(user) -> bool:
     """
     return has_perm(user, c.PERM_VIEW_PRIVATE) or has_perm(user, c.PERM_MODERATE)
 
-
 def owns(user, profile) -> bool:
     return bool(
         user and user.is_authenticated and profile is not None
         and profile.user_id == user.id
     )
 
-
 def can_edit_profile(user, profile) -> bool:
     return owns(user, profile) or has_perm(user, c.PERM_MODERATE)
-
 
 def assert_can_edit(user, profile):
     """Verrou d'ecriture. Ne renvoie rien en cas de succes.
@@ -104,7 +95,6 @@ def assert_can_edit(user, profile):
             "ce profil ne vous appartient pas", "not_owner", 403,
         )
 
-
 def assert_owns_child(user, profile, child, label: str = "ressource"):
     """Verifie a la fois la propriete du profil et le rattachement de l'objet.
 
@@ -115,7 +105,6 @@ def assert_owns_child(user, profile, child, label: str = "ressource"):
     assert_can_edit(user, profile)
     if child is None or child.profile_id != profile.pk:
         raise ProfileAccessDenied(f"{label} introuvable", "not_found", 404)
-
 
 def capabilities(user) -> dict:
     """Capacites de l'utilisateur, pour piloter l'affichage de l'interface."""

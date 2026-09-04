@@ -1,4 +1,3 @@
-##tests/test_scoring.py
 
 from decimal import Decimal
 
@@ -13,7 +12,6 @@ from .factories import (
     add_multiple_choice, add_single_choice, draft_of, make_admin, make_questionnaire,
     make_user, publish,
 )
-
 
 class ScoreQuestionTests(TestCase):
 
@@ -105,7 +103,6 @@ class ScoreQuestionTests(TestCase):
 
         self.assertFalse(entry["graded"])
         self.assertEqual(Decimal(entry["max_score"]), Decimal("0"))
-
 
 class ScoreAttemptTests(TestCase):
 

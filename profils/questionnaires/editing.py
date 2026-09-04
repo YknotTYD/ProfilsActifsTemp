@@ -1,4 +1,3 @@
-##editing.py
 """Edition du contenu d'une version.
 
 Chaque ecriture verifie d'abord que la version est bien modifiable, valide la
@@ -14,11 +13,6 @@ from .auditing   import log, snapshot_fields
 from .conditions import validate_condition
 from .models     import Badge, Question, QuestionOption, QuestionnaireAccessRule
 from .question_types import ConfigError, get_type
-
-
-# --------------------------------------------------------------------------- #
-# Validation des blocs de configuration
-# --------------------------------------------------------------------------- #
 
 def validate_scoring(scoring: dict) -> dict:
     """Valide un bloc de scoring de question."""
@@ -36,7 +30,6 @@ def validate_scoring(scoring: dict) -> dict:
         raise ConfigError(f"scoring.partial_mode invalide: {scoring['partial_mode']!r}")
     scoring["partial"] = bool(scoring["partial"])
     return scoring
-
 
 def validate_version_scoring(scoring: dict) -> dict:
     scoring = {**c.DEFAULT_VERSION_SCORING, **(scoring or {})}
@@ -57,15 +50,9 @@ def validate_version_scoring(scoring: dict) -> dict:
     scoring["floor_negative"] = bool(scoring.get("floor_negative", True))
     return scoring
 
-
-# --------------------------------------------------------------------------- #
-# Questions
-# --------------------------------------------------------------------------- #
-
 def _next_order(version) -> int:
     last = version.questions.order_by("-order").first()
     return (last.order + 1) if last else 0
-
 
 def _apply_question_payload(question, payload: dict, *, version):
     """Applique et valide une charge utile sur une question (creee ou existante)."""
@@ -101,7 +88,6 @@ def _apply_question_payload(question, payload: dict, *, version):
     if not question.text:
         raise ConfigError("l'enonce de la question est obligatoire")
 
-
 @transaction.atomic
 def create_question(version, payload: dict, *, actor = None) -> Question:
     version.assert_editable()
@@ -127,7 +113,6 @@ def create_question(version, payload: dict, *, actor = None) -> Question:
         new = {"text": question.text, "type": question.type}, operation = "create")
     return question
 
-
 @transaction.atomic
 def update_question(question, payload: dict, *, actor = None) -> Question:
     question.version.assert_editable()
@@ -151,7 +136,6 @@ def update_question(question, payload: dict, *, actor = None) -> Question:
             old = scoring_before, new = question.scoring_config)
     return question
 
-
 @transaction.atomic
 def delete_question(question, *, actor = None):
     version = question.version
@@ -170,12 +154,10 @@ def delete_question(question, *, actor = None):
         old = {"text": question.text, "type": question.type}, operation = "delete")
     question.delete()
 
-
 def _condition_keys(condition) -> set[str]:
     from .conditions import referenced_keys
 
     return referenced_keys(condition)
-
 
 @transaction.atomic
 def reorder_questions(version, ordered_ids: list[int], *, actor = None):
@@ -192,11 +174,6 @@ def reorder_questions(version, ordered_ids: list[int], *, actor = None):
     log(actor, c.AUDIT_QUESTION_CHANGE, version, questionnaire = version.questionnaire,
         new = {"order": given}, operation = "reorder")
 
-
-# --------------------------------------------------------------------------- #
-# Options
-# --------------------------------------------------------------------------- #
-
 def _validate_option_payload(payload: dict) -> dict:
     text = str(payload.get("text", "")).strip()
     if not text:
@@ -209,7 +186,6 @@ def _validate_option_payload(payload: dict) -> dict:
         "score":       payload.get("score"),
     }
 
-
 def _create_options(question, options: list[dict]):
     for index, raw in enumerate(options):
         data = _validate_option_payload(raw)
@@ -218,7 +194,6 @@ def _create_options(question, options: list[dict]):
             order    = raw.get("order", index),
             **data,
         )
-
 
 def _replace_options(question, options: list[dict]):
     """Reecrit le jeu d'options en conservant les cles stables fournies."""
@@ -241,7 +216,6 @@ def _replace_options(question, options: list[dict]):
 
     question.options.exclude(pk__in = keep).delete()
 
-
 def _create_scale_options(question):
     config = question.config or {}
     labels = config.get("labels") or {}
@@ -250,7 +224,6 @@ def _create_scale_options(question):
         {"text": str(labels.get(str(value), value)), "value": str(value), "order": index}
         for index, value in enumerate(range(config.get("min", 1), config.get("max", 5) + 1, step))
     ])
-
 
 @transaction.atomic
 def add_option(question, payload: dict, *, actor = None) -> QuestionOption:
@@ -268,7 +241,6 @@ def add_option(question, payload: dict, *, actor = None) -> QuestionOption:
     log(actor, c.AUDIT_OPTION_CHANGE, option, questionnaire = question.version.questionnaire,
         new = {"text": option.text}, operation = "create", question = question.id)
     return option
-
 
 @transaction.atomic
 def update_option(option, payload: dict, *, actor = None) -> QuestionOption:
@@ -292,7 +264,6 @@ def update_option(option, payload: dict, *, actor = None) -> QuestionOption:
         operation = "update", question = option.question_id)
     return option
 
-
 @transaction.atomic
 def delete_option(option, *, actor = None):
     question = option.question
@@ -301,11 +272,6 @@ def delete_option(option, *, actor = None):
     log(actor, c.AUDIT_OPTION_CHANGE, option, questionnaire = question.version.questionnaire,
         old = {"text": option.text}, operation = "delete", question = question.id)
     option.delete()
-
-
-# --------------------------------------------------------------------------- #
-# Regles d'acces
-# --------------------------------------------------------------------------- #
 
 @transaction.atomic
 def set_access_rules(questionnaire, kind: str, groups: list[list[dict]], *, actor = None):

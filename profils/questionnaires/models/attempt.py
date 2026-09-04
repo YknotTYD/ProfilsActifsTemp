@@ -1,4 +1,3 @@
-##models/attempt.py
 
 from django.contrib.auth.models import User
 from django.db                   import models
@@ -6,7 +5,6 @@ from django.utils                import timezone
 
 from .. import constants as c
 from .questionnaire import Question, QuestionOption, Questionnaire, QuestionnaireVersion
-
 
 class QuestionnaireAttempt(models.Model):
     """Passage d'un questionnaire par un utilisateur.
@@ -44,15 +42,11 @@ class QuestionnaireAttempt(models.Model):
     percentage = models.DecimalField(max_digits = 6, decimal_places = 2, null = True, blank = True)
     passed     = models.BooleanField(null = True, blank = True)
 
-    #: tentative dont celle-ci reprend les reponses, lors d'un changement de
-    #: version. Elle ne consomme pas le quota de tentatives du participant.
     carried_from = models.ForeignKey(
         "self", on_delete = models.SET_NULL, null = True, blank = True,
         related_name = "carried_to"
     )
 
-    #: compteur serveur incremente a chaque ecriture, expose au client pour
-    #: qu'il puisse detecter un etat perime (section 33)
     revision = models.PositiveIntegerField(default = 0)
     metadata = models.JSONField(default = dict, blank = True)
 
@@ -91,7 +85,6 @@ class QuestionnaireAttempt(models.Model):
             update_fields = list(update_fields) + ["revision", "last_activity_at"]
         self.save(update_fields = update_fields)
 
-
 class UserAnswer(models.Model):
     """Reponse d'un utilisateur a une question, dans une tentative donnee.
 
@@ -112,12 +105,10 @@ class UserAnswer(models.Model):
     score_details = models.JSONField(default = dict, blank = True)
 
     locked      = models.BooleanField(default = False)
-    #: reponse reprise d'une version precedente, jamais ressaisie ici
     carried     = models.BooleanField(default = False)
     answered_at = models.DateTimeField(auto_now_add = True)
     updated_at  = models.DateTimeField(auto_now = True)
 
-    #: garde-fous de concurrence (section 33)
     revision        = models.PositiveIntegerField(default = 1)
     client_sequence = models.BigIntegerField(default = 0)
     idempotency_key = models.CharField(max_length = 64, blank = True, default = "")
@@ -137,7 +128,6 @@ class UserAnswer(models.Model):
 
     def __str__(self):
         return f"Answer<a{self.attempt_id} q{self.question_id}>"
-
 
 class UserAnswerSelection(models.Model):
     """Option retenue par une reponse.
@@ -159,7 +149,6 @@ class UserAnswerSelection(models.Model):
 
     def __str__(self):
         return f"Selection<a{self.answer_id} o{self.option_id}>"
-
 
 class QuestionnaireResult(models.Model):
     """Resultat fige d'une tentative terminee.

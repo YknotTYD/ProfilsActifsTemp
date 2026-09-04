@@ -7,9 +7,6 @@ from django.db.models.signals import post_delete
 from django.dispatch import receiver
 from . import constants
 
-# TODO: constructors for models
-# TODO: error messages
-
 def strings_to_choice_char_fields(strings: tuple[str]) -> models.CharField:
     return models.CharField(
         max_length = max([len(i) for i in strings]),
@@ -53,6 +50,11 @@ class VideoLink(models.Model):
             })
 
 class VideoFile(models.Model):
+    """Video de presentation soumise par fichier (feed recruteur/admin).
+
+    Meme regle de moderation que `VideoLink` (voir `views.get_video_filepaths`) :
+    `status` demarre a "PENDING" et seul "APPROVED" est repris par le feed.
+    """
 
     user = models.ForeignKey(User, on_delete = models.CASCADE)
     file = models.FileField(
@@ -60,8 +62,18 @@ class VideoFile(models.Model):
         validators = [FileExtensionValidator(allowed_extensions = ['mp4', 'mov', 'avi', 'webm'])]
     )
 
+    status = strings_to_choice_char_fields(constants.VIDEO_LINK_STATUSES)
+    rejection_reason = models.TextField(blank = True, default = "")
+
     def __str__(self):
         return f"VideoFile<{self.user}>"
+
+    def clean(self):
+        super().clean()
+        if self.status == constants.VIDEO_LINK_REJECTED and not self.rejection_reason.strip():
+            raise ValidationError({
+                "rejection_reason": "un motif est obligatoire pour refuser une video.",
+            })
 
 @receiver(post_delete, sender = VideoFile)
 def delete_videofile_on_delete(sender, instance, **kwargs):
@@ -91,7 +103,11 @@ class VideoLinkAdmin(admin.ModelAdmin):
     list_filter  = ("status",)
     search_fields = ("user__username", "url")
 
+@admin.register(VideoFile)
+class VideoFileAdmin(admin.ModelAdmin):
+    list_display = ("id", "user", "file", "status")
+    list_filter  = ("status",)
+    search_fields = ("user__username",)
 
 admin.site.register(Role)
-admin.site.register(VideoFile)
 admin.site.register(Reaction)

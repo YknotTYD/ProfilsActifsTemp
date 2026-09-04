@@ -1,4 +1,3 @@
-##porting.py
 """Export et import de questionnaires au format JSON.
 
 Le document est portable : il ne contient aucune cle primaire, uniquement les
@@ -36,11 +35,6 @@ ATTEMPT_FIELDS = ("max_attempts", "cooldown_seconds", "time_limit_seconds",
                   "carry_over_answers")
 ANSWER_FIELDS  = ("answer_edit_mode", "navigation_mode", "allow_back")
 
-
-# --------------------------------------------------------------------------- #
-# Export
-# --------------------------------------------------------------------------- #
-
 def _rules_document(questionnaire, kind: str) -> list[list[dict]]:
     """Regles d'acces en groupes, avec des references portables."""
     groups: dict[int, list] = {}
@@ -53,11 +47,9 @@ def _rules_document(questionnaire, kind: str) -> list[list[dict]]:
         elif rule.rule_type == c.RULE_BADGE:
             entry["badge_code"] = rule.badge.code if rule.badge else None
         elif rule.rule_type == c.RULE_USER:
-            # l'identifiant n'a pas de sens ailleurs : on exporte le nom
             entry["username"] = rule.target_user.username if rule.target_user else None
         groups.setdefault(rule.group_index, []).append(entry)
     return [groups[key] for key in sorted(groups)]
-
 
 def export_questionnaire(questionnaire, version = None) -> dict:
     """Document JSON complet d'un questionnaire et d'une de ses versions."""
@@ -103,14 +95,8 @@ def export_questionnaire(questionnaire, version = None) -> dict:
         },
     }
 
-
-# --------------------------------------------------------------------------- #
-# Import
-# --------------------------------------------------------------------------- #
-
 class ImportError_(ValidationError):
     """Document d'import invalide."""
-
 
 def validate_document(document) -> dict:
     """Verifie la forme du document avant d'ecrire quoi que ce soit."""
@@ -148,7 +134,6 @@ def validate_document(document) -> dict:
             seen.add(key)
     return document
 
-
 @transaction.atomic
 def import_questionnaire(document, *, actor = None, title = None) -> Questionnaire:
     """Cree un questionnaire en brouillon a partir d'un document exporte."""
@@ -182,14 +167,12 @@ def import_questionnaire(document, *, actor = None, title = None) -> Questionnai
         scoring_config = validate_version_scoring(content.get("scoring_config") or {}),
     )
 
-    # premiere passe : les questions, sans leurs conditions
     pending = []
     for index, payload in enumerate(content["questions"]):
         question = _import_question(version, payload, index)
         if payload.get("condition"):
             pending.append((question, payload["condition"]))
 
-    # seconde passe : les conditions, une fois toutes les cles stables connues
     known = set(version.questions.values_list("stable_key", flat = True))
     for question, condition in pending:
         try:
@@ -204,7 +187,6 @@ def import_questionnaire(document, *, actor = None, title = None) -> Questionnai
         new = {"title": questionnaire.title, "questions": len(content["questions"])},
         imported = True)
     return questionnaire
-
 
 def _import_question(version, payload: dict, index: int) -> Question:
     handler = get_type(payload["type"])
@@ -247,7 +229,6 @@ def _import_question(version, payload: dict, index: int) -> Question:
         )
     return question
 
-
 def _import_rules(questionnaire, meta: dict, *, actor = None):
     """Rejoue les regles d'acces, en ignorant ce qui n'existe pas ici."""
     from django.contrib.auth.models import User
@@ -264,12 +245,12 @@ def _import_rules(questionnaire, meta: dict, *, actor = None):
                     entry["role"] = rule.get("role", "")
                 elif entry["rule_type"] == c.RULE_BADGE:
                     if not Badge.objects.filter(code = rule.get("badge_code", "")).exists():
-                        continue        # badge absent de cette instance
+                        continue
                     entry["badge_code"] = rule["badge_code"]
                 elif entry["rule_type"] == c.RULE_USER:
                     user = User.objects.filter(username = rule.get("username", "")).first()
                     if user is None:
-                        continue        # utilisateur absent de cette instance
+                        continue
                     entry["user_id"] = user.id
                 resolved.append(entry)
             if resolved:

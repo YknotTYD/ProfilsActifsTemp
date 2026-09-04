@@ -1,4 +1,3 @@
-##models/__init__.py
 """Modeles des profils professionnels.
 
 Le modele est normalise : competences, experiences, formations,

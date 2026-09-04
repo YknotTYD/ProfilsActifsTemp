@@ -1,4 +1,3 @@
-##permissions.py
 """Permissions d'administration.
 
 Repose sur le systeme de permissions Django (permissions personnalisees
@@ -17,7 +16,6 @@ from . import constants as c
 
 ADMIN_ROLE = "admin"
 
-
 def user_roles(user) -> set[str]:
     """Roles d'un utilisateur, en minuscules.
 
@@ -31,7 +29,7 @@ def user_roles(user) -> set[str]:
 
     try:
         from profils.mainapp.models import Role
-    except Exception:                                   # pragma: no cover
+    except Exception:
         Role = None
     if Role is not None:
         roles |= {
@@ -43,12 +41,10 @@ def user_roles(user) -> set[str]:
         roles.add(ADMIN_ROLE)
     return roles
 
-
 def is_questionnaire_admin(user) -> bool:
     if not user or not user.is_authenticated:
         return False
     return user.is_superuser or ADMIN_ROLE in user_roles(user)
-
 
 def has_perm(user, perm: str) -> bool:
     """Verifie une permission applicative."""
@@ -58,14 +54,12 @@ def has_perm(user, perm: str) -> bool:
         return True
     return user.has_perm(perm)
 
-
 def can_manage(user) -> bool:
     """Acces general a l'espace d'administration des questionnaires."""
     return any(
         has_perm(user, perm)
         for perm in (c.PERM_CREATE, c.PERM_UPDATE, c.PERM_VIEW, c.PERM_VIEW_ATTEMPTS)
     )
-
 
 def require_perm(perm: str):
     """Decorateur de vue JSON exigeant une permission."""
@@ -82,7 +76,6 @@ def require_perm(perm: str):
         return wrapper
 
     return decorator
-
 
 def admin_capabilities(user) -> dict:
     """Capacites de l'utilisateur, pour piloter l'affichage de l'interface."""

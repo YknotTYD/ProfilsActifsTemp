@@ -1,4 +1,3 @@
-##messaging
 """App messagerie (spec section 4) : conversations entre deux utilisateurs,
 sous reserve qu'une regle d'ouverture (`rules.py`) l'autorise. La seule
 regle active aujourd'hui est "un recruteur peut contacter un demandeur

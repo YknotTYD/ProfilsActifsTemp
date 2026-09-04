@@ -1,4 +1,3 @@
-##services.py
 """Cycle de vie des tentatives : demarrage, sauvegarde, reprise, fin.
 
 Toute la logique metier vit ici ; l'API n'est qu'une couche de transport. Rien
@@ -23,7 +22,6 @@ from .question_types import AnswerError
 from .scoring        import score_attempt
 from .snapshots      import answer_snapshot
 
-
 class AttemptError(Exception):
     """Erreur de cycle de vie d'une tentative."""
 
@@ -33,18 +31,12 @@ class AttemptError(Exception):
         self.code   = code
         self.status = status
 
-
 class StaleWrite(AttemptError):
     """Ecriture perimee : une reponse plus recente existe deja."""
 
     def __init__(self, answer):
         super().__init__("une reponse plus recente existe deja", "stale_write", 409)
         self.answer = answer
-
-
-# --------------------------------------------------------------------------- #
-# Expiration
-# --------------------------------------------------------------------------- #
 
 def expire_if_needed(attempt) -> bool:
     """Bascule la tentative en EXPIRED si son echeance est depassee."""
@@ -55,7 +47,6 @@ def expire_if_needed(attempt) -> bool:
     log(attempt.user, c.AUDIT_UPDATE, attempt, questionnaire = attempt.questionnaire,
         new = {"status": c.ATTEMPT_EXPIRED}, reason = "expiration")
     return True
-
 
 def expire_stale_attempts(questionnaire = None) -> int:
     """Balayage des tentatives echues. Appelable par une tache planifiee."""
@@ -68,11 +59,6 @@ def expire_stale_attempts(questionnaire = None) -> int:
         queryset = queryset.filter(questionnaire = questionnaire)
     return queryset.update(status = c.ATTEMPT_EXPIRED)
 
-
-# --------------------------------------------------------------------------- #
-# Demarrage / reprise
-# --------------------------------------------------------------------------- #
-
 def current_attempt(questionnaire, user, *, test: bool = False):
     """Tentative en cours de l'utilisateur, ou None."""
     attempt = QuestionnaireAttempt.objects.filter(
@@ -84,14 +70,11 @@ def current_attempt(questionnaire, user, *, test: bool = False):
         return None
     return attempt
 
-
 def _check_attempt_quota(questionnaire, user, *, test: bool):
     """Nombre de tentatives, delai d'attente et rejouabilite (section 15)."""
     if test:
         return
 
-    # une tentative reportee lors d'un changement de version est imposee au
-    # participant : elle ne doit pas lui couter une de ses tentatives
     previous = QuestionnaireAttempt.objects.filter(
         questionnaire = questionnaire, user = user, is_test = False,
         carried_from__isnull = True,
@@ -128,7 +111,6 @@ def _check_attempt_quota(questionnaire, user, *, test: bool):
         if not best.passed and not questionnaire.allow_retry_after_fail:
             raise AttemptError("nouvelle tentative non autorisee apres echec", "retry_after_fail_denied")
 
-
 @transaction.atomic
 def start_attempt(questionnaire, user, *, test: bool = False) -> QuestionnaireAttempt:
     """Demarre une tentative, ou rend celle deja en cours.
@@ -160,7 +142,6 @@ def start_attempt(questionnaire, user, *, test: bool = False) -> QuestionnaireAt
             expires_at     = attempt_deadline(questionnaire),
         )
     except IntegrityError:
-        # course entre deux onglets : la contrainte d'unicite a tranche
         existing = current_attempt(questionnaire, user, test = test)
         if existing is None:
             raise
@@ -171,14 +152,8 @@ def start_attempt(questionnaire, user, *, test: bool = False) -> QuestionnaireAt
         new = {"version": version.version_number, "is_test": test, "attempt_number": number})
     return attempt
 
-
-# --------------------------------------------------------------------------- #
-# Etat / progression
-# --------------------------------------------------------------------------- #
-
 def attempt_questions(attempt) -> list[Question]:
     return list(attempt.version.questions.prefetch_related("options").order_by("order", "id"))
-
 
 def answers_map(attempt) -> dict:
     """Cle stable de question -> UserAnswer."""
@@ -187,12 +162,10 @@ def answers_map(attempt) -> dict:
         for answer in attempt.answers.select_related("question").prefetch_related("selections")
     }
 
-
 def visible_questions(attempt, questions = None, answers = None) -> list[Question]:
     questions = questions if questions is not None else attempt_questions(attempt)
     answers   = answers   if answers   is not None else answers_map(attempt)
     return compute_visible(questions, {key: a.value for key, a in answers.items()})
-
 
 def refresh_progress(attempt, *, questions = None, answers = None, save = True) -> dict:
     """Recalcule la progression a partir des seules questions visibles."""
@@ -226,7 +199,6 @@ def refresh_progress(attempt, *, questions = None, answers = None, save = True) 
         "visible":  [q.id for q in visible],
     }
 
-
 def next_unanswered(attempt, answers = None):
     """Question sur laquelle reprendre la tentative."""
     answers = answers if answers is not None else answers_map(attempt)
@@ -235,11 +207,6 @@ def next_unanswered(attempt, answers = None):
         if not question.handler.is_answered(answer.value if answer else None):
             return question
     return None
-
-
-# --------------------------------------------------------------------------- #
-# Sauvegarde d'une reponse
-# --------------------------------------------------------------------------- #
 
 def _assert_answer_writable(attempt, question, existing):
     questionnaire = attempt.questionnaire
@@ -262,7 +229,6 @@ def _assert_answer_writable(attempt, question, existing):
             raise AttemptError("reponse verrouillee", "answer_locked")
         if questionnaire.answer_edit_mode == c.ANSWERS_LOCKED_ON_VALIDATE:
             raise AttemptError("les reponses ne sont pas modifiables", "answer_not_editable")
-
 
 @transaction.atomic
 def save_answer(attempt, question_id: int, raw_value, *,
@@ -321,7 +287,6 @@ def save_answer(attempt, question_id: int, raw_value, *,
     try:
         answer.save()
     except IntegrityError:
-        # deux onglets ont cree la reponse en meme temps : on reprend l'existante
         answer = UserAnswer.objects.get(attempt = attempt, question = question)
         answer.value    = value
         answer.snapshot = answer_snapshot(question)
@@ -340,7 +305,6 @@ def save_answer(attempt, question_id: int, raw_value, *,
     ])
 
     return answer_state(attempt, answer, progress = progress)
-
 
 def _sync_selections(answer, question, value):
     """Maintient la table des options retenues (statistiques futures)."""
@@ -365,7 +329,6 @@ def _sync_selections(answer, question, value):
         for option_id in wanted if option_id not in existing
     ])
 
-
 def answer_state(attempt, answer, *, progress = None, replayed: bool = False) -> dict:
     """Etat renvoye au client apres une sauvegarde."""
     return {
@@ -384,7 +347,6 @@ def answer_state(attempt, answer, *, progress = None, replayed: bool = False) ->
         "progress": progress if progress is not None else refresh_progress(attempt, save = False),
     }
 
-
 @transaction.atomic
 def clear_answer(attempt, question_id: int) -> dict:
     """Efface une reponse (retour a l'etat non repondu)."""
@@ -400,11 +362,6 @@ def clear_answer(attempt, question_id: int) -> dict:
 
     progress = refresh_progress(attempt)
     return {"cleared": True, "progress": progress}
-
-
-# --------------------------------------------------------------------------- #
-# Fin de tentative
-# --------------------------------------------------------------------------- #
 
 @transaction.atomic
 def finish_attempt(attempt, *, force: bool = False) -> QuestionnaireResult:
@@ -487,7 +444,6 @@ def finish_attempt(attempt, *, force: bool = False) -> QuestionnaireResult:
 
     return result
 
-
 @transaction.atomic
 def abandon_attempt(attempt) -> QuestionnaireAttempt:
     if attempt.status != c.ATTEMPT_IN_PROGRESS:
@@ -497,7 +453,6 @@ def abandon_attempt(attempt) -> QuestionnaireAttempt:
     log(attempt.user, c.AUDIT_UPDATE, attempt, questionnaire = attempt.questionnaire,
         new = {"status": c.ATTEMPT_ABANDONED})
     return attempt
-
 
 @transaction.atomic
 def invalidate_attempt(attempt, *, actor = None, reason: str = "") -> QuestionnaireAttempt:

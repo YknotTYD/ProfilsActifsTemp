@@ -1,4 +1,3 @@
-##serializers.py
 """Conversion des modeles en structures JSON.
 
 Deux familles de fonctions, volontairement distinctes, sur le modele de
@@ -18,14 +17,8 @@ from . import ranking
 from .permissions import can_see_private
 from .visibility import audience_of, visible_sections
 
-
 def _iso(value):
     return value.isoformat() if value else None
-
-
-# --------------------------------------------------------------------------- #
-# Briques
-# --------------------------------------------------------------------------- #
 
 def skill_reference(skill) -> dict:
     return {
@@ -34,7 +27,6 @@ def skill_reference(skill) -> dict:
         "name":     skill.name,
         "category": skill.category,
     }
-
 
 def user_skill(row) -> dict:
     return {
@@ -49,10 +41,8 @@ def user_skill(row) -> dict:
         "certification_id": row.evidence_certification_id,
     }
 
-
 def _linked_skills(entry) -> list:
     return [skill_reference(link.skill) for link in entry.skill_links.all()]
-
 
 def experience(row) -> dict:
     return {
@@ -71,7 +61,6 @@ def experience(row) -> dict:
         "skills":        _linked_skills(row),
     }
 
-
 def education(row) -> dict:
     return {
         "id":             row.id,
@@ -89,7 +78,6 @@ def education(row) -> dict:
         "skills":         _linked_skills(row),
     }
 
-
 def certification(row) -> dict:
     return {
         "id":               row.id,
@@ -103,7 +91,6 @@ def certification(row) -> dict:
         "order":            row.order,
         "skills":           _linked_skills(row),
     }
-
 
 def project(row) -> dict:
     return {
@@ -119,7 +106,6 @@ def project(row) -> dict:
         "skills":      _linked_skills(row),
     }
 
-
 def language(row) -> dict:
     return {
         "id":         row.id,
@@ -131,7 +117,6 @@ def language(row) -> dict:
         "order":      row.order,
     }
 
-
 def link(row) -> dict:
     return {
         "id":    row.id,
@@ -140,7 +125,6 @@ def link(row) -> dict:
         "url":   row.url,
         "order": row.order,
     }
-
 
 def video(row, *, include_moderation: bool = False) -> dict:
     """`include_moderation` n'est jamais a `True` sur une route publique :
@@ -181,11 +165,6 @@ def video(row, *, include_moderation: bool = False) -> dict:
         })
     return payload
 
-
-# --------------------------------------------------------------------------- #
-# Profil
-# --------------------------------------------------------------------------- #
-
 def identity(profile) -> dict:
     """Entete du profil : toujours visible des lors que la page est accessible."""
     name = profile.full_name
@@ -214,7 +193,6 @@ def identity(profile) -> dict:
         "updated_at": _iso(profile.updated_at),
     }
 
-
 def availability(profile) -> dict:
     return {
         "status":       profile.availability_status,
@@ -227,7 +205,6 @@ def availability(profile) -> dict:
         "mobility_radius_km":  profile.mobility_radius_km,
         "mobility_note":       profile.mobility_note,
     }
-
 
 def public_profile(profile, viewer) -> dict:
     """Profil tel que `viewer` a le droit de le voir.
@@ -278,16 +255,12 @@ def public_profile(profile, viewer) -> dict:
     if allowed[c.SECTION_AVAILABILITY]:
         payload["availability"] = availability(profile)
     if allowed[c.SECTION_VIDEOS]:
-        # section 6 : les statistiques de reactions ne regardent que le
-        # proprietaire et les administrateurs -- exactement ce que dit deja
-        # `is_owner` ici (voir `visibility.audience_of`).
         payload["videos"] = [
             video(row, include_moderation = is_owner) for row in
             visible_videos(viewer, profile).prefetch_related("skill_links__skill")
         ]
 
     return payload
-
 
 def owner_profile(profile) -> dict:
     """Profil complet, du point de vue de son proprietaire."""
@@ -299,7 +272,6 @@ def owner_profile(profile) -> dict:
     }
     return payload
 
-
 def search_settings(profile) -> dict:
     settings = profile.search_settings()
     return {
@@ -308,11 +280,6 @@ def search_settings(profile) -> dict:
         "show_availability_in_results": settings.show_availability_in_results,
         "contactable_by_recruiters":    settings.contactable_by_recruiters,
     }
-
-
-# --------------------------------------------------------------------------- #
-# Resultats de recherche (section 13)
-# --------------------------------------------------------------------------- #
 
 def search_card(profile, query, viewer = None, *, top_skills: int = 6, privileged: bool = None) -> dict:
     """Carte de resultat.
@@ -345,8 +312,6 @@ def search_card(profile, query, viewer = None, *, top_skills: int = 6, privilege
             "languages": getattr(profile, "matched_language_count", 0),
         },
         "score_breakdown": ranking.score_breakdown(profile, query),
-        # miniature du futur feed video (section 13) : la cle existe des
-        # maintenant pour que la carte n'ait pas a changer de forme plus tard.
         "video_thumbnail": None,
         "has_video":       bool(getattr(profile, "has_video", 0)),
     }
@@ -354,7 +319,6 @@ def search_card(profile, query, viewer = None, *, top_skills: int = 6, privilege
     if allowed[c.SECTION_SKILLS]:
         requested = set(query.skill_ids)
         rows = list(profile.skills.all())
-        # les competences demandees d'abord, puis les plus solides
         rows.sort(key = lambda row: (row.skill_id not in requested, -row.level_rank, row.order))
         card["skills"] = [user_skill(row) for row in rows[:top_skills]]
         card["skill_count"] = len(rows)
@@ -370,10 +334,7 @@ def search_card(profile, query, viewer = None, *, top_skills: int = 6, privilege
 
     return card
 
-
 def search_response(result: dict, query, viewer = None) -> dict:
-    # calcule une fois pour toute la page : sans ca, chaque carte relance une
-    # requete de roles pour le meme visiteur (voir `search_card`).
     privileged = can_see_private(viewer)
     return {
         "results": [
@@ -383,11 +344,6 @@ def search_response(result: dict, query, viewer = None) -> dict:
         "pagination": result["pagination"],
         "query":      result["query"],
     }
-
-
-# --------------------------------------------------------------------------- #
-# Vocabulaire, pour l'interface
-# --------------------------------------------------------------------------- #
 
 def meta() -> dict:
     """Toutes les listes de choix, pour que le frontend n'en code aucune en dur."""

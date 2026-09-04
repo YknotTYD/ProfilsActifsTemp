@@ -1,4 +1,3 @@
-##tests/test_profile.py
 """Profil : creation, modification, consultation, visibilite (sections 2, 10, 11)."""
 
 from django.contrib.auth.models import AnonymousUser
@@ -12,7 +11,6 @@ from profils.profiles.visibility import (
 )
 
 from .factories import add_skill, make_admin, make_profile, make_user
-
 
 class CreationTests(TestCase):
 
@@ -36,7 +34,6 @@ class CreationTests(TestCase):
         user = make_user("stable")
         self.assertEqual(services.get_profile(user).pk, services.get_profile(user).pk)
         self.assertEqual(ProfessionalProfile.objects.filter(user = user).count(), 1)
-
 
 class UpdateTests(TestCase):
 
@@ -117,7 +114,6 @@ class UpdateTests(TestCase):
         services.set_links(self.profile, [{"kind": c.LINK_WEBSITE, "url": "https://y.dev"}])
         self.assertEqual(self.profile.links.count(), 1)
 
-
 class VisibilityTests(TestCase):
 
     def setUp(self):
@@ -189,7 +185,6 @@ class VisibilityTests(TestCase):
         from profils.profiles.visibility import rank
 
         self.assertEqual(rank("N_IMPORTE_QUOI"), c.VISIBILITY_RANKS[c.VISIBILITY_PRIVATE])
-
 
 class SerializationTests(TestCase):
 

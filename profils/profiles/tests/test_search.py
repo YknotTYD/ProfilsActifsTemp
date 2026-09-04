@@ -1,4 +1,3 @@
-##tests/test_search.py
 """Moteur de recherche : filtres, AND/OR, pagination, classement (sections 12 a 14)."""
 
 from datetime import date
@@ -17,10 +16,8 @@ from .factories import (
     make_user,
 )
 
-
 def usernames(result) -> list[str]:
     return [profile.username for profile in result["profiles"]]
-
 
 class SkillMatchingTests(TestCase):
 
@@ -88,7 +85,6 @@ class SkillMatchingTests(TestCase):
 
         result = search(ProfileQuery.from_params({"skill": "java", "min_years": 1}))
         self.assertNotIn("annees-inconnues", usernames(result))
-
 
 class FilterTests(TestCase):
 
@@ -170,7 +166,6 @@ class FilterTests(TestCase):
             with self.assertRaises(BadRequest, msg = params):
                 ProfileQuery.from_params(params)
 
-
 class SearchableTests(TestCase):
     """Section 28.5 : un profil non recherchable n'apparait dans aucun resultat."""
 
@@ -200,7 +195,6 @@ class SearchableTests(TestCase):
 
         self.assertTrue(can_view_profile(make_user("passant"), self.hidden))
 
-
 class SearchVisibilityTests(TestCase):
 
     def setUp(self):
@@ -223,7 +217,6 @@ class SearchVisibilityTests(TestCase):
         for viewer in (AnonymousUser(), make_user("x"), make_admin()):
             result = search(ProfileQuery.from_params({"skill": "java"}), viewer)
             self.assertNotIn("privee", usernames(result))
-
 
 class SearchExcludesNonCandidatesTests(TestCase):
     """La recherche de candidats n'a de sens que pour des demandeurs d'emploi."""
@@ -252,7 +245,6 @@ class SearchExcludesNonCandidatesTests(TestCase):
         result = search(ProfileQuery.from_params({"skill": "java"}))
         self.assertNotIn(recruiter.username, usernames(result))
         self.assertIn("candidat", usernames(result))
-
 
 class RankingTests(TestCase):
     """Section 14 : mieux couvrir, mieux maitriser et plus d'experience remonte."""
@@ -345,7 +337,6 @@ class RankingTests(TestCase):
         found = search(ProfileQuery.from_params({"skill": "java"}))["profiles"][0]
         self.assertEqual(found.capped_skill_years, c.RANKING_CAPS["skill_years"])
 
-
 class SortAndPaginationTests(TestCase):
 
     def setUp(self):
@@ -391,7 +382,6 @@ class SortAndPaginationTests(TestCase):
     def test_sort_by_name(self):
         result = search(ProfileQuery.from_params({"skill": "java", "sort": c.SORT_NAME}))
         self.assertEqual(usernames(result), sorted(usernames(result)))
-
 
 class QueryEfficiencyTests(TestCase):
     """Le moteur ne doit pas ramener tous les profils pour filtrer ensuite."""

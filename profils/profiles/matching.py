@@ -1,4 +1,3 @@
-##matching.py
 """Preparation du rapprochement candidat / offre (section 26).
 
 **Le matching n'est pas implemente ici**, et c'est voulu : il n'y a pas encore
@@ -19,7 +18,6 @@ score de correspondance n'est pas un moteur de plus a ecrire, c'est
 """
 
 from . import constants as c
-
 
 def profile_features(profile) -> dict:
     """Caracteristiques comparables d'un profil.
@@ -68,7 +66,6 @@ def profile_features(profile) -> dict:
         "available_from": profile.available_from.isoformat() if profile.available_from else None,
         "is_available":   profile.is_available,
     }
-
 
 def query_from_offer(offer: dict):
     """Traduit les exigences d'une offre en requete de recherche de profils.

@@ -1,4 +1,3 @@
-##tests/test_videos.py
 """Videos : structure, association aux competences, preparation du feed.
 
 Sections 15 a 19. Le feed vertical n'est pas implemente ; ce qui est teste
@@ -27,7 +26,6 @@ from profils.profiles.visibility import can_view_video, visible_videos
 
 from .factories import add_skill, add_video, make_admin, make_profile, make_user
 
-
 class EmptySectionTests(TestCase):
     """Section 15 : la section existe et repond, vide, des maintenant."""
 
@@ -54,7 +52,6 @@ class EmptySectionTests(TestCase):
         response = self.client.get(f"/profile/{self.profile.username}/")
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Video de presentation")
-
 
 class VideoModelTests(TestCase):
 
@@ -114,7 +111,6 @@ class VideoModelTests(TestCase):
         with self.assertRaises(BadRequest):
             services.create_video(self.profile, {"title": "X", "status": "EN_VRAC"})
 
-
 class VideoSkillTests(TestCase):
     """Section 17 : plusieurs competences par video."""
 
@@ -148,7 +144,6 @@ class VideoSkillTests(TestCase):
 
         slugs = sorted(link.skill.slug for link in video.skill_links.all())
         self.assertEqual(slugs, ["go", "grpc"])
-
 
 class VideoStatsPrivacyTests(TestCase):
     """Section 6 : "le public ne doit jamais pouvoir connaitre... les
@@ -197,7 +192,6 @@ class VideoStatsPrivacyTests(TestCase):
         payload = serializers.public_profile(profile, visitor)
         self.assertNotIn("stats", payload["videos"][0])
 
-
 class VideoVisibilityTests(TestCase):
 
     def setUp(self):
@@ -237,9 +231,7 @@ class VideoVisibilityTests(TestCase):
         self.profile.refresh_from_db()
 
         self.assertEqual(list(visible_videos(self.visitor, self.profile)), [])
-        # le proprietaire, lui, garde acces a sa propre section
         self.assertEqual(visible_videos(self.owner, self.profile).count(), 1)
-
 
 class FeedPreparationTests(TestCase):
     """Sections 18 et 19 : le chainon recherche -> profils -> videos existe."""
@@ -306,7 +298,6 @@ class FeedPreparationTests(TestCase):
         for url in ("/feed/", "/api/feed/", "/api/videos/feed/"):
             self.assertEqual(client.get(url).status_code, 404, url)
 
-
 class MatchingPreparationTests(TestCase):
     """Section 26 : les donnees d'un rapprochement offre / candidat sont pretes."""
 
@@ -349,7 +340,6 @@ class MatchingPreparationTests(TestCase):
             "skills": ["Java", "Docker"], "min_level": c.LEVEL_EXPERT,
         })
         self.assertEqual(list(search(query)["profiles"]), [])
-
 
 class ModerationPipelineTests(TestCase):
     """Sections 1, 2 et "Historique de moderation".
@@ -428,9 +418,6 @@ class ModerationPipelineTests(TestCase):
         video.refresh_from_db()
         self.assertEqual(video.status, c.VIDEO_REJECTED)
         self.assertEqual(video.rejection_reason, "contenu hors sujet")
-        # ce que le visiteur voit est verifie a la serialisation (section 6
-        # pour les reactions, meme principe pour le motif de refus) : ici, on
-        # verifie seulement que le champ existe pour le proprietaire.
 
     def test_a_rejected_video_can_be_resubmitted(self):
         video = services.submit_video_link(self.profile, {
@@ -488,7 +475,6 @@ class ModerationPipelineTests(TestCase):
         video.refresh_from_db()
         self.assertEqual(video.status, c.VIDEO_PENDING)
         self.assertFalse(video.is_published)
-
 
 class PresentationReplacementTests(TestCase):
     """Section 2 : remplacement d'une video de presentation deja publiee."""
@@ -558,7 +544,6 @@ class PresentationReplacementTests(TestCase):
         with self.assertRaises(Exception):
             second.save()
 
-
 class FeedPlaybackTests(TestCase):
     """`profiles.feed.playback` : lien d'integration vs fichier."""
 
@@ -581,7 +566,6 @@ class FeedPlaybackTests(TestCase):
             playback(c.VIDEO_SOURCE_LINK, "https://cdn.example.test/clip.mp4?t=1"),
             ("file", "https://cdn.example.test/clip.mp4?t=1"),
         )
-
 
 class FeedEngagementTests(TestCase):
     """Vues et reactions du feed video (`profiles.engagement` + API)."""
@@ -641,7 +625,6 @@ class FeedEngagementTests(TestCase):
         self.video.status = c.VIDEO_DRAFT
         self.video.save()
         self.assertEqual(self._react("like").status_code, 404)
-
 
 class RejectionHistoryTests(TestCase):
     """Console de moderation : historique des refus, 7 jours puis archives."""

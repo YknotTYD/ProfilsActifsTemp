@@ -1,4 +1,3 @@
-##versioning.py
 """Cycle de vie des versions.
 
 Regles appliquees ici, et nulle part ailleurs :
@@ -20,15 +19,9 @@ from . import constants as c
 from .auditing import log
 from .models   import Question, QuestionOption, QuestionnaireVersion
 
-
-# --------------------------------------------------------------------------- #
-# Creation / copie
-# --------------------------------------------------------------------------- #
-
 def next_version_number(questionnaire) -> int:
     latest = questionnaire.versions.order_by("-version_number").first()
     return (latest.version_number + 1) if latest else 1
-
 
 @transaction.atomic
 def create_version(questionnaire, *, source = None, actor = None, title = None,
@@ -62,7 +55,6 @@ def create_version(questionnaire, *, source = None, actor = None, title = None,
     )
     return version
 
-
 def copy_questions(source: QuestionnaireVersion, target: QuestionnaireVersion):
     """Duplique les questions et options en conservant les cles stables."""
     for question in source.questions.prefetch_related("options").all():
@@ -94,7 +86,6 @@ def copy_questions(source: QuestionnaireVersion, target: QuestionnaireVersion):
             for option in question.options.all()
         ])
 
-
 @transaction.atomic
 def editable_version(questionnaire, *, actor = None):
     """Retourne une version modifiable, en en creant une au besoin.
@@ -107,11 +98,6 @@ def editable_version(questionnaire, *, actor = None):
     if draft and draft.is_editable:
         return draft
     return create_version(questionnaire, source = draft or None, actor = actor)
-
-
-# --------------------------------------------------------------------------- #
-# Transitions
-# --------------------------------------------------------------------------- #
 
 @transaction.atomic
 def publish_version(version, *, actor = None, carry_over = None):
@@ -150,7 +136,6 @@ def publish_version(version, *, actor = None, carry_over = None):
         new = {"version_number": version.version_number},
     )
 
-    # les participants deja passes ne repartent pas de zero
     wanted = questionnaire.carry_over_answers if carry_over is None else carry_over
     if wanted and previous is not None and previous.pk != version.pk:
         from .carryover import carry_over as run_carry_over
@@ -160,7 +145,6 @@ def publish_version(version, *, actor = None, carry_over = None):
         version.carry_over_report = None
 
     return version
-
 
 @transaction.atomic
 def set_version_test(version, *, actor = None):
@@ -181,7 +165,6 @@ def set_version_test(version, *, actor = None):
     log(actor, c.AUDIT_TEST_MODE, version, questionnaire = questionnaire,
         new = {"status": c.STATUS_TEST})
     return version
-
 
 @transaction.atomic
 def invalidate_version(version, *, actor = None, reason: str = ""):
@@ -213,7 +196,6 @@ def invalidate_version(version, *, actor = None, reason: str = ""):
         invalidated_attempts = invalidated)
     return version
 
-
 @transaction.atomic
 def restore_version(questionnaire, source: QuestionnaireVersion, *, actor = None):
     """Restaure une ancienne version en en derivant une nouvelle."""
@@ -223,27 +205,19 @@ def restore_version(questionnaire, source: QuestionnaireVersion, *, actor = None
         new = {"version_number": version.version_number})
     return version
 
-
-# --------------------------------------------------------------------------- #
-# Comparaison
-# --------------------------------------------------------------------------- #
-
 _QUESTION_FIELDS = (
     "order", "text", "description", "explanation", "type", "required",
     "config", "expected_config", "scoring_config", "condition",
 )
 _OPTION_FIELDS = ("order", "text", "description", "value", "is_correct")
 
-
 def _question_payload(question) -> dict:
     return {field: getattr(question, field) for field in _QUESTION_FIELDS}
-
 
 def _option_payload(option) -> dict:
     payload = {field: getattr(option, field) for field in _OPTION_FIELDS}
     payload["score"] = str(option.score) if option.score is not None else None
     return payload
-
 
 def _diff_options(old_question, new_question) -> dict:
     old_options = {o.stable_key: o for o in old_question.options.all()} if old_question else {}
@@ -260,7 +234,6 @@ def _diff_options(old_question, new_question) -> dict:
             changed.append({"stable_key": key, "text": new_options[key].text, "fields": fields})
 
     return {"added": added, "removed": removed, "changed": changed}
-
 
 def compare_versions(left: QuestionnaireVersion, right: QuestionnaireVersion) -> dict:
     """Compare deux versions question par question et option par option."""

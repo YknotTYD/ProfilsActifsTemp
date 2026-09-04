@@ -1,4 +1,3 @@
-##tests/test_carryover.py
 """Report des reponses lors de la publication d'une nouvelle version."""
 
 from decimal import Decimal
@@ -17,7 +16,6 @@ from profils.questionnaires.services   import (
 from profils.questionnaires.versioning import editable_version, publish_version
 
 from .factories import add_single_choice, draft_of, make_admin, make_questionnaire, make_user
-
 
 class CarryOverTestCase(TestCase):
 
@@ -50,7 +48,6 @@ class CarryOverTestCase(TestCase):
 
     def attempt_on(self, user, version):
         return QuestionnaireAttempt.objects.filter(user = user, version = version).first()
-
 
 class CompletedAttemptTests(CarryOverTestCase):
 
@@ -201,7 +198,6 @@ class CompletedAttemptTests(CarryOverTestCase):
             latest = QuestionnaireResult.objects.filter(user = user).order_by("-computed_at").first()
             self.assertEqual(str(latest.percentage), percent, user.username)
 
-
 class InProgressAttemptTests(CarryOverTestCase):
 
     def test_an_open_attempt_moves_to_the_new_version_in_place(self):
@@ -240,8 +236,8 @@ class InProgressAttemptTests(CarryOverTestCase):
             self.assertEqual(answer.question.version_id, version.id)
 
     def test_no_second_open_attempt_is_ever_created(self):
-        self.play(self.alice)                                    # terminee
-        start_attempt(self.q, self.bob)                          # en cours
+        self.play(self.alice)
+        start_attempt(self.q, self.bob)
 
         version = self.new_version()
         publish_version(version, actor = self.admin)
@@ -250,7 +246,6 @@ class InProgressAttemptTests(CarryOverTestCase):
             self.assertLessEqual(
                 QuestionnaireAttempt.objects.filter(
                     user = user, status = c.ATTEMPT_IN_PROGRESS).count(), 1, user.username)
-
 
 class ArchivedVersionTests(CarryOverTestCase):
     """Une version archivee par une publication ne doit pas pieger les participants."""
@@ -278,7 +273,6 @@ class ArchivedVersionTests(CarryOverTestCase):
         with self.assertRaises(AttemptError) as ctx:
             save_answer(attempt, self.number.id, 4)
         self.assertEqual(ctx.exception.code, "version_closed")
-
 
 class CarryOverSettingsTests(CarryOverTestCase):
 
@@ -342,7 +336,6 @@ class CarryOverSettingsTests(CarryOverTestCase):
         self.assertEqual(
             QuestionnaireAttempt.objects.filter(user = self.alice, version = version).count(), first)
 
-
 class PreviewTests(CarryOverTestCase):
 
     def test_the_preview_writes_nothing(self):
@@ -374,7 +367,6 @@ class PreviewTests(CarryOverTestCase):
     def test_the_preview_is_empty_without_participants(self):
         version = self.new_version()
         self.assertEqual(preview(self.q, version)["participants"], 0)
-
 
 class CarryOverApiTests(CarryOverTestCase):
 
