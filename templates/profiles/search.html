@@ -1,16 +1,6 @@
 {% extends "profiles/base.html" %}
 {% block title %}Rechercher des profils{% endblock %}
 
-{% comment %}
-Page de recherche.
-
-Les controles de filtre sont rendus cote serveur a partir du vocabulaire
-(`meta`) : aucune liste de choix n'est ecrite en dur dans le JavaScript, si
-bien qu'ajouter un type de contrat dans `constants.py` le fait apparaitre ici
-sans toucher au frontend. Le JavaScript ne fait que lire ces controles,
-interroger l'API et afficher les resultats : il ne filtre rien lui-meme.
-{% endcomment %}
-
 {% block content %}
 <div class="p-pagehead">
     <h1>Rechercher des profils</h1>

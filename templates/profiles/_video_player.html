@@ -1,9 +1,3 @@
-{% comment %}
-Lecteur video partage (page de profil, page de gestion, plus tard le feed).
-Contexte attendu : `player` = {"mode": "iframe"|"file", "url": "..."} ; `title`
-facultatif. La decision iframe/fichier est prise cote serveur
-(`ProfileVideo.playback`), jamais devinee ici.
-{% endcomment %}
 <div class="p-video-player">
   {% if player.mode == "iframe" and player.url %}
   <iframe

@@ -1,14 +1,6 @@
 {% extends "profiles/base.html" %}
 {% block title %}Ma video de presentation{% endblock %}
 
-{% comment %}
-Une seule page, un seul objet : la video de presentation. Jamais de liste,
-puisqu'un profil n'a jamais plus d'une video de presentation active a la fois
-(section 2). Pendant un remplacement, l'ancienne reste affichee comme "en
-ligne" jusqu'a la confirmation explicite -- c'est le point le plus facile a
-rater de la specification.
-{% endcomment %}
-
 {% block content %}
 <div class="p-pagehead">
     <h1>Ma video de presentation</h1>

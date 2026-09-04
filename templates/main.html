@@ -18,66 +18,73 @@
     {% include "partials/_navbar.html" %}
 
     {% if user.is_authenticated %}
-    <div class="dashboard-page">
-      <div class="dash-hero">
-        <div class="dash-avatar">{{ user.username|slice:":1"|upper }}</div>
-        <div>
-          <h1 class="dash-hero-name">Bienvenue {{ user.username }}</h1>
-          <span class="dash-role">{{ role }}</span>
-        </div>
-      </div>
-
-      <div class="dash-grid">
-        {% if role == "JobSeeker" %}
-        <div class="mt-2">
-          {% with current=my_video_status.current pending=my_video_status.pending %}
-          {% if not current and not pending %}
-          <p class="text-[#4a4a4a]">Vous n'avez pas encore de video de presentation.</p>
-          {% else %}
-            {% if current %}
-            <p class="text-[#4a4a4a]"><strong>{{ current.title }}</strong> — en ligne</p>
-            {% endif %}
-            {% if pending %}
-            <p class="text-[#4a4a4a]">
-              <strong>{{ pending.title }}</strong> —
-              {% if pending.status == "PENDING" %}en attente de moderation
-              {% elif pending.status == "APPROVED" %}validee, en attente de votre confirmation
-              {% elif pending.status == "REJECTED" %}refusee{% if pending.rejection_reason %} : {{ pending.rejection_reason }}{% endif %}
-              {% else %}{{ pending.status }}{% endif %}
-            </p>
-            {% endif %}
-          {% endif %}
-          {% endwith %}
-          <a href="/profiles/me/video/" class="btn-primary inline-block mt-2">GERER MA VIDEO DE PRESENTATION</a>
-        </div>
-
-        {% elif role == "Recruiter" or role == "Admin" %}
-        <div class="dash-panel">
-          <h2 class="dash-panel-title">Vidéos des candidats</h2>
-          <p class="dash-panel-desc">
-            Découvrez les profils actifs et réagissez à leurs vidéos de
-            présentation.
-          </p>
-          {% if role == "Admin" %}
-          <p class="mt-2">
-            <a href="/profiles/admin/videos/" class="btn-ghost">Modération des vidéos de profil →</a>
-          </p>
-          {% endif %}
-          {% if feed_items %}
-            {% include "feed.html" %}
-          {% else %}
-          <div class="dash-empty">
-            <span class="dash-empty-icon">🎬</span>
-            <p>
-              Aucune vidéo pour le moment. Revenez plus tard pour découvrir
-              les candidats.
-            </p>
+        <div class="dashboard-page{% if feed_items %} dashboard-page--wide{% endif %}">
+      <div class="dash-split">
+        <div class="dash-col">
+          <div class="dash-hero">
+            <div class="dash-avatar">{{ user.username|slice:":1"|upper }}</div>
+            <div>
+              <h1 class="dash-hero-name">Bienvenue {{ user.username }}</h1>
+              <span class="dash-role">{{ role }}</span>
+            </div>
           </div>
-          {% endif %}
+
+          <div class="dash-grid">
+            {% if role == "JobSeeker" %}
+            <div class="mt-2">
+              {% with current=my_video_status.current pending=my_video_status.pending %}
+              {% if not current and not pending %}
+              <p class="text-[#4a4a4a]">Vous n'avez pas encore de video de presentation.</p>
+              {% else %}
+                {% if current %}
+                <p class="text-[#4a4a4a]"><strong>{{ current.title }}</strong> — en ligne</p>
+                {% endif %}
+                {% if pending %}
+                <p class="text-[#4a4a4a]">
+                  <strong>{{ pending.title }}</strong> —
+                  {% if pending.status == "PENDING" %}en attente de moderation
+                  {% elif pending.status == "APPROVED" %}validee, en attente de votre confirmation
+                  {% elif pending.status == "REJECTED" %}refusee{% if pending.rejection_reason %} : {{ pending.rejection_reason }}{% endif %}
+                  {% else %}{{ pending.status }}{% endif %}
+                </p>
+                {% endif %}
+              {% endif %}
+              {% endwith %}
+              <a href="/profiles/me/video/" class="btn-primary inline-block mt-2">GERER MA VIDEO DE PRESENTATION</a>
+            </div>
+
+            {% elif role == "Recruiter" or role == "Admin" %}
+            <div class="dash-panel">
+              <h2 class="dash-panel-title">Vidéos des candidats</h2>
+              <p class="dash-panel-desc">
+                Découvrez les profils actifs et réagissez à leurs vidéos de
+                présentation.
+              </p>
+              {% if role == "Admin" %}
+              <p class="mt-2">
+                <a href="/profiles/admin/videos/" class="btn-ghost">Modération des vidéos de profil →</a>
+              </p>
+              {% endif %}
+              {% if not feed_items %}
+              <div class="dash-empty">
+                <span class="dash-empty-icon">🎬</span>
+                <p>
+                  Aucune vidéo pour le moment. Revenez plus tard pour découvrir
+                  les candidats.
+                </p>
+              </div>
+              {% endif %}
+            </div>
+            {% endif %}
+          </div>
         </div>
+
+        {% if feed_items %}
+        <aside class="dash-feed-col">
+          {% include "feed.html" %}
+        </aside>
         {% endif %}
       </div>
-
     </div>
     {% else %}
     <div class="home-hero">
@@ -97,8 +104,7 @@
       Ils recrutent déjà avec ProfilsActifs
     </p>
     <div class="testimonial-viewport">
-      <!-- prettier-ignore -->
-      <div class="testimonial-track">
+            <div class="testimonial-track">
         {% include "partials/_testimonials.html" %}{% include "partials/_testimonials.html" %}
       </div>
     </div>

@@ -1,63 +1,313 @@
-{% comment %}
-Feed vertical du tableau de bord recruteur / admin. Une seule source :
-`profiles.ProfileVideo` publiees (voir `profiles.feed.dashboard_feed_items`).
-{% endcomment %}
-<div class="feed mt-5" id="feed">
-  {% for item in feed_items %}
-  <div class="feed-item" data-video-id="{{ item.id }}" data-mode="{{ item.mode }}">
-    {% if item.mode == "iframe" %}
-    <iframe
-      src="{{ item.url }}?autoplay=1&mute=1&playsinline=1&controls=0"
-      referrerpolicy="strict-origin-when-cross-origin"
-      allow="autoplay; encrypted-media"
-      allowfullscreen
-    ></iframe>
-    {% else %}
-    <video src="{{ item.url }}" autoplay muted playsinline loop></video>
-    {% endif %}
+{% load feed_extras %}
 
-    <div class="feed-caption">
-      <a href="/profile/{{ item.username }}/" class="feed-author">
-        {% if item.photo_url %}
-        <img class="feed-avatar" src="{{ item.photo_url }}" alt="" />
-        {% else %}
-        <span class="feed-avatar feed-avatar--fallback">{{ item.initials }}</span>
-        {% endif %}
-        <strong>{{ item.display_name }}</strong>
-      </a>
-      {% if item.title %}<span class="feed-title">{{ item.title }}</span>{% endif %}
-    </div>
+<section class="vfeed" aria-label="Vidéos des candidats">
+  {% if feed_items %}
+  <div class="vfeed-scroller" id="vfeed-scroller" tabindex="-1">
+    {% for v in feed_items %}
+    <article class="vfeed-item" data-vfeed-item data-video-id="{{ v.id }}">
+      <div class="vfeed-stage">
 
-    <div class="feed-actions">
-      <button
-        type="button"
-        class="feed-btn react-btn {% if item.liked %}is-on{% endif %}"
-        data-video-id="{{ item.id }}"
-        data-reaction="like"
-        aria-label="J'aime" title="J'aime"
-      >
-        <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path fill="currentColor" d="M2 21h3V9H2v12ZM22 10.2c0-.9-.7-1.6-1.6-1.6h-5.1l.8-3.9v-.3c0-.4-.2-.8-.4-1.1L14.8 2 8.6 8.3c-.3.3-.5.7-.5 1.2V19c0 .9.7 1.6 1.6 1.6h7.2c.6 0 1.2-.4 1.5-1l2.7-6.4c.1-.2.1-.4.1-.6v-2.4Z"/></svg>
-        {% if role == "Admin" %}<span class="feed-btn-count" data-count="like">{{ item.likes|default:0 }}</span>{% endif %}
-      </button>
-      <button
-        type="button"
-        class="feed-btn react-btn {% if item.disliked %}is-on{% endif %}"
-        data-video-id="{{ item.id }}"
-        data-reaction="dislike"
-        aria-label="Je n'aime pas" title="Je n'aime pas"
-      >
-        <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path fill="currentColor" d="M22 3h-3v12h3V3ZM2 13.8c0 .9.7 1.6 1.6 1.6h5.1l-.8 3.9v.3c0 .4.2.8.4 1.1L9.2 22l6.2-6.3c.3-.3.5-.7.5-1.2V5c0-.9-.7-1.6-1.6-1.6H7.1c-.6 0-1.2.4-1.5 1L2.9 10.8c-.1.2-.1.4-.1.6v2.4Z"/></svg>
-      </button>
-      {% if role == "Recruiter" %}
-      <form method="post" action="/messages/start/" class="feed-message-form">
-        {% csrf_token %}
-        <input type="hidden" name="recipient" value="{{ item.username }}" />
-        <button type="submit" class="feed-btn" aria-label="Contacter {{ item.display_name }}" title="Contacter {{ item.display_name }}">
-          <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path fill="currentColor" d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2Zm8 7 8-5H4l8 5Zm0 2L4 8v10h16V8l-8 5Z"/></svg>
-        </button>
-      </form>
-      {% endif %}
-    </div>
+        <div class="vfeed-player">
+          <video
+            class="vfeed-video"
+            src="{{ v.video_url }}"
+            {% if v.poster_url %}poster="{{ v.poster_url }}"{% endif %}
+            loop
+            muted
+            playsinline
+            preload="metadata"
+            aria-label="Vidéo de présentation de {{ v.candidate.name }}"
+          ></video>
+
+          <span class="vfeed-paused" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="34" height="34">
+              <path d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 0 1 0 1.971l-11.54 6.347a1.125 1.125 0 0 1-1.667-.985V5.653Z" />
+            </svg>
+          </span>
+
+          <button type="button" class="vfeed-sound" data-vfeed-sound aria-pressed="true" aria-label="Activer le son">
+            <svg class="vfeed-sound-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="20" height="20" aria-hidden="true">
+              <path d="M17.25 9.75 19.5 12m0 0 2.25 2.25M19.5 12l2.25-2.25M19.5 12l-2.25 2.25m-10.5-6 4.72-4.72a.75.75 0 0 1 1.28.53v15.88a.75.75 0 0 1-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.01 9.01 0 0 1 2.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75Z" />
+            </svg>
+            <svg class="vfeed-sound-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="20" height="20" aria-hidden="true">
+              <path d="M19.114 5.636a9 9 0 0 1 0 12.728M16.463 8.288a5.25 5.25 0 0 1 0 7.424M6.75 8.25l4.72-4.72a.75.75 0 0 1 1.28.53v15.88a.75.75 0 0 1-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.01 9.01 0 0 1 2.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75Z" />
+            </svg>
+          </button>
+
+          <div class="vfeed-overlay">
+            <p class="vfeed-name">{{ v.candidate.name }}</p>
+            {% if v.candidate.title %}<p class="vfeed-title">{{ v.candidate.title }}</p>{% endif %}
+            {% if v.candidate.description %}
+            <p class="vfeed-desc" data-vfeed-desc>{{ v.candidate.description }}</p>
+            <button type="button" class="vfeed-more" data-vfeed-more hidden>voir plus</button>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="vfeed-rail">
+          <a href="{{ v.candidate.profile_url }}" class="vfeed-avatar" aria-label="Voir le profil de {{ v.candidate.name }}">
+            {% if v.candidate.avatar_url %}
+            <img src="{{ v.candidate.avatar_url }}" alt="" width="48" height="48" />
+            {% else %}
+            <span aria-hidden="true">{{ v.candidate.initial }}</span>
+            {% endif %}
+          </a>
+
+          <button
+            type="button"
+            class="vfeed-action vfeed-action--like"
+            data-vfeed-like
+            data-count="{{ v.likes_count }}"
+            aria-pressed="{{ v.liked|yesno:'true,false' }}"
+            aria-label="J'aime"
+          >
+            <span class="vfeed-action-icon">
+              <svg class="vfeed-icon-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="24" height="24" aria-hidden="true">
+                <path d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
+              </svg>
+              <svg class="vfeed-icon-on" viewBox="0 0 24 24" fill="currentColor" width="24" height="24" aria-hidden="true">
+                <path d="M11.645 20.91l-.007-.003-.022-.012a15.247 15.247 0 0 1-.383-.218 25.18 25.18 0 0 1-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0 1 12 5.052 5.5 5.5 0 0 1 16.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 0 1-4.244 3.17 15.247 15.247 0 0 1-.383.219l-.022.012-.007.004-.003.001a.752.752 0 0 1-.704 0l-.003-.001Z" />
+              </svg>
+            </span>
+            <span class="vfeed-action-count" data-vfeed-count>{{ v.likes_count|compact_count }}</span>
+          </button>
+
+          <button
+            type="button"
+            class="vfeed-action vfeed-action--save"
+            data-vfeed-save
+            data-count="{{ v.saves_count }}"
+            aria-pressed="false"
+            aria-label="Enregistrer"
+          >
+            <span class="vfeed-action-icon">
+              <svg class="vfeed-icon-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="24" height="24" aria-hidden="true">
+                <path d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z" />
+              </svg>
+              <svg class="vfeed-icon-on" viewBox="0 0 24 24" fill="currentColor" width="24" height="24" aria-hidden="true">
+                <path d="M6.32 2.577a49.255 49.255 0 0 1 11.36 0c1.497.174 2.57 1.46 2.57 2.93V21a.75.75 0 0 1-1.085.67L12 18.089l-7.165 3.583A.75.75 0 0 1 3.75 21V5.507c0-1.47 1.073-2.756 2.57-2.93Z" />
+              </svg>
+            </span>
+            <span class="vfeed-action-count" data-vfeed-count>{{ v.saves_count|compact_count }}</span>
+          </button>
+
+          <button
+            type="button"
+            class="vfeed-action vfeed-action--share"
+            data-vfeed-share
+            data-count="{{ v.shares_count }}"
+            data-share-url="{{ v.candidate.profile_url }}"
+            data-share-title="{{ v.candidate.name }}"
+            aria-label="Partager"
+          >
+            <span class="vfeed-action-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="24" height="24" aria-hidden="true">
+                <path d="M15 15l6-6m0 0l-6-6m6 6H9a6 6 0 0 0 0 12h3" />
+              </svg>
+            </span>
+            <span class="vfeed-action-count" data-vfeed-count>{{ v.shares_count|compact_count }}</span>
+            <span class="vfeed-share-toast" data-vfeed-share-toast hidden>Lien copié</span>
+          </button>
+        </div>
+
+      </div>
+    </article>
+    {% endfor %}
   </div>
-  {% endfor %}
-</div>
+  {% else %}
+  <div class="vfeed-empty">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" width="40" height="40" aria-hidden="true">
+      <path d="M15.75 10.5l4.72-4.72a.75.75 0 0 1 1.28.53v11.38a.75.75 0 0 1-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25h-9A2.25 2.25 0 0 0 2.25 7.5v9a2.25 2.25 0 0 0 2.25 2.25Z" />
+    </svg>
+    <p class="vfeed-empty-title">Aucune vidéo pour le moment</p>
+    <p class="vfeed-empty-text">Revenez plus tard pour découvrir les candidats.</p>
+  </div>
+  {% endif %}
+</section>
+
+{% if feed_items %}
+<script>
+(() => {
+  const scroller = document.getElementById('vfeed-scroller');
+  if (!scroller) return;
+
+  const items = Array.from(scroller.querySelectorAll('[data-vfeed-item]'));
+  const videos = items.map((item) => item.querySelector('.vfeed-video'));
+  const csrftoken = document.querySelector('meta[name="csrf-token"]')?.content;
+
+  // Le son est une preference globale, comme sur TikTok : couper une video les
+  // coupe toutes. Les navigateurs refusent de demarrer une lecture sonore sans
+  // geste de l'utilisateur -- on part donc en muet, et le bouton l'active.
+  let muted = true;
+
+  /* Compteurs -- meme regle que le filtre `compact_count` cote serveur
+     (voir profils/mainapp/templatetags/feed_extras.py). */
+  function compactCount(count) {
+    for (const [limit, suffix] of [[1e6, 'M'], [1e3, 'k']]) {
+      if (count >= limit * 0.9995) {
+        const scaled = (count / limit).toFixed(1).replace(/\.0$/, '');
+        return scaled.replace('.', ',') + suffix;
+      }
+    }
+    return String(count);
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Lecture : une seule video joue, celle qui occupe l'ecran.          */
+  /* ------------------------------------------------------------------ */
+
+  let activeIndex = 0;
+
+  function activate(index) {
+    activeIndex = index;
+    videos.forEach((video, i) => {
+      video.muted = muted;
+      if (i === index) {
+        // `play()` renvoie une promesse rejetee si l'onglet interdit encore la
+        // lecture : sans le `catch`, la console se remplit d'erreurs non
+        // capturees a chaque changement de video.
+        video.play().catch(() => {});
+      } else {
+        video.pause();
+        video.currentTime = 0;
+      }
+      video.closest('[data-vfeed-item]').classList.toggle('is-active', i === index);
+    });
+  }
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) activate(items.indexOf(entry.target));
+    });
+  }, { root: scroller, threshold: 0.6 });
+
+  items.forEach((item) => observer.observe(item));
+
+  /* Clic sur la video : lecture / pause. */
+  videos.forEach((video) => {
+    const item = video.closest('[data-vfeed-item]');
+    const sync = () => item.classList.toggle('is-paused', video.paused);
+
+    video.addEventListener('play', sync);
+    video.addEventListener('pause', sync);
+    video.addEventListener('click', () => {
+      if (video.paused) video.play().catch(() => {}); else video.pause();
+    });
+  });
+
+  /* Son : un seul etat pour tout le feed. */
+  scroller.querySelectorAll('[data-vfeed-sound]').forEach((button) => {
+    button.addEventListener('click', () => {
+      muted = !muted;
+      videos.forEach((video) => { video.muted = muted; });
+      scroller.querySelectorAll('[data-vfeed-sound]').forEach((other) => {
+        other.setAttribute('aria-pressed', String(muted));
+        other.setAttribute('aria-label', muted ? 'Activer le son' : 'Couper le son');
+      });
+    });
+  });
+
+  /* ------------------------------------------------------------------ */
+  /* Actions                                                            */
+  /* ------------------------------------------------------------------ */
+
+  function toggleCounter(button) {
+    const pressed = button.getAttribute('aria-pressed') === 'true';
+    const count = Number(button.dataset.count || 0) + (pressed ? -1 : 1);
+
+    button.dataset.count = String(Math.max(count, 0));
+    button.setAttribute('aria-pressed', String(!pressed));
+    button.querySelector('[data-vfeed-count]').textContent = compactCount(Math.max(count, 0));
+
+    return !pressed;
+  }
+
+  scroller.querySelectorAll('[data-vfeed-like]').forEach((button) => {
+    button.addEventListener('click', () => {
+      toggleCounter(button);
+
+      // L'affichage ne depend pas de la reponse : le retour visuel est
+      // immediat, l'enregistrement suit. `/api/react/` bascule deja le like
+      // a chaque appel, c'est donc le meme aller-retour dans les deux sens.
+      const videoId = button.closest('[data-vfeed-item]').dataset.videoId;
+      fetch('/api/react/', {
+        method: 'POST',
+        headers: { 'X-CSRFToken': csrftoken, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ video_id: videoId, reaction: 'like' }),
+      }).catch(() => {});
+    });
+  });
+
+  // Enregistrer : etat visuel seul, aucun modele ne le stocke encore.
+  scroller.querySelectorAll('[data-vfeed-save]').forEach((button) => {
+    button.addEventListener('click', () => toggleCounter(button));
+  });
+
+  /* Partager : lien du profil du candidat, via le partage natif quand le
+     navigateur le propose (mobile), sinon copie dans le presse-papiers.
+     Comme "Enregistrer", le compteur n'est qu'un retour visuel -- aucun
+     modele ne stocke les partages. */
+  scroller.querySelectorAll('[data-vfeed-share]').forEach((button) => {
+    button.addEventListener('click', async () => {
+      const url = new URL(button.dataset.shareUrl, window.location.origin).href;
+      const title = button.dataset.shareTitle || document.title;
+      let shared = false;
+
+      if (navigator.share) {
+        try {
+          await navigator.share({ title, url });
+          shared = true;
+        } catch (err) {
+          // L'utilisateur a ferme la feuille de partage : pas une erreur.
+          if (err.name === 'AbortError') return;
+        }
+      }
+
+      if (!shared) {
+        try {
+          await navigator.clipboard.writeText(url);
+        } catch (err) {
+          return;
+        }
+
+        const toast = button.querySelector('[data-vfeed-share-toast]');
+        toast.hidden = false;
+        clearTimeout(button._shareToastTimer);
+        button._shareToastTimer = setTimeout(() => { toast.hidden = true; }, 1500);
+      }
+
+      const count = Number(button.dataset.count || 0) + 1;
+      button.dataset.count = String(count);
+      button.querySelector('[data-vfeed-count]').textContent = compactCount(count);
+    });
+  });
+
+  /* "voir plus" : n'apparait que si le resume est reellement tronque. */
+  scroller.querySelectorAll('[data-vfeed-more]').forEach((button) => {
+    const description = button.previousElementSibling;
+    if (description.scrollHeight <= description.clientHeight + 1) return;
+
+    button.hidden = false;
+    button.addEventListener('click', () => {
+      const expanded = description.classList.toggle('is-expanded');
+      button.textContent = expanded ? 'voir moins' : 'voir plus';
+    });
+  });
+
+  /* Fleches haut / bas : meme deplacement que la molette, une video a la fois. */
+  scroller.addEventListener('keydown', (event) => {
+    const step = { ArrowDown: 1, ArrowUp: -1 }[event.key];
+    if (step === undefined) return;
+
+    const next = items[activeIndex + step];
+    if (!next) return;
+
+    event.preventDefault();
+    next.scrollIntoView({ behavior: 'smooth' });
+  });
+
+  activate(0);
+  scroller.focus({ preventScroll: true });
+})();
+</script>
+{% endif %}
