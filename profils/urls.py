@@ -35,10 +35,11 @@ urlpatterns = [
     path("api/upload/video/", api.video_upload),
     path("api/delete/video/", api.video_delete),
     path("api/react/",        api.react),
+    path("health/",           views.health),
     path("",                  include("profils.questionnaires.urls")),
     path("",                  include("profils.profiles.urls")),
     path("",                  include("profils.notifications.urls")),
-    path("",                  include("profils.messaging.urls")),
+    path("",                  include("profils.messaging.urls"))
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root = settings.MEDIA_ROOT)

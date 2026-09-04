@@ -1,11 +1,13 @@
 from django.shortcuts           import render
 from django.http.request        import HttpRequest
-from django.http.response       import HttpResponse
+from django.http.response       import HttpResponse, JsonResponse
 from django.shortcuts           import render, redirect
 from django.contrib.auth        import logout as logout_
 from .models                    import Role
 from django.utils               import timezone
 from . import constants
+from django.db import connections
+from django.db.utils import OperationalError
 
 # TODO: deleting
 # TODO: support for multiple languages
@@ -129,3 +131,13 @@ def quiz(request: HttpRequest) -> HttpResponse:
 
 def cgu(request: HttpRequest) -> HttpResponse:
     return render(request, "cgu.html")
+
+def health(request: HttpRequest) -> JsonResponse:
+
+    try:
+        db_conn = connections['default']
+        db_conn.cursor()
+    except OperationalError:
+        return JsonResponse({'status': 'error', 'database': 'down'}, status = 503)
+
+    return JsonResponse({'status': 'ok', 'database': 'up'})
