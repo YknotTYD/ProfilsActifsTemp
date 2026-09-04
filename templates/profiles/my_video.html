@@ -28,7 +28,7 @@ rater de la specification.
     <h2>Video actuelle <span class="p-badge p-ok">En ligne</span></h2>
     <p><strong>{{ current.title }}</strong></p>
     {% include "profiles/_video_player.html" with player=current.playback title=current.title %}
-    <p><a href="{{ current.file_url }}" target="_blank" rel="noopener" class="p-btn small">Ouvrir dans un nouvel onglet</a></p>
+    <p><a href="{{ current.playback.url }}" target="_blank" rel="noopener" class="p-btn small">Ouvrir dans un nouvel onglet</a></p>
 </section>
 {% endif %}
 
@@ -43,7 +43,7 @@ rater de la specification.
     </h2>
     <p><strong>{{ pending.title }}</strong></p>
     {% include "profiles/_video_player.html" with player=pending.playback title=pending.title %}
-    <p class="p-muted"><a href="{{ pending.file_url }}" target="_blank" rel="noopener">{{ pending.file_url }}</a></p>
+    <p class="p-muted"><a href="{{ pending.playback.url }}" target="_blank" rel="noopener">{{ pending.playback.url }}</a></p>
 
     {% if pending.status == "REJECTED" and pending.rejection_reason %}
     <p class="p-muted">Motif du refus : {{ pending.rejection_reason }}</p>
@@ -91,6 +91,7 @@ rater de la specification.
 
 {% if not pending %}
 <section class="p-panel">
+
     <h2>{% if current %}Remplacer ma video{% else %}Ajouter ma video{% endif %}</h2>
     <form method="post">
         {% csrf_token %}
@@ -105,6 +106,10 @@ rater de la specification.
         </div>
         <button type="submit" class="p-btn p-primary" style="margin-top:.5rem">Soumettre a la moderation</button>
     </form>
+
+    <p class="p-muted" style="margin-top:1rem">Ou televersez un fichier :</p>
+    {% include "profiles/_videofile_upload_form.html" %}
+
 </section>
 {% endif %}
 {% endblock %}

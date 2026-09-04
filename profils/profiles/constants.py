@@ -459,7 +459,7 @@ VIDEO_SOURCES = (
 #: controle de format/taille/extension) est menee separement : tant qu'elle
 #: n'est pas branchee, `services.submit_video_link` reste le seul point
 #: d'entree pour une nouvelle video.
-ENABLED_VIDEO_SOURCES = (VIDEO_SOURCE_LINK,)
+ENABLED_VIDEO_SOURCES = (VIDEO_SOURCE_LINK, VIDEO_SOURCE_FILE)
 
 
 # --------------------------------------------------------------------------- #

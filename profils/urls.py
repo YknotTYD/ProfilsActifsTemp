@@ -39,7 +39,7 @@ urlpatterns = [
     path("",                  include("profils.questionnaires.urls")),
     path("",                  include("profils.profiles.urls")),
     path("",                  include("profils.notifications.urls")),
-    path("",                  include("profils.messaging.urls"))
+    path("",                  include("profils.messaging.urls")),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root = settings.MEDIA_ROOT)

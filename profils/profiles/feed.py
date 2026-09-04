@@ -114,8 +114,7 @@ def _youtube_embed(url: str) -> str:
     match = re.search(r"(?:v=|youtu\.be/|/shorts/)([A-Za-z0-9_-]{6,})", url)
     return f"https://www.youtube.com/embed/{match.group(1)}" if match else url
 
-
-def playback(source_type: str, file_url: str) -> tuple[str, str]:
+def playback(source_type: str, file_url: str, video_id: int | None = None) -> tuple[str, str]:
     """(`mode`, `url`) pour lire une video : `mode` vaut `"iframe"` ou `"file"`.
 
     Heuristique volontairement simple : les donnees reelles sont des liens
@@ -126,7 +125,9 @@ def playback(source_type: str, file_url: str) -> tuple[str, str]:
     url = (file_url or "").strip()
     low = url.lower()
     if source_type == c.VIDEO_SOURCE_FILE:
-        return ("file", url)
+        from django.urls import reverse
+        return ("file", reverse("p_video_file", args=[video_id]))
+
     if "youtube.com/watch" in low or "youtu.be/" in low or "/shorts/" in low:
         return ("iframe", _youtube_embed(url))
     if any(hint in low for hint in _IFRAME_HINTS):
@@ -156,7 +157,7 @@ def dashboard_feed_items(viewer) -> list[dict]:
 
     items = []
     for video in videos:
-        mode, url = playback(video.source_type, video.file_url)
+        mode, url = playback(video.source_type, video.file_url, video_id = video.id)
         profile   = video.profile
         reaction  = mine.get(video.id)
         items.append({

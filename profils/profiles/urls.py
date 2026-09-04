@@ -58,14 +58,17 @@ urlpatterns = [
     path("api/profiles/me/languages/",               api.me_languages),
     path("api/profiles/me/languages/<int:pk>/",      api.me_language_item),
 
-    path("api/profiles/me/videos/",                  api.me_videos),
-    path("api/profiles/me/videos/<int:pk>/",         api.me_video_item),
+    path("api/profiles/me/videos/",                   api.me_videos),
+    path("api/profiles/me/videos/<int:pk>/",          api.me_video_item),
     path("api/profiles/me/videos/<int:pk>/publish/",  api.me_video_publish),
     path("api/profiles/me/videos/<int:pk>/resubmit/", api.me_video_resubmit),
+
+    path("api/profiles/me/videos/file/",              api.me_video_file_upload),
 
     # feed video : vues et reactions (spectateur)
     path("api/profiles/videos/<int:pk>/view/",  api.video_view),
     path("api/profiles/videos/<int:pk>/react/", api.video_react),
+    path("api/profiles/videos/<int:pk>/file/",  api.video_file, name = "p_video_file"),
 
     # ------------------------------------------------------------------ #
     # API - moderation administrateur (spec "Moderation video, presentation,

@@ -812,3 +812,43 @@ def reject_video(video: ProfileVideo, reason: str, *, user) -> ProfileVideo:
     return moderation.transition_video(
         video, c.VIDEO_REJECTED, actor = c.ACTOR_ADMIN, user = user, reason = reason,
     )
+
+
+pass
+
+ALLOWED_VIDEO_EXTENSIONS = ("mp4", "mov", "avi", "webm")
+MAX_VIDEO_FILE_SIZE = 100 * 1024 * 1024
+
+def process_video_file(video):
+    reasons = []
+
+    ext = video.file_content_type.split("/")[-1].lower()
+    if False and ext not in ALLOWED_VIDEO_EXTENSIONS: # TODO: rm
+        reasons.append(f"Format non supporté : {ext}")
+
+    if video.file_size and video.file_size > MAX_VIDEO_FILE_SIZE:
+        reasons.append("Fichier trop volumineux")
+
+    if reasons:
+        moderation.transition_video(
+            video, c.VIDEO_REJECTED, actor=c.ACTOR_SYSTEM, reason="; ".join(reasons)
+        )
+        return video
+
+    moderation.transition_video(video, c.VIDEO_PENDING, actor=c.ACTOR_SYSTEM)
+    return video
+
+def submit_video_file(profile, file, title, description=""):
+    video = ProfileVideo.objects.create(
+        profile=profile,
+        title=title,
+        description=description,
+        source_type=c.VIDEO_SOURCE_FILE,
+        status=c.VIDEO_DRAFT,
+        file_blob=file.read(),
+        file_content_type=file.content_type,
+        file_size=file.size,
+    )
+    moderation.transition_video(video, c.VIDEO_PROCESSING, actor=c.ACTOR_OWNER, user=profile.user)
+    process_video_file(video)
+    return video

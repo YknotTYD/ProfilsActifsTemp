@@ -1,6 +1,6 @@
 from django.shortcuts           import render
 from django.http.request        import HttpRequest
-from django.http.response       import HttpResponse, JsonResponse
+from django.http.response       import HttpResponse, JsonResponse, Http404
 from django.shortcuts           import render, redirect
 from django.contrib.auth        import logout as logout_
 from .models                    import Role

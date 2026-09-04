@@ -1,5 +1,7 @@
 ##models/video.py
-"""Modele video (sections 15 a 19, et moderation).
+
+"""
+Modele video (sections 15 a 19, et moderation).
 
 Le nom `Video` est deja pris par `mainapp.Video` (le feed de demonstration par
 URL). On prend donc `ProfileVideo`, comme le prevoit la clause d'adaptation aux
@@ -148,12 +150,12 @@ class ProfileVideo(models.Model):
         de gestion -- toutes doivent afficher la meme video de la meme facon.
         """
         from ..feed import playback
-        mode, url = playback(self.source_type, self.file_url)
+        mode, url = playback(self.source_type, self.file_url, video_id=self.id)
         return {"mode": mode, "url": url}
 
-
 class VideoModerationEvent(models.Model):
-    """Historique de moderation d'une video (section "Historique de moderation").
+    """
+    Historique de moderation d'une video (section "Historique de moderation").
 
     Ecrit exclusivement par `moderation.transition_video`, dans la meme
     transaction que le changement de statut qu'il decrit : l'historique ne

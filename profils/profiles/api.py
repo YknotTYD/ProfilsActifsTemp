@@ -25,6 +25,8 @@ from .skills import resolve_skill
 from .visibility import (
     PreviewViewer, assert_can_view, audience_of, can_view_video, visible_videos,
 )
+from django.shortcuts import get_object_or_404
+from django.http      import HttpResponse, Http404, JsonResponse
 
 
 # --------------------------------------------------------------------------- #
@@ -539,3 +541,42 @@ def admin_video_history(request, pk):
         }
         for event in events
     ]})
+
+pass
+
+#def video_file(request, pk):
+#    video = get_object_or_404(
+#        ProfileVideo, pk=pk, status=c.VIDEO_PUBLISHED, source_type=c.VIDEO_SOURCE_FILE
+#    )
+#    if not video.file_blob:
+#        raise Http404
+#    return HttpResponse(video.file_blob, content_type=video.file_content_type)
+
+def video_file(request, pk):
+    video = get_object_or_404(ProfileVideo, pk=pk, source_type=c.VIDEO_SOURCE_FILE)
+
+    if video.status != c.VIDEO_PUBLISHED:
+        if not (request.user.is_authenticated and request.user.has_perm(c.PERM_MODERATE)):
+            raise Http404
+
+    if not video.file_blob:
+        raise Http404
+    return HttpResponse(video.file_blob, content_type=video.file_content_type)
+
+@api(("POST",))
+def me_video_file_upload(request):
+    """Soumission d'une nouvelle video par fichier (section 1)."""
+    profile = _me(request)
+    permissions.assert_can_edit(request.user, profile)
+
+    file = request.FILES.get("file")
+    if not file:
+        raise BadRequest("aucun fichier fourni", "file_required")
+
+    video = services.submit_video_file(
+        profile,
+        file,
+        title=request.POST.get("title", ""),
+        description=request.POST.get("description", ""),
+    )
+    return ok(serializers.video(video, include_moderation=True), status=201)

@@ -1,0 +1,34 @@
+<form id="video-file-form" enctype="multipart/form-data">
+    <input type="text" name="title" placeholder="Titre" required>
+    <textarea name="description" placeholder="Description"></textarea>
+    <input type="file" name="file" accept=".mp4,.mov,.avi,.webm" required>
+    <button type="submit">Téléverser</button>
+</form>
+<p id="video-file-status"></p>
+
+<script>
+document.getElementById('video-file-form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    const form = e.target;
+    const formData = new FormData(form);
+    const status = document.getElementById('video-file-status');
+    const csrftoken = document.querySelector('meta[name="csrf-token"]').content;
+    status.textContent = 'Envoi en cours...';
+
+    fetch('/api/profiles/me/videos/file/', {
+        method: 'POST',
+        body: formData,
+        headers: { 'X-CSRFToken': csrftoken },
+    })
+    .then(response => response.json().then(data => ({ ok: response.ok, data })))
+    .then(({ ok, data }) => {
+        if (ok) {
+            status.textContent = 'Video envoyée, en attente de modération.';
+            form.reset();
+        } else {
+            status.textContent = 'Erreur : ' + (data.error || data.detail || 'inconnue');
+        }
+    })
+    .catch(() => { status.textContent = 'Erreur réseau.'; });
+});
+</script>
