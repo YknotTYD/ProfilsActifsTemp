@@ -545,3 +545,12 @@ SEED_LANGUAGES = (
     ("uk", "Ukrainien"),  ("vi", "Vietnamien"), ("th", "Thai"),
     ("id", "Indonesien"), ("ca", "Catalan"),    ("bn", "Bengali"),
 )
+
+ALLOWED_VIDEO_CONTENT_TYPES = {
+    "video/mp4":        "mp4",
+    "video/quicktime":  "mov",
+    "video/x-msvideo":  "avi",
+    "video/webm":       "webm",
+}
+
+MAX_VIDEO_FILE_SIZE = 850 * 1024 * 1024

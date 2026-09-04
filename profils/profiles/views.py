@@ -210,3 +210,5 @@ def my_profile_redirect(request):
         return response
     services.get_profile(request.user)
     return redirect(f"/profile/{request.user.username}/")
+
+# TODO: "No real magic-byte file validation — you're trusting the client-reported content_type, which can be spoofed or occasionally wrong/generic depending on browser/OS. Fine for a school project; not fine for anything adversarial.""
