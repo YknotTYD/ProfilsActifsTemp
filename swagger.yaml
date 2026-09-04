@@ -1,0 +1,1392 @@
+openapi: 3.0.3
+info:
+  title: ProfilsActifs
+  version: "1.0.0"
+
+servers:
+  - url: /api
+
+tags:
+  - name: Vocabulaire
+  - name: Profil public
+  - name: Recherche
+  - name: Mon profil
+  - name: Competences
+  - name: Experiences
+  - name: Formation
+  - name: Certifications
+  - name: Projets
+  - name: Langues
+  - name: Videos
+  - name: Moderation
+
+components:
+  securitySchemes:
+    sessionAuth:
+      type: apiKey
+      in: cookie
+      name: sessionid
+      description: A adapter selon votre mecanisme d'authentification reel (session, token, JWT...)
+
+  schemas:
+    Erreur:
+      type: object
+      properties:
+        error:
+          type: string
+        code:
+          type: string
+
+    MetaChoice:
+      type: object
+      properties:
+        value:
+          type: string
+        label:
+          type: string
+
+    Meta:
+      type: object
+      properties:
+        skill_levels:
+          type: array
+          items: { $ref: "#/components/schemas/MetaChoice" }
+        skill_categories:
+          type: array
+          items: { $ref: "#/components/schemas/MetaChoice" }
+        fields:
+          type: array
+          items: { $ref: "#/components/schemas/MetaChoice" }
+        availability:
+          type: array
+          items: { $ref: "#/components/schemas/MetaChoice" }
+        contract_types:
+          type: array
+          items: { $ref: "#/components/schemas/MetaChoice" }
+        work_modes:
+          type: array
+          items: { $ref: "#/components/schemas/MetaChoice" }
+        visibilities:
+          type: array
+          items: { $ref: "#/components/schemas/MetaChoice" }
+        sections:
+          type: array
+          items: { $ref: "#/components/schemas/MetaChoice" }
+        language_levels:
+          type: array
+          items: { $ref: "#/components/schemas/MetaChoice" }
+        degree_levels:
+          type: array
+          items: { $ref: "#/components/schemas/MetaChoice" }
+        link_kinds:
+          type: array
+          items: { $ref: "#/components/schemas/MetaChoice" }
+        video_statuses:
+          type: array
+          items: { $ref: "#/components/schemas/MetaChoice" }
+        match_modes:
+          type: array
+          items: { $ref: "#/components/schemas/MetaChoice" }
+        sort_options:
+          type: array
+          items: { $ref: "#/components/schemas/MetaChoice" }
+        page_size:
+          type: object
+          properties:
+            default: { type: integer }
+            max: { type: integer }
+
+    Skill:
+      type: object
+      properties:
+        id: { type: integer }
+        slug: { type: string }
+        name: { type: string }
+        category: { type: string }
+
+    UserSkill:
+      type: object
+      properties:
+        skill: { $ref: "#/components/schemas/Skill" }
+        level: { type: string }
+        level_label: { type: string }
+        level_rank: { type: integer }
+        years_experience: { type: number }
+        order: { type: integer }
+        added_at: { type: string, format: date-time, nullable: true }
+        evidence_url: { type: string, nullable: true }
+        certification_id: { type: integer, nullable: true }
+
+    Experience:
+      type: object
+      properties:
+        id: { type: integer }
+        title: { type: string }
+        company: { type: string }
+        description: { type: string }
+        start_date: { type: string, format: date, nullable: true }
+        end_date: { type: string, format: date, nullable: true }
+        is_current: { type: boolean }
+        location_city: { type: string, nullable: true }
+        location_country: { type: string, nullable: true }
+        contract_type: { type: string, nullable: true }
+        duration_months: { type: integer, nullable: true }
+        order: { type: integer }
+        skills:
+          type: array
+          items: { $ref: "#/components/schemas/Skill" }
+
+    Education:
+      type: object
+      properties:
+        id: { type: integer }
+        institution: { type: string }
+        degree: { type: string }
+        degree_level: { type: string }
+        field_of_study: { type: string, nullable: true }
+        description: { type: string, nullable: true }
+        start_date: { type: string, format: date, nullable: true }
+        end_date: { type: string, format: date, nullable: true }
+        is_current: { type: boolean }
+        diploma_url: { type: string, nullable: true }
+        diploma_verified: { type: boolean }
+        order: { type: integer }
+        skills:
+          type: array
+          items: { $ref: "#/components/schemas/Skill" }
+
+    Certification:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        issuer: { type: string }
+        issued_on: { type: string, format: date, nullable: true }
+        expires_on: { type: string, format: date, nullable: true }
+        is_expired: { type: boolean }
+        credential_id: { type: string, nullable: true }
+        verification_url: { type: string, nullable: true }
+        order: { type: integer }
+        skills:
+          type: array
+          items: { $ref: "#/components/schemas/Skill" }
+
+    Project:
+      type: object
+      properties:
+        id: { type: integer }
+        title: { type: string }
+        description: { type: string, nullable: true }
+        role: { type: string, nullable: true }
+        url: { type: string, nullable: true }
+        started_on: { type: string, format: date, nullable: true }
+        ended_on: { type: string, format: date, nullable: true }
+        video_id: { type: integer, nullable: true }
+        order: { type: integer }
+        skills:
+          type: array
+          items: { $ref: "#/components/schemas/Skill" }
+
+    LanguageRef:
+      type: object
+      description: Element du referentiel des langues (route /languages/)
+      properties:
+        id: { type: integer }
+        code: { type: string }
+        name: { type: string }
+
+    UserLanguage:
+      type: object
+      description: Langue declaree sur un profil (route /profiles/me/languages/)
+      properties:
+        id: { type: integer }
+        code: { type: string }
+        name: { type: string }
+        level: { type: string }
+        level_label: { type: string }
+        level_rank: { type: integer }
+        order: { type: integer }
+
+    Link:
+      type: object
+      properties:
+        id: { type: integer }
+        kind: { type: string }
+        label: { type: string }
+        url: { type: string }
+        order: { type: integer }
+
+    VideoStats:
+      type: object
+      properties:
+        views: { type: integer }
+        likes: { type: integer }
+        shares: { type: integer }
+
+    Video:
+      type: object
+      description: Vue publique, sans les champs de moderation
+      properties:
+        id: { type: integer }
+        title: { type: string }
+        description: { type: string, nullable: true }
+        source_type: { type: string }
+        file_url: { type: string }
+        thumbnail_url: { type: string, nullable: true }
+        duration_seconds: { type: integer, nullable: true }
+        status: { type: string }
+        is_presentation: { type: boolean }
+        visibility: { type: string }
+        tags:
+          type: array
+          items: { type: string }
+        created_at: { type: string, format: date-time }
+        published_at: { type: string, format: date-time, nullable: true }
+        stats: { $ref: "#/components/schemas/VideoStats" }
+        skills:
+          type: array
+          items: { $ref: "#/components/schemas/Skill" }
+
+    VideoAvecModeration:
+      description: >
+        Vue proprietaire/administrateur : ajoute les champs de moderation,
+        jamais exposes sur une route publique.
+      allOf:
+        - $ref: "#/components/schemas/Video"
+        - type: object
+          properties:
+            rejection_reason: { type: string, nullable: true }
+            moderated_at: { type: string, format: date-time, nullable: true }
+            moderated_by: { type: string, nullable: true }
+            replaces: { type: integer, nullable: true }
+            requires_user_action: { type: boolean }
+
+    Location:
+      type: object
+      properties:
+        city: { type: string, nullable: true }
+        region: { type: string, nullable: true }
+        country: { type: string, nullable: true }
+        label: { type: string, nullable: true }
+
+    Identity:
+      type: object
+      properties:
+        username: { type: string }
+        full_name: { type: string }
+        initials: { type: string }
+        first_name: { type: string }
+        last_name: { type: string }
+        headline: { type: string, nullable: true }
+        summary: { type: string, nullable: true }
+        photo_url: { type: string, nullable: true }
+        cover_url: { type: string, nullable: true }
+        cover_color: { type: string }
+        location: { $ref: "#/components/schemas/Location" }
+        professional_field: { type: string, nullable: true }
+        professional_field_label: { type: string }
+        total_experience_months: { type: integer }
+        total_experience_years: { type: number }
+        url: { type: string }
+        updated_at: { type: string, format: date-time, nullable: true }
+
+    Availability:
+      type: object
+      properties:
+        status: { type: string }
+        status_label: { type: string }
+        is_available: { type: boolean }
+        available_from: { type: string, format: date, nullable: true }
+        contract_types:
+          type: array
+          items: { type: string }
+        work_modes:
+          type: array
+          items: { type: string }
+        willing_to_relocate: { type: boolean }
+        mobility_radius_km: { type: integer, nullable: true }
+        mobility_note: { type: string, nullable: true }
+
+    SearchSettings:
+      type: object
+      properties:
+        searchable: { type: boolean }
+        appear_in_video_feed: { type: boolean }
+        show_availability_in_results: { type: boolean }
+        contactable_by_recruiters: { type: boolean }
+
+    Privacy:
+      type: object
+      properties:
+        profile_visibility: { type: string }
+        sections:
+          type: object
+          additionalProperties: { type: boolean }
+        search: { $ref: "#/components/schemas/SearchSettings" }
+
+    PublicProfile:
+      type: object
+      description: >
+        Construit par omission : seules les sections que le visiteur a le
+        droit de voir apparaissent dans la reponse.
+      properties:
+        profile: { $ref: "#/components/schemas/Identity" }
+        sections:
+          type: object
+          additionalProperties: { type: boolean }
+        is_owner: { type: boolean }
+        visibility: { type: string }
+        skills:
+          type: array
+          items: { $ref: "#/components/schemas/UserSkill" }
+        experiences:
+          type: array
+          items: { $ref: "#/components/schemas/Experience" }
+        education:
+          type: array
+          items: { $ref: "#/components/schemas/Education" }
+        certifications:
+          type: array
+          items: { $ref: "#/components/schemas/Certification" }
+        languages:
+          type: array
+          items: { $ref: "#/components/schemas/UserLanguage" }
+        projects:
+          type: array
+          items: { $ref: "#/components/schemas/Project" }
+        links:
+          type: array
+          items: { $ref: "#/components/schemas/Link" }
+        availability: { $ref: "#/components/schemas/Availability" }
+        videos:
+          type: array
+          items: { $ref: "#/components/schemas/Video" }
+
+    OwnerProfile:
+      description: Profil complet, cote proprietaire, avec les reglages de confidentialite
+      allOf:
+        - $ref: "#/components/schemas/PublicProfile"
+        - type: object
+          properties:
+            privacy: { $ref: "#/components/schemas/Privacy" }
+
+    SearchCardMatch:
+      type: object
+      properties:
+        skills: { type: integer }
+        requested: { type: integer }
+        languages: { type: integer }
+
+    SearchCard:
+      type: object
+      properties:
+        username: { type: string }
+        full_name: { type: string }
+        initials: { type: string }
+        headline: { type: string, nullable: true }
+        photo_url: { type: string, nullable: true }
+        location: { type: string, nullable: true }
+        professional_field: { type: string, nullable: true }
+        total_experience_years: { type: number }
+        url: { type: string }
+        relevance: { type: number }
+        match: { $ref: "#/components/schemas/SearchCardMatch" }
+        score_breakdown:
+          type: object
+          additionalProperties: true
+        video_thumbnail:
+          type: string
+          nullable: true
+        has_video: { type: boolean }
+        skills:
+          type: array
+          items: { $ref: "#/components/schemas/UserSkill" }
+        skill_count: { type: integer }
+        availability:
+          type: object
+          properties:
+            status: { type: string }
+            status_label: { type: string }
+            is_available: { type: boolean }
+            contract_types:
+              type: array
+              items: { type: string }
+            work_modes:
+              type: array
+              items: { type: string }
+
+    SearchResponse:
+      type: object
+      properties:
+        results:
+          type: array
+          items: { $ref: "#/components/schemas/SearchCard" }
+        pagination:
+          type: object
+          additionalProperties: true
+        query:
+          type: object
+          additionalProperties: true
+
+paths:
+
+  /profiles/meta/:
+    get:
+      tags: [Vocabulaire]
+      summary: Listes de choix (niveaux, domaines, contrats, visibilites...)
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Meta" }
+
+  /skills/:
+    get:
+      tags: [Competences]
+      summary: Recherche de competences pour autocompletion
+      parameters:
+        - name: q
+          in: query
+          schema: { type: string }
+        - name: category
+          in: query
+          schema: { type: string }
+        - name: limit
+          in: query
+          schema: { type: integer, default: 20, maximum: 100 }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  skills:
+                    type: array
+                    items: { $ref: "#/components/schemas/Skill" }
+    post:
+      tags: [Competences]
+      summary: Ajout d'une competence au referentiel
+      security: [{ sessionAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+                category: { type: string }
+      responses:
+        "201":
+          description: Competence creee ou existante renvoyee
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Skill" }
+        "401":
+          description: Authentification requise
+
+  /languages/:
+    get:
+      tags: [Vocabulaire]
+      summary: Liste des langues disponibles
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  languages:
+                    type: array
+                    items: { $ref: "#/components/schemas/LanguageRef" }
+
+  /profiles/{username}/:
+    get:
+      tags: [Profil public]
+      summary: Profil public d'un utilisateur
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema: { type: string }
+        - name: preview
+          in: query
+          description: public ou registered, reserve au proprietaire du profil
+          schema: { type: string, enum: [public, registered] }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PublicProfile" }
+        "404":
+          description: Profil introuvable
+
+  /profiles/{username}/videos/:
+    get:
+      tags: [Profil public]
+      summary: Videos visibles d'un profil
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  username: { type: string }
+                  videos:
+                    type: array
+                    items: { $ref: "#/components/schemas/Video" }
+        "404":
+          description: Profil introuvable
+
+  /profiles/search/:
+    get:
+      tags: [Recherche]
+      summary: Recherche de profils
+      parameters:
+        - name: skill
+          in: query
+          description: Repetable, ex. skill=java&skill=docker
+          schema: { type: array, items: { type: string } }
+        - name: mode
+          in: query
+          schema: { type: string, enum: [AND, OR] }
+        - name: min_level
+          in: query
+          schema: { type: string }
+        - name: contract
+          in: query
+          schema: { type: string }
+        - name: available
+          in: query
+          schema: { type: boolean }
+        - name: sort
+          in: query
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SearchResponse" }
+
+  /profiles/me/:
+    get:
+      tags: [Mon profil]
+      summary: Consulter mon profil
+      security: [{ sessionAuth: [] }]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OwnerProfile" }
+    put:
+      tags: [Mon profil]
+      summary: Remplacer mon profil
+      security: [{ sessionAuth: [] }]
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object, additionalProperties: true }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OwnerProfile" }
+    patch:
+      tags: [Mon profil]
+      summary: Modifier partiellement mon profil
+      security: [{ sessionAuth: [] }]
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object, additionalProperties: true }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OwnerProfile" }
+
+  /profiles/me/privacy/:
+    get:
+      tags: [Mon profil]
+      summary: Consulter les parametres de confidentialite
+      security: [{ sessionAuth: [] }]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Privacy" }
+    put:
+      tags: [Mon profil]
+      summary: Definir les parametres de confidentialite
+      security: [{ sessionAuth: [] }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                profile_visibility: { type: string }
+                sections:
+                  type: object
+                  additionalProperties: { type: boolean }
+                search: { $ref: "#/components/schemas/SearchSettings" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Privacy" }
+    patch:
+      tags: [Mon profil]
+      summary: Modifier partiellement les parametres de confidentialite
+      security: [{ sessionAuth: [] }]
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object, additionalProperties: true }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Privacy" }
+
+  /profiles/me/links/:
+    get:
+      tags: [Mon profil]
+      summary: Consulter mes liens
+      security: [{ sessionAuth: [] }]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  links:
+                    type: array
+                    items: { $ref: "#/components/schemas/Link" }
+    put:
+      tags: [Mon profil]
+      summary: Remplacer mes liens
+      security: [{ sessionAuth: [] }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                links:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      kind: { type: string }
+                      label: { type: string }
+                      url: { type: string }
+                      order: { type: integer }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  links:
+                    type: array
+                    items: { $ref: "#/components/schemas/Link" }
+
+  /profiles/me/skills/:
+    get:
+      tags: [Competences]
+      summary: Mes competences
+      security: [{ sessionAuth: [] }]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  skills:
+                    type: array
+                    items: { $ref: "#/components/schemas/UserSkill" }
+    post:
+      tags: [Competences]
+      summary: Ajouter une competence a mon profil
+      security: [{ sessionAuth: [] }]
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object, additionalProperties: true }
+      responses:
+        "201":
+          description: Competence liee creee
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UserSkill" }
+
+  /profiles/me/skills/reorder/:
+    post:
+      tags: [Competences]
+      summary: Reordonner mes competences
+      security: [{ sessionAuth: [] }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                skills:
+                  type: array
+                  items: { type: integer }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  skills:
+                    type: array
+                    items: { $ref: "#/components/schemas/UserSkill" }
+
+  /profiles/me/skills/{skill_id}/:
+    put:
+      tags: [Competences]
+      summary: Modifier une competence liee (remplacement)
+      security: [{ sessionAuth: [] }]
+      parameters:
+        - name: skill_id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object, additionalProperties: true }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UserSkill" }
+    patch:
+      tags: [Competences]
+      summary: Modifier une competence liee (partiel)
+      security: [{ sessionAuth: [] }]
+      parameters:
+        - name: skill_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UserSkill" }
+    delete:
+      tags: [Competences]
+      summary: Retirer une competence de mon profil
+      security: [{ sessionAuth: [] }]
+      parameters:
+        - name: skill_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: OK
+
+  /profiles/me/experiences/:
+    get:
+      tags: [Experiences]
+      summary: Mes experiences professionnelles
+      security: [{ sessionAuth: [] }]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  experiences:
+                    type: array
+                    items: { $ref: "#/components/schemas/Experience" }
+    post:
+      tags: [Experiences]
+      summary: Ajouter une experience
+      security: [{ sessionAuth: [] }]
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object, additionalProperties: true }
+      responses:
+        "201":
+          description: Experience creee
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Experience" }
+
+  /profiles/me/experiences/{pk}/:
+    put:
+      tags: [Experiences]
+      summary: Modifier une experience (remplacement)
+      security: [{ sessionAuth: [] }]
+      parameters:
+        - name: pk
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Experience" }
+    patch:
+      tags: [Experiences]
+      summary: Modifier une experience (partiel)
+      security: [{ sessionAuth: [] }]
+      parameters:
+        - name: pk
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Experience" }
+    delete:
+      tags: [Experiences]
+      summary: Supprimer une experience
+      security: [{ sessionAuth: [] }]
+      parameters:
+        - name: pk
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: OK
+
+  /profiles/me/education/:
+    get:
+      tags: [Formation]
+      summary: Mon parcours de formation
+      security: [{ sessionAuth: [] }]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  education:
+                    type: array
+                    items: { $ref: "#/components/schemas/Education" }
+    post:
+      tags: [Formation]
+      summary: Ajouter une formation
+      security: [{ sessionAuth: [] }]
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object, additionalProperties: true }
+      responses:
+        "201":
+          description: Formation creee
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Education" }
+
+  /profiles/me/education/{pk}/:
+    put:
+      tags: [Formation]
+      summary: Modifier une formation (remplacement)
+      security: [{ sessionAuth: [] }]
+      parameters:
+        - name: pk
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Education" }
+    patch:
+      tags: [Formation]
+      summary: Modifier une formation (partiel)
+      security: [{ sessionAuth: [] }]
+      parameters:
+        - name: pk
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Education" }
+    delete:
+      tags: [Formation]
+      summary: Supprimer une formation
+      security: [{ sessionAuth: [] }]
+      parameters:
+        - name: pk
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: OK
+
+  /profiles/me/certifications/:
+    get:
+      tags: [Certifications]
+      summary: Mes certifications
+      security: [{ sessionAuth: [] }]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  certifications:
+                    type: array
+                    items: { $ref: "#/components/schemas/Certification" }
+    post:
+      tags: [Certifications]
+      summary: Ajouter une certification
+      security: [{ sessionAuth: [] }]
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object, additionalProperties: true }
+      responses:
+        "201":
+          description: Certification creee
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Certification" }
+
+  /profiles/me/certifications/{pk}/:
+    put:
+      tags: [Certifications]
+      summary: Modifier une certification (remplacement)
+      security: [{ sessionAuth: [] }]
+      parameters:
+        - name: pk
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Certification" }
+    patch:
+      tags: [Certifications]
+      summary: Modifier une certification (partiel)
+      security: [{ sessionAuth: [] }]
+      parameters:
+        - name: pk
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Certification" }
+    delete:
+      tags: [Certifications]
+      summary: Supprimer une certification
+      security: [{ sessionAuth: [] }]
+      parameters:
+        - name: pk
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: OK
+
+  /profiles/me/projects/:
+    get:
+      tags: [Projets]
+      summary: Mes projets
+      security: [{ sessionAuth: [] }]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  projects:
+                    type: array
+                    items: { $ref: "#/components/schemas/Project" }
+    post:
+      tags: [Projets]
+      summary: Ajouter un projet
+      security: [{ sessionAuth: [] }]
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object, additionalProperties: true }
+      responses:
+        "201":
+          description: Projet cree
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Project" }
+
+  /profiles/me/projects/{pk}/:
+    put:
+      tags: [Projets]
+      summary: Modifier un projet (remplacement)
+      security: [{ sessionAuth: [] }]
+      parameters:
+        - name: pk
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Project" }
+    patch:
+      tags: [Projets]
+      summary: Modifier un projet (partiel)
+      security: [{ sessionAuth: [] }]
+      parameters:
+        - name: pk
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Project" }
+    delete:
+      tags: [Projets]
+      summary: Supprimer un projet
+      security: [{ sessionAuth: [] }]
+      parameters:
+        - name: pk
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: OK
+
+  /profiles/me/languages/:
+    get:
+      tags: [Langues]
+      summary: Mes langues declarees
+      security: [{ sessionAuth: [] }]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  languages:
+                    type: array
+                    items: { $ref: "#/components/schemas/UserLanguage" }
+    post:
+      tags: [Langues]
+      summary: Ajouter ou definir une langue
+      security: [{ sessionAuth: [] }]
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object, additionalProperties: true }
+      responses:
+        "201":
+          description: Langue ajoutee
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UserLanguage" }
+
+  /profiles/me/languages/{pk}/:
+    delete:
+      tags: [Langues]
+      summary: Retirer une langue
+      security: [{ sessionAuth: [] }]
+      parameters:
+        - name: pk
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: OK
+
+  /profiles/me/videos/:
+    get:
+      tags: [Videos]
+      summary: Mes videos, tous statuts confondus
+      security: [{ sessionAuth: [] }]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  videos:
+                    type: array
+                    items: { $ref: "#/components/schemas/VideoAvecModeration" }
+    post:
+      tags: [Videos]
+      summary: Soumettre un nouveau lien video
+      security: [{ sessionAuth: [] }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                file_url: { type: string }
+      responses:
+        "201":
+          description: Video soumise
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/VideoAvecModeration" }
+
+  /profiles/me/videos/{pk}/:
+    get:
+      tags: [Videos]
+      summary: Consulter une de mes videos
+      security: [{ sessionAuth: [] }]
+      parameters:
+        - name: pk
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/VideoAvecModeration" }
+    patch:
+      tags: [Videos]
+      summary: Modifier une video ou remplacer son lien
+      security: [{ sessionAuth: [] }]
+      parameters:
+        - name: pk
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                file_url: { type: string }
+              additionalProperties: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/VideoAvecModeration" }
+    delete:
+      tags: [Videos]
+      summary: Supprimer une video
+      security: [{ sessionAuth: [] }]
+      parameters:
+        - name: pk
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: OK
+
+  /profiles/me/videos/{pk}/publish/:
+    post:
+      tags: [Videos]
+      summary: Publier une video de presentation
+      security: [{ sessionAuth: [] }]
+      parameters:
+        - name: pk
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/VideoAvecModeration" }
+
+  /profiles/me/videos/{pk}/resubmit/:
+    post:
+      tags: [Videos]
+      summary: Resoumettre une video refusee
+      security: [{ sessionAuth: [] }]
+      parameters:
+        - name: pk
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                file_url: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/VideoAvecModeration" }
+
+  /profiles/admin/videos/pending/:
+    get:
+      tags: [Moderation]
+      summary: File d'attente de moderation (toutes les videos en attente)
+      security: [{ sessionAuth: [] }]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  videos:
+                    type: array
+                    items:
+                      allOf:
+                        - $ref: "#/components/schemas/VideoAvecModeration"
+                        - type: object
+                          properties:
+                            profile:
+                              type: object
+                              properties:
+                                username: { type: string }
+                                user_id: { type: integer }
+        "403":
+          description: Permission de moderation requise
+
+  /profiles/admin/videos/{pk}/approve/:
+    post:
+      tags: [Moderation]
+      summary: Approuver une video
+      security: [{ sessionAuth: [] }]
+      parameters:
+        - name: pk
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/VideoAvecModeration" }
+
+  /profiles/admin/videos/{pk}/reject/:
+    post:
+      tags: [Moderation]
+      summary: Rejeter une video
+      security: [{ sessionAuth: [] }]
+      parameters:
+        - name: pk
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/VideoAvecModeration" }
+
+  /profiles/admin/videos/{pk}/history/:
+    get:
+      tags: [Moderation]
+      summary: Historique de moderation d'une video
+      security: [{ sessionAuth: [] }]
+      parameters:
+        - name: pk
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  history:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        actor: { type: string, nullable: true }
+                        source: { type: string }
+                        old_status: { type: string }
+                        new_status: { type: string }
+                        reason: { type: string, nullable: true }
+                        created_at: { type: string, format: date-time }
