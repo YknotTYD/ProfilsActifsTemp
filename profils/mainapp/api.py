@@ -10,8 +10,12 @@ from django.core.files.storage import default_storage
 from django.utils.dateparse import parse_date
 from django.utils import timezone
 from . import constants
+from django.db import connections
 from urllib.parse import urlencode
+from django.db.utils import OperationalError
 import json
+
+# TODO: don't load everything
 
 def _age_on(birth_date, today):
     """Age en annees revolues a la date `today`.

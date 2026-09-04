@@ -106,7 +106,7 @@
         node.querySelector('.p-mod-description').textContent = video.description || '';
 
         const urlLink = node.querySelector('.p-mod-url');
-        urlLink.href = video.file_url;
+        urlLink.href = video.file_url || video.playback.url;
 
         list.appendChild(node);
         const item = list.lastElementChild;

@@ -694,3 +694,48 @@ def reject_video(video: ProfileVideo, reason: str, *, user) -> ProfileVideo:
     return moderation.transition_video(
         video, c.VIDEO_REJECTED, actor = c.ACTOR_ADMIN, user = user, reason = reason,
     )
+
+# TODO: "No real magic-byte file validation — you're trusting the client-reported content_type, which can be spoofed or occasionally wrong/generic depending on browser/OS. Fine for a school project; not fine for anything adversarial.""
+
+def process_video_file(video):
+    reasons = []
+
+    if video.file_content_type not in c.ALLOWED_VIDEO_CONTENT_TYPES:
+        reasons.append(f"Format non supporté : {video.file_content_type}")
+
+
+    if video.file_size and video.file_size > c.MAX_VIDEO_FILE_SIZE:
+        reasons.append("Fichier trop volumineux")
+
+    if reasons:
+        moderation.transition_video(
+            video, c.VIDEO_REJECTED, actor=c.ACTOR_SYSTEM, reason="; ".join(reasons)
+        )
+        return video
+
+    moderation.transition_video(video, c.VIDEO_PENDING, actor=c.ACTOR_SYSTEM)
+    return video
+
+def submit_video_file(profile, file, title, description=""):
+    video = ProfileVideo(
+        profile=profile,
+        title=title,
+        description=description,
+        source_type=c.VIDEO_SOURCE_FILE,
+        status=c.VIDEO_DRAFT,
+        is_presentation=True,
+        file_content_type=file.content_type,
+        file_size=file.size,
+        file_blob=file.read(),
+    )
+
+    current = ProfileVideo.objects.filter(
+        profile=profile, is_presentation=True, status=c.VIDEO_PUBLISHED,
+    ).first()
+    if current is not None:
+        video.replaces = current
+
+    video.save()
+    moderation.transition_video(video, c.VIDEO_PROCESSING, actor=c.ACTOR_OWNER, user=profile.user)
+    process_video_file(video)
+    return video

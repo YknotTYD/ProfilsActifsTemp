@@ -11,7 +11,7 @@ avec l'API apres le premier rendu.
 """
 
 from django.contrib import messages
-from django.http      import Http404
+from django.http      import Http404, HttpResponse
 from django.shortcuts import redirect, render
 
 from . import constants as c
@@ -148,8 +148,9 @@ def my_video_page(request):
         try:
             if action == "submit":
                 payload = {
-                    "title": request.POST.get("title", "").strip() or "Ma video de presentation",
-                    "file_url": request.POST.get("file_url", "").strip(),
+                    "title":       request.POST.get("title", "").strip() or "Ma video de presentation",
+                    "file_url":    request.POST.get("file_url", "").strip(),
+                    "description": request.POST.get("description")
                 }
                 if current is not None:
                     payload["replaces"] = current.pk
@@ -188,3 +189,5 @@ def my_profile_redirect(request):
         return response
     services.get_profile(request.user)
     return redirect(f"/profile/{request.user.username}/")
+
+# TODO: "No real magic-byte file validation — you're trusting the client-reported content_type, which can be spoofed or occasionally wrong/generic depending on browser/OS. Fine for a school project; not fine for anything adversarial.""

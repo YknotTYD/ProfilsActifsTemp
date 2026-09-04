@@ -24,6 +24,7 @@ class Role(models.Model):
         return self.role
 
 class VideoLink(models.Model):
+
     """Video de presentation soumise par lien (feed recruteur/admin).
 
     Aucune video ici n'est visible avant moderation : `status` demarre a

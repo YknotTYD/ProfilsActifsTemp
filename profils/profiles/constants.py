@@ -355,7 +355,13 @@ VIDEO_SOURCES = (
     (VIDEO_SOURCE_FILE, "Fichier televerse"),
 )
 
-ENABLED_VIDEO_SOURCES = (VIDEO_SOURCE_LINK,)
+#: seul mode utilisable a la soumission pour le moment. Le modele est deja
+#: pret pour l'upload par fichier (`ProfileVideo.file_blob`, en blob brut
+#: plutot qu'un stockage disque), mais son implementation (reception,
+#: controle de format/taille/extension) est menee separement : tant qu'elle
+#: n'est pas branchee, `services.submit_video_link` reste le seul point
+#: d'entree pour une nouvelle video.
+ENABLED_VIDEO_SOURCES = (VIDEO_SOURCE_LINK, VIDEO_SOURCE_FILE)
 
 MATCH_MODE_AND = "AND"
 MATCH_MODE_OR  = "OR"
@@ -416,3 +422,12 @@ SEED_LANGUAGES = (
     ("uk", "Ukrainien"),  ("vi", "Vietnamien"), ("th", "Thai"),
     ("id", "Indonesien"), ("ca", "Catalan"),    ("bn", "Bengali"),
 )
+
+ALLOWED_VIDEO_CONTENT_TYPES = {
+    "video/mp4":        "mp4",
+    "video/quicktime":  "mov",
+    "video/x-msvideo":  "avi",
+    "video/webm":       "webm",
+}
+
+MAX_VIDEO_FILE_SIZE = 850 * 1024 * 1024
