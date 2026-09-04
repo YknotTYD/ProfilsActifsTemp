@@ -168,8 +168,9 @@ def my_video_page(request):
         try:
             if action == "submit":
                 payload = {
-                    "title": request.POST.get("title", "").strip() or "Ma video de presentation",
-                    "file_url": request.POST.get("file_url", "").strip(),
+                    "title":       request.POST.get("title", "").strip() or "Ma video de presentation",
+                    "file_url":    request.POST.get("file_url", "").strip(),
+                    "description": request.POST.get("description")
                 }
                 if current is not None:
                     payload["replaces"] = current.pk
