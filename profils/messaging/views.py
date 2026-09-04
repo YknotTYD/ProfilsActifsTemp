@@ -1,4 +1,3 @@
-##views.py
 """Pages de messagerie : de simples formulaires, dans le style de
 `mainapp` -- pas besoin d'une interface JavaScript pour lire et envoyer un
 message.
@@ -14,10 +13,8 @@ from . import services
 from .http import BadRequest, MessagingAccessDenied
 from .models import Conversation
 
-
 def _login_required(request):
     return None if request.user.is_authenticated else redirect("/login/")
-
 
 def conversations_page(request):
     """Mes conversations : `/messages/`."""
@@ -34,7 +31,6 @@ def conversations_page(request):
         for conv in services.conversations_for(request.user)
     ]
     return render(request, "messaging/conversations.html", {"conversations": conversations})
-
 
 def start_conversation_view(request):
     """`POST /messages/start/` : demarre -- ou retrouve -- une conversation,
@@ -63,7 +59,6 @@ def start_conversation_view(request):
         return redirect("/messages/")
 
     return redirect(f"/messages/{conversation.pk}/")
-
 
 def conversation_thread_page(request, pk):
     """Fil de conversation : `/messages/<id>/`. GET l'affiche, POST y ajoute

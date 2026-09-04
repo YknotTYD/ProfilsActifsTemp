@@ -1,4 +1,3 @@
-##http.py
 """Couche HTTP JSON du module profils.
 
 Le projet n'utilise pas de framework d'API. Les primitives d'enveloppe
@@ -20,7 +19,6 @@ from profils.questionnaires.http import BadRequest, body, fail, get_bool, get_in
 from .permissions import ProfileAccessDenied, has_perm
 
 __all__ = ["BadRequest", "api", "body", "fail", "get_bool", "get_int", "ok"]
-
 
 def api(methods = ("GET",), *, perm: str = None, login: bool = True):
     """Decorateur de vue JSON.

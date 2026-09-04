@@ -1,4 +1,3 @@
-##tests/test_question_types.py
 
 from django.test import TestCase
 
@@ -7,7 +6,6 @@ from profils.questionnaires.editing       import create_question
 from profils.questionnaires.question_types import AnswerError, ConfigError, all_types, get_type
 
 from .factories import draft_of, make_admin, make_questionnaire
-
 
 class RegistryTests(TestCase):
 
@@ -32,7 +30,6 @@ class RegistryTests(TestCase):
             )
         self.assertNotIn("text", {t.id for t in all_types()})
 
-
 class QuestionTypeTestCase(TestCase):
 
     def setUp(self):
@@ -50,7 +47,6 @@ class QuestionTypeTestCase(TestCase):
     def ratio(self, question, raw):
         value = self.normalize(question, raw)
         return question.handler.evaluate(question, value)[0]
-
 
 class ChoiceTypeTests(QuestionTypeTestCase):
 
@@ -133,7 +129,6 @@ class ChoiceTypeTests(QuestionTypeTestCase):
         self.assertEqual(self.ratio(question, {"option_ids": [four.id]}), 1.0)
         self.assertEqual(self.ratio(question, {"option_ids": [two.id]}), 0.0)
 
-
 class NumericTypeTests(QuestionTypeTestCase):
 
     def test_integer_rejects_decimals(self):
@@ -205,7 +200,6 @@ class NumericTypeTests(QuestionTypeTestCase):
         for type_id in (c.TYPE_DISTANCE, c.TYPE_WEIGHT, c.TYPE_HEIGHT, c.TYPE_SPEED, c.TYPE_DURATION):
             self.assertTrue(get_type(type_id).units, type_id)
 
-
 class TemporalTypeTests(QuestionTypeTestCase):
 
     def test_date_parsing_and_bounds(self):
@@ -239,7 +233,6 @@ class TemporalTypeTests(QuestionTypeTestCase):
             self.normalize(question, {"start": "2026-06-10", "end": "2026-06-01"})
         with self.assertRaises(AnswerError):
             self.normalize(question, {"start": "2026-06-01", "end": "2026-06-30"})
-
 
 class StructuredTypeTests(QuestionTypeTestCase):
 

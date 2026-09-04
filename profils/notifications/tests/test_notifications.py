@@ -1,4 +1,3 @@
-##tests/test_notifications.py
 """Centre de notifications (spec section 5).
 
 Lues / non lues, compteur, acces rapide, et le fait que le pipeline de
@@ -13,7 +12,6 @@ from profils.profiles.tests.factories import make_admin, make_profile, make_user
 
 from .. import services, types
 from ..models import Notification
-
 
 class NotifyTests(TestCase):
 
@@ -61,7 +59,6 @@ class NotifyTests(TestCase):
         services.mark_read(n)
         self.assertEqual(n.read_at, first_read_at)
 
-
 class NotificationApiTests(TestCase):
 
     def setUp(self):
@@ -103,7 +100,6 @@ class NotificationApiTests(TestCase):
         self.client.post("/api/notifications/read-all/")
         self.assertEqual(self.client.get("/api/notifications/unread-count/").json()["count"], 0)
 
-
 class VideoModerationNotificationTests(TestCase):
     """Le pipeline de moderation video emet vraiment ces notifications."""
 
@@ -121,8 +117,6 @@ class VideoModerationNotificationTests(TestCase):
         notif = Notification.objects.get(recipient = self.owner)
         self.assertEqual(notif.type, types.VIDEO_APPROVED)
         self.assertEqual(notif.target_id, video.pk)
-        # section 5 : le lien mene la ou le proprietaire agit sur sa video,
-        # pas sur sa page publique.
         self.assertEqual(notif.url, "/profiles/me/video/")
 
     def test_rejection_notifies_the_owner_with_the_reason(self):

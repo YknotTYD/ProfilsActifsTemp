@@ -1,4 +1,3 @@
-##carryover.py
 """Report des reponses d'une version a la suivante.
 
 Quand une nouvelle version est publiee, les participants ne repartent pas de
@@ -31,7 +30,6 @@ from .models         import QuestionnaireAttempt, UserAnswer, UserAnswerSelectio
 from .question_types import AnswerError
 from .snapshots      import answer_snapshot
 
-
 def _previous_attempts(questionnaire, version):
     """Tentatives reelles rattachees a une version anterieure."""
     return (
@@ -43,14 +41,12 @@ def _previous_attempts(questionnaire, version):
         .order_by("user_id", "-started_at")
     )
 
-
 def _latest_per_user(attempts) -> dict:
     """Derniere tentative de chaque participant, ordre deja decroissant."""
     latest = {}
     for attempt in attempts:
         latest.setdefault(attempt.user_id, attempt)
     return latest
-
 
 def _selected_keys(answer) -> list[str]:
     """Cles stables des options retenues par une reponse.
@@ -67,7 +63,6 @@ def _selected_keys(answer) -> list[str]:
                 if o.get("id") is not None}
     return [by_id[i] for i in (answer.value or {}).get("option_ids", []) if i in by_id]
 
-
 def _remap_options(answer, question):
     """Traduit des identifiants d'options d'une version vers une autre.
 
@@ -81,7 +76,6 @@ def _remap_options(answer, question):
     new_ids = {option.stable_key: option.id for option in question.options.all()}
     mapped  = [new_ids[key] for key in old_keys if key in new_ids]
     return {"option_ids": mapped} if mapped else None
-
 
 def _transferable(answer, questions_by_key: dict):
     """Question d'accueil d'une reponse, si elle est encore transferable.
@@ -108,7 +102,6 @@ def _transferable(answer, questions_by_key: dict):
         return None
     return question, value
 
-
 def _write_answer(attempt, question, value, *, source = None) -> UserAnswer:
     """Ecrit une reponse reportee, avec un instantane de la nouvelle version."""
     answer = UserAnswer(
@@ -131,7 +124,6 @@ def _write_answer(attempt, question, value, *, source = None) -> UserAnswer:
         ])
     return answer
 
-
 def _missing_required(version, answers_by_key: dict) -> list:
     """Questions obligatoires visibles restees sans reponse."""
     questions = list(version.questions.prefetch_related("options").order_by("order", "id"))
@@ -141,11 +133,6 @@ def _missing_required(version, answers_by_key: dict) -> list:
         if question.required and not question.handler.is_answered(
             answers_by_key.get(question.stable_key))
     ]
-
-
-# --------------------------------------------------------------------------- #
-# Estimation, avant de publier
-# --------------------------------------------------------------------------- #
 
 def preview(questionnaire, version) -> dict:
     """Ce que le report ferait, sans rien ecrire.
@@ -190,11 +177,6 @@ def preview(questionnaire, version) -> dict:
 
     return report
 
-
-# --------------------------------------------------------------------------- #
-# Report effectif
-# --------------------------------------------------------------------------- #
-
 @transaction.atomic
 def carry_over(questionnaire, version, *, actor = None) -> dict:
     """Reporte les reponses des participants sur `version`.
@@ -232,7 +214,6 @@ def carry_over(questionnaire, version, *, actor = None) -> dict:
             new = report, operation = "carry_over")
     return report
 
-
 def _move_in_progress(attempt, version, questions_by_key: dict):
     """Deplace une tentative en cours sur la nouvelle version.
 
@@ -249,8 +230,6 @@ def _move_in_progress(attempt, version, questions_by_key: dict):
         else:
             carried[transfer[0].stable_key] = (transfer[0], transfer[1], answer)
 
-    # on repart d'une ardoise propre : les anciennes reponses pointent vers les
-    # questions de l'ancienne version, qui n'existent plus pour cette tentative
     UserAnswerSelection.objects.filter(answer__attempt = attempt).delete()
     attempt.answers.all().delete()
 
@@ -266,7 +245,6 @@ def _move_in_progress(attempt, version, questions_by_key: dict):
     refresh_progress(attempt)
     return "moved", dropped
 
-
 def _continue_completed(attempt, version, questions_by_key: dict):
     """Cree une tentative de suite pour un participant deja arrive au bout.
 
@@ -276,14 +254,12 @@ def _continue_completed(attempt, version, questions_by_key: dict):
 
     user = attempt.user
 
-    # une tentative est deja ouverte : elle a la priorite, on n'en cree pas une seconde
     if QuestionnaireAttempt.objects.filter(
         questionnaire = attempt.questionnaire, user = user,
         is_test = False, status = c.ATTEMPT_IN_PROGRESS,
     ).exists():
         return None
 
-    # deja reporte sur cette version lors d'une publication precedente
     if QuestionnaireAttempt.objects.filter(
         questionnaire = attempt.questionnaire, user = user,
         version = version, is_test = False,

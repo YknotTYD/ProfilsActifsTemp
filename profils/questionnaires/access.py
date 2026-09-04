@@ -1,4 +1,3 @@
-##access.py
 """Evaluation des regles d'acces et de visibilite.
 
 Les regles sont stockees en forme normale disjonctive : AND a l'interieur d'un
@@ -19,7 +18,6 @@ from . import constants as c
 from .models      import UserBadge
 from .permissions import is_questionnaire_admin, user_roles
 
-
 class AccessDenied(Exception):
     """Refus d'acces, avec un motif exploitable par l'API."""
 
@@ -28,7 +26,6 @@ class AccessDenied(Exception):
         self.reason = reason
         self.code   = code
         self.status = status
-
 
 def _rule_matches(rule, user, roles: set[str], badge_ids: set[int]) -> bool:
     if rule.rule_type == c.RULE_EVERYONE:
@@ -39,10 +36,9 @@ def _rule_matches(rule, user, roles: set[str], badge_ids: set[int]) -> bool:
         matched = rule.role.lower() in roles
     elif rule.rule_type == c.RULE_BADGE:
         matched = rule.badge_id in badge_ids
-    else:                                               # pragma: no cover
+    else:
         matched = False
     return not matched if rule.negate else matched
-
 
 def evaluate_rules(questionnaire, user, kind: str) -> bool:
     """Applique le jeu de regles `kind` a `user`.
@@ -71,7 +67,6 @@ def evaluate_rules(questionnaire, user, kind: str) -> bool:
         for group in groups.values()
     )
 
-
 def can_see(questionnaire, user) -> bool:
     """L'utilisateur sait-il que ce questionnaire existe ?"""
     if is_questionnaire_admin(user):
@@ -81,7 +76,6 @@ def can_see(questionnaire, user) -> bool:
     if questionnaire.status == c.STATUS_TEST:
         return evaluate_rules(questionnaire, user, c.RULE_KIND_ACCESS)
     return evaluate_rules(questionnaire, user, c.RULE_KIND_VISIBILITY)
-
 
 def assert_can_start(questionnaire, user, *, test: bool = False):
     """Verifie tout ce qui conditionne le demarrage d'une tentative.
@@ -119,7 +113,6 @@ def assert_can_start(questionnaire, user, *, test: bool = False):
         if not evaluate_rules(questionnaire, user, k.RULE_KIND_ACCESS):
             raise AccessDenied("acces refuse par les regles du questionnaire", "rules_denied")
 
-
 def assert_version_usable(version, *, test: bool = False):
     """Verifie qu'une version peut encore recevoir des reponses."""
     if version is None:
@@ -135,7 +128,6 @@ def assert_version_usable(version, *, test: bool = False):
     if not version.is_valid_now():
         raise AccessDenied("version hors de sa periode de validite", "version_expired", 409)
 
-
 def visible_questionnaires(user, queryset = None):
     """Questionnaires que `user` a le droit de voir."""
     from .models import Questionnaire
@@ -144,14 +136,12 @@ def visible_questionnaires(user, queryset = None):
     queryset = queryset.prefetch_related("access_rules")
     return [q for q in queryset if can_see(q, user)]
 
-
 def result_visibility(questionnaire, user) -> dict:
     """Ce que l'utilisateur a le droit de voir dans un resultat."""
     settings = questionnaire.visibility_settings
     if is_questionnaire_admin(user):
         return {key: True for key in settings}
     return settings
-
 
 def attempt_deadline(questionnaire, started_at = None):
     """Echeance d'une tentative, en combinant duree max et delai d'expiration."""

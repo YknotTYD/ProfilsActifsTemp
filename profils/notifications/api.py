@@ -1,4 +1,3 @@
-##api.py
 """API du centre de notifications.
 
 Couche de transport uniquement, dans le meme esprit que `profiles/api.py` :
@@ -12,7 +11,6 @@ from profils.questionnaires.http import api, fail, ok
 from . import serializers, services
 from .models import Notification
 
-
 @api(("GET",))
 def list_notifications(request):
     rows = (
@@ -24,11 +22,9 @@ def list_notifications(request):
         "unread_count":  services.unread_count(request.user),
     })
 
-
 @api(("GET",))
 def unread_count(request):
     return ok({"count": services.unread_count(request.user)})
-
 
 @api(("POST",))
 def mark_read(request, pk):
@@ -37,7 +33,6 @@ def mark_read(request, pk):
         return fail("notification introuvable", "not_found", 404)
     services.mark_read(notification)
     return ok()
-
 
 @api(("POST",))
 def mark_all_read(request):

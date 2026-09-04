@@ -1,4 +1,3 @@
-##templatetags/profile_extras.py
 """Filtres de presentation des profils.
 
 L'API renvoie des dates ISO et des durees en secondes : ce sont les bonnes
@@ -20,7 +19,6 @@ _MONTHS = (
     "juil.", "aout", "sept.", "oct.", "nov.", "dec.",
 )
 
-
 @register.filter
 def month_year(value) -> str:
     """`2020-01-01` -> `janv. 2020`."""
@@ -30,7 +28,6 @@ def month_year(value) -> str:
     if date is None:
         return str(value)
     return f"{_MONTHS[date.month - 1]} {date.year}"
-
 
 @register.filter
 def period(entry) -> str:
@@ -42,7 +39,6 @@ def period(entry) -> str:
     if start and end:
         return f"{start} — {end}"
     return start or end or ""
-
 
 @register.filter
 def duration_months(months) -> str:
@@ -59,7 +55,6 @@ def duration_months(months) -> str:
         parts.append(f"{rest} mois")
     return " ".join(parts)
 
-
 @register.filter
 def duration_seconds(seconds) -> str:
     """`58` -> `0:58`."""
@@ -69,12 +64,10 @@ def duration_seconds(seconds) -> str:
         return ""
     return f"{seconds // 60}:{seconds % 60:02d}"
 
-
 @register.filter
 def bars(rank) -> range:
     """Quatre crans, pour dessiner un niveau sans avoir a le lire."""
     return range(1, 5)
-
 
 @register.filter
 def dictkey(mapping, key):

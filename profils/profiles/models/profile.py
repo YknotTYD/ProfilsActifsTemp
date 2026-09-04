@@ -1,11 +1,9 @@
-##models/profile.py
 
 from django.contrib.auth.models import User
 from django.core.exceptions      import ValidationError
 from django.db                   import models
 
 from .. import constants as c
-
 
 class ProfessionalProfile(models.Model):
     """Profil professionnel d'un utilisateur.
@@ -27,25 +25,19 @@ class ProfessionalProfile(models.Model):
         User, on_delete = models.CASCADE, related_name = "professional_profile"
     )
 
-    # -- identite professionnelle (section 2) ------------------------------- #
     headline = models.CharField(
         max_length = 160, blank = True, default = "",
         help_text = "titre professionnel, par exemple 'Developpeur backend Java'"
     )
     summary  = models.TextField(blank = True, default = "")
 
-    #: le projet n'a pas de stockage de fichiers : comme `mainapp.Video`, on
-    #: garde des URL. Le jour ou un stockage arrive, ces champs deviennent des
-    #: `FileField` sans toucher au reste.
     photo_url = models.CharField(max_length = 1024, blank = True, default = "")
     cover_url = models.CharField(max_length = 1024, blank = True, default = "")
 
-    #: teinte de la banniere quand aucune image de couverture n'est fournie.
     cover_color = models.CharField(
         max_length = 20, choices = c.COVER_COLORS, blank = True, default = c.DEFAULT_COVER_COLOR,
     )
 
-    # -- localisation generale ---------------------------------------------- #
     location_city    = models.CharField(max_length = 120, blank = True, default = "")
     location_region  = models.CharField(max_length = 120, blank = True, default = "")
     location_country = models.CharField(
@@ -57,7 +49,6 @@ class ProfessionalProfile(models.Model):
         max_length = 24, choices = c.PROFESSIONAL_FIELDS, blank = True, default = ""
     )
 
-    # -- disponibilite (section 10) ----------------------------------------- #
     availability_status = models.CharField(
         max_length = 24, choices = c.AVAILABILITY_STATUSES,
         default = c.AVAILABILITY_NOT_LOOKING,
@@ -72,12 +63,10 @@ class ProfessionalProfile(models.Model):
     mobility_radius_km  = models.PositiveIntegerField(null = True, blank = True)
     mobility_note       = models.CharField(max_length = 240, blank = True, default = "")
 
-    # -- visibilite (section 11) -------------------------------------------- #
     visibility = models.CharField(
         max_length = 20, choices = c.VISIBILITIES, default = c.VISIBILITY_REGISTERED_USERS,
     )
 
-    # -- valeur derivee, tenue a jour a l'ecriture (section 14) -------------- #
     total_experience_months = models.PositiveIntegerField(default = 0)
 
     created_at = models.DateTimeField(auto_now_add = True)
@@ -91,7 +80,6 @@ class ProfessionalProfile(models.Model):
             ("moderate_profile",      "Peut moderer un profil"),
         )
         indexes = (
-            # le couple que touche chaque recherche
             models.Index(fields = ["visibility", "availability_status"]),
             models.Index(fields = ["professional_field"]),
             models.Index(fields = ["location_country", "location_city"]),
@@ -102,14 +90,10 @@ class ProfessionalProfile(models.Model):
     def __str__(self):
         return f"ProfessionalProfile<{self.user.username}>"
 
-    # ------------------------------------------------------------------ #
-
     def save(self, *args, **kwargs):
         creating = self._state.adding
         super().save(*args, **kwargs)
         if creating:
-            # un profil sans reglages serait invisible en recherche (voir
-            # `search.base_queryset`) : on les cree avec lui.
             ProfileVisibility.objects.get_or_create(profile = self)
             ProfileSearchSettings.objects.get_or_create(profile = self)
 
@@ -118,10 +102,6 @@ class ProfessionalProfile(models.Model):
         """Profil de `user`, cree a la volee la premiere fois."""
         profile, _ = cls.objects.get_or_create(user = user)
         return profile
-
-    # ------------------------------------------------------------------ #
-    # Lectures derivees
-    # ------------------------------------------------------------------ #
 
     @property
     def username(self) -> str:
@@ -158,10 +138,6 @@ class ProfessionalProfile(models.Model):
     def contract_type_codes(self) -> list[str]:
         return [row.contract_type for row in self.contract_types.all()]
 
-    # ------------------------------------------------------------------ #
-    # Reglages, avec repli sur les valeurs par defaut
-    # ------------------------------------------------------------------ #
-
     def visibility_settings(self) -> "ProfileVisibility":
         settings = getattr(self, "visibility_config", None)
         return settings if settings is not None else ProfileVisibility(profile = self)
@@ -173,8 +149,6 @@ class ProfessionalProfile(models.Model):
     @property
     def searchable(self) -> bool:
         return self.search_settings().searchable
-
-    # ------------------------------------------------------------------ #
 
     def recompute_experience(self, *, save: bool = True) -> int:
         """Recalcule la duree totale d'experience a partir des experiences.
@@ -205,10 +179,8 @@ class ProfessionalProfile(models.Model):
                 self.save(update_fields = ["total_experience_months", "updated_at"])
         return months
 
-
 def _months_between(start, end) -> int:
     return max(0, (end.year - start.year) * 12 + (end.month - start.month))
-
 
 class ProfileVisibility(models.Model):
     """Visibilite section par section (section 11).
@@ -247,7 +219,6 @@ class ProfileVisibility(models.Model):
     def as_dict(self) -> dict:
         return {section: self.of(section) for section, _ in c.PROFILE_SECTIONS}
 
-
 class ProfileSearchSettings(models.Model):
     """Reglages de recherche, independants de la visibilite (section 11).
 
@@ -277,7 +248,6 @@ class ProfileSearchSettings(models.Model):
     def __str__(self):
         return f"ProfileSearchSettings<{self.profile_id} searchable={self.searchable}>"
 
-
 class ProfileContractType(models.Model):
     """Type de contrat recherche (section 10).
 
@@ -302,7 +272,6 @@ class ProfileContractType(models.Model):
 
     def __str__(self):
         return f"ProfileContractType<{self.profile_id}:{self.contract_type}>"
-
 
 class ProfileLink(models.Model):
     """Portfolio et liens professionnels (section 2)."""

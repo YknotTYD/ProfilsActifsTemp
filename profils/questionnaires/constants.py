@@ -1,14 +1,9 @@
-##constants.py
 """Vocabulaire partagé du systeme de questionnaires.
 
 Tout ce qui est un "choix" (statut, type, operateur...) est declare ici sous
 forme de tuple de couples afin de rester utilisable directement dans les
 `choices` Django et dans les validations d'API.
 """
-
-# --------------------------------------------------------------------------- #
-# Statuts
-# --------------------------------------------------------------------------- #
 
 STATUS_DRAFT       = "DRAFT"
 STATUS_TEST        = "TEST"
@@ -28,7 +23,6 @@ QUESTIONNAIRE_STATUSES = (
 
 VERSION_STATUSES = QUESTIONNAIRE_STATUSES
 
-#: statuts dans lesquels une version ne peut plus etre editee
 LOCKED_VERSION_STATUSES = (
     STATUS_TEST,
     STATUS_PUBLISHED,
@@ -37,7 +31,6 @@ LOCKED_VERSION_STATUSES = (
     STATUS_INVALIDATED,
 )
 
-#: statuts dans lesquels une version n'accepte plus de nouvelle reponse
 CLOSED_VERSION_STATUSES = (
     STATUS_DISABLED,
     STATUS_ARCHIVED,
@@ -58,17 +51,12 @@ ATTEMPT_STATUSES = (
     (ATTEMPT_INVALIDATED, "Invalidee"),
 )
 
-#: une tentative dans un de ces statuts est definitivement close
 FINAL_ATTEMPT_STATUSES = (
     ATTEMPT_COMPLETED,
     ATTEMPT_ABANDONED,
     ATTEMPT_EXPIRED,
     ATTEMPT_INVALIDATED,
 )
-
-# --------------------------------------------------------------------------- #
-# Familles et types de questions
-# --------------------------------------------------------------------------- #
 
 FAMILY_CHOICE     = "choice"
 FAMILY_NUMERIC    = "numeric"
@@ -82,7 +70,6 @@ QUESTION_FAMILIES = (
     (FAMILY_STRUCTURED, "Valeur structuree"),
 )
 
-# choix
 TYPE_SINGLE_CHOICE   = "single_choice"
 TYPE_MULTIPLE_CHOICE = "multiple_choice"
 TYPE_CHECKBOX        = "checkbox"
@@ -92,7 +79,6 @@ TYPE_DROPDOWN        = "dropdown"
 TYPE_MULTI_SELECT    = "multi_select"
 TYPE_SCALE           = "scale"
 
-# numerique
 TYPE_INTEGER     = "integer"
 TYPE_DECIMAL     = "decimal"
 TYPE_PERCENTAGE  = "percentage"
@@ -103,24 +89,18 @@ TYPE_HEIGHT      = "height"
 TYPE_SPEED       = "speed"
 TYPE_DURATION    = "duration"
 
-# date / temps
 TYPE_DATE        = "date"
 TYPE_TIME        = "time"
 TYPE_DATETIME    = "datetime"
 TYPE_HOUR_MINUTE = "hour_minute"
 TYPE_DATE_RANGE  = "date_range"
 
-# structure
 TYPE_COUNTRY = "country"
 TYPE_CITY    = "city"
 TYPE_YEAR    = "year"
 TYPE_MONTH   = "month"
 TYPE_WEEKDAY = "weekday"
 TYPE_ADDRESS = "address"
-
-# --------------------------------------------------------------------------- #
-# Regles d'acces / visibilite
-# --------------------------------------------------------------------------- #
 
 RULE_KIND_ACCESS     = "ACCESS"
 RULE_KIND_VISIBILITY = "VISIBILITY"
@@ -142,10 +122,6 @@ RULE_TYPES = (
     (RULE_BADGE,    "Badge"),
 )
 
-# --------------------------------------------------------------------------- #
-# Regles de tentative / navigation
-# --------------------------------------------------------------------------- #
-
 ANSWERS_FREE                = "FREE"
 ANSWERS_UNTIL_FINISH        = "UNTIL_FINISH"
 ANSWERS_LOCKED_ON_VALIDATE  = "LOCKED_ON_VALIDATE"
@@ -163,10 +139,6 @@ NAVIGATION_MODES = (
     (NAVIGATION_FREE,   "Navigation libre"),
     (NAVIGATION_LINEAR, "Lineaire"),
 )
-
-# --------------------------------------------------------------------------- #
-# Conditions d'affichage
-# --------------------------------------------------------------------------- #
 
 OP_EQUALS       = "EQUALS"
 OP_NOT_EQUALS   = "NOT_EQUALS"
@@ -190,17 +162,12 @@ LOGIC_AND = "AND"
 LOGIC_OR  = "OR"
 LOGIC_OPERATORS = (LOGIC_AND, LOGIC_OR)
 
-# --------------------------------------------------------------------------- #
-# Scoring
-# --------------------------------------------------------------------------- #
-
 PARTIAL_PROPORTIONAL   = "proportional"
 PARTIAL_ALL_OR_NOTHING = "all_or_nothing"
 PARTIAL_THRESHOLD      = "threshold"
 
 PARTIAL_MODES = (PARTIAL_PROPORTIONAL, PARTIAL_ALL_OR_NOTHING, PARTIAL_THRESHOLD)
 
-#: scoring par defaut d'une question
 DEFAULT_QUESTION_SCORING = {
     "weight":            1.0,
     "correct_score":     1.0,
@@ -211,14 +178,12 @@ DEFAULT_QUESTION_SCORING = {
     "partial_threshold": 0.5,
 }
 
-#: scoring par defaut d'une version de questionnaire
 DEFAULT_VERSION_SCORING = {
     "pass_threshold_percent": 60.0,
     "floor_negative":         True,
     "levels":                 [],
 }
 
-#: visibilite des resultats par defaut
 DEFAULT_RESULT_VISIBILITY = {
     "show_score":            True,
     "show_percentage":       True,
@@ -229,10 +194,6 @@ DEFAULT_RESULT_VISIBILITY = {
     "show_explanations":     False,
     "show_badge":            False,
 }
-
-# --------------------------------------------------------------------------- #
-# Audit
-# --------------------------------------------------------------------------- #
 
 AUDIT_CREATE          = "CREATE"
 AUDIT_UPDATE          = "UPDATE"
@@ -261,10 +222,6 @@ AUDIT_ACTIONS = tuple(
     )
 )
 
-# --------------------------------------------------------------------------- #
-# Badges
-# --------------------------------------------------------------------------- #
-
 BADGE_SOURCE_RESULT = "QUESTIONNAIRE_RESULT"
 BADGE_SOURCE_MANUAL = "MANUAL"
 BADGE_SOURCE_SYSTEM = "SYSTEM"
@@ -274,10 +231,6 @@ BADGE_SOURCES = (
     (BADGE_SOURCE_MANUAL, "Attribution manuelle"),
     (BADGE_SOURCE_SYSTEM, "Systeme"),
 )
-
-# --------------------------------------------------------------------------- #
-# Permissions applicatives
-# --------------------------------------------------------------------------- #
 
 PERM_CREATE       = "questionnaires.add_questionnaire"
 PERM_UPDATE       = "questionnaires.change_questionnaire"

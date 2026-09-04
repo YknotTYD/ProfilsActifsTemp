@@ -1,4 +1,3 @@
-##badges.py
 """Attribution des badges.
 
 Le modele, les relations et l'API sont en place (section 21). L'interface
@@ -15,14 +14,12 @@ from .models   import Badge, QuestionnaireResult, UserBadge
 
 _CRITERIA: dict[str, callable] = {}
 
-
 def criterion(name: str):
     def decorator(func):
         _CRITERIA[name] = func
         return func
 
     return decorator
-
 
 @criterion("questionnaire_passed")
 def _passed(badge, user, result) -> bool:
@@ -31,14 +28,12 @@ def _passed(badge, user, result) -> bool:
         return False
     return result.passed
 
-
 @criterion("min_percentage")
 def _min_percentage(badge, user, result) -> bool:
     target = badge.criteria.get("questionnaire")
     if target is not None and int(target) != result.questionnaire_id:
         return False
     return float(result.percentage) >= float(badge.criteria.get("percentage", 100))
-
 
 @criterion("questionnaires_passed")
 def _all_passed(badge, user, result) -> bool:
@@ -52,7 +47,6 @@ def _all_passed(badge, user, result) -> bool:
     )
     return wanted <= done
 
-
 @criterion("attempts_count")
 def _attempts_count(badge, user, result) -> bool:
     from .models import QuestionnaireAttempt
@@ -63,11 +57,9 @@ def _attempts_count(badge, user, result) -> bool:
         queryset = queryset.filter(questionnaire_id = int(target))
     return queryset.count() >= int(badge.criteria.get("count", 1))
 
-
 def evaluate_badge(badge, user, result) -> bool:
     handler = _CRITERIA.get((badge.criteria or {}).get("type"))
     return bool(handler and handler(badge, user, result))
-
 
 def award_for_result(result) -> list[UserBadge]:
     """Attribue les badges declenches par un resultat reel.
@@ -100,7 +92,6 @@ def award_for_result(result) -> list[UserBadge]:
                 new = {"badge": badge.code, "user": result.user_id})
 
     return awarded
-
 
 def user_badges(user) -> list[dict]:
     """Badges d'un utilisateur, format expose par l'API."""

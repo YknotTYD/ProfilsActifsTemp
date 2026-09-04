@@ -1,4 +1,3 @@
-##services.py
 """Ecritures et lectures de notifications.
 
 Point d'entree unique pour en creer une : `notify()`. Les autres apps
@@ -13,7 +12,6 @@ from django.utils import timezone
 
 from . import types
 from .models import Notification
-
 
 def notify(recipient, type_code: str, *, target = None, url: str = "", **payload) -> Notification:
     """Cree une notification pour `recipient`.
@@ -34,18 +32,15 @@ def notify(recipient, type_code: str, *, target = None, url: str = "", **payload
 
     return Notification.objects.create(**kwargs)
 
-
 def unread_count(user) -> int:
     if not user or not user.is_authenticated:
         return 0
     return Notification.objects.filter(recipient = user, read_at__isnull = True).count()
 
-
 def mark_read(notification: Notification):
     if notification.read_at is None:
         notification.read_at = timezone.now()
         notification.save(update_fields = ["read_at"])
-
 
 def mark_all_read(user):
     Notification.objects.filter(recipient = user, read_at__isnull = True).update(

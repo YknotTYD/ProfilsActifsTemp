@@ -1,10 +1,8 @@
-##models/skill.py
 
 from django.db import models
 
 from .. import constants as c
 from ..skills import normalize_skill_name
-
 
 class Skill(models.Model):
     """Competence du referentiel (section 3).
@@ -37,7 +35,6 @@ class Skill(models.Model):
             self.slug = normalize_skill_name(self.name)
         super().save(*args, **kwargs)
 
-
 class SkillAlias(models.Model):
     """Orthographe supplementaire pointant vers une competence.
 
@@ -54,7 +51,6 @@ class SkillAlias(models.Model):
 
     def __str__(self):
         return f"SkillAlias<{self.normalized} -> {self.skill_id}>"
-
 
 class UserSkill(models.Model):
     """Competence declaree par un profil, avec son niveau (section 3).
@@ -79,7 +75,6 @@ class UserSkill(models.Model):
     added_at         = models.DateTimeField(auto_now_add = True)
     updated_at       = models.DateTimeField(auto_now = True)
 
-    # -- future preuve / certification (section 3) -------------------------- #
     evidence_url = models.URLField(max_length = 1024, blank = True, default = "")
     evidence_certification = models.ForeignKey(
         "profiles.Certification", on_delete = models.SET_NULL,
@@ -94,7 +89,6 @@ class UserSkill(models.Model):
             ),
         )
         indexes = (
-            # l'index de la recherche par competence et niveau minimum
             models.Index(fields = ["skill", "level_rank"]),
             models.Index(fields = ["skill", "years_experience"]),
             models.Index(fields = ["profile", "order"]),
@@ -112,7 +106,6 @@ class UserSkill(models.Model):
     @property
     def level_label(self) -> str:
         return dict(c.SKILL_LEVELS).get(self.level, self.level)
-
 
 class SkillLink(models.Model):
     """Base des tables d'association <section professionnelle> / competence.

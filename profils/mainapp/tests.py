@@ -8,7 +8,6 @@ from profils.notifications.models import Notification
 
 from .models import Role, VideoLink
 
-
 class NavbarConsistencyTests(TestCase):
     """La barre de navigation est la meme sur toutes les pages (context
     processor `navigation`), et distingue l'administrateur."""
@@ -39,7 +38,6 @@ class NavbarConsistencyTests(TestCase):
         self.assertIn("Se connecter", body)
         self.assertNotIn("notif-bell", body)
 
-
 class ReactionNotificationTests(TestCase):
     """Section 5 : "like recu", "dislike recu"."""
 
@@ -68,7 +66,7 @@ class ReactionNotificationTests(TestCase):
 
     def test_removing_a_reaction_does_not_notify_again(self):
         self._react("like")
-        self._react("like")  # meme reaction : la retire
+        self._react("like")
         self.assertEqual(Notification.objects.filter(recipient = self.owner).count(), 1)
 
     def test_reacting_to_ones_own_video_does_not_notify(self):

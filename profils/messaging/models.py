@@ -1,4 +1,3 @@
-##models.py
 """Conversation et message (spec section 4).
 
 `context` est generique (content_type + object_id) : d'ou est partie la
@@ -12,7 +11,6 @@ from django.conf import settings
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
-
 
 class Conversation(models.Model):
 
@@ -52,7 +50,6 @@ class Conversation(models.Model):
     @property
     def last_message(self):
         return self.messages.order_by("-created_at").first()
-
 
 class Message(models.Model):
 

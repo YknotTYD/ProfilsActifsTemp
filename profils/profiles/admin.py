@@ -1,4 +1,3 @@
-##admin.py
 """Enregistrement dans l'administration Django.
 
 Complement de l'interface dediee : utile pour l'inspection, le depannage et la
@@ -15,22 +14,18 @@ from .models import (
     WorkExperienceSkill,
 )
 
-
 class UserSkillInline(admin.TabularInline):
     model  = UserSkill
     extra  = 0
     fields = ("skill", "level", "years_experience", "order")
 
-
 class SkillAliasInline(admin.TabularInline):
     model = SkillAlias
     extra = 0
 
-
 class ContractTypeInline(admin.TabularInline):
     model = ProfileContractType
     extra = 0
-
 
 @admin.register(ProfessionalProfile)
 class ProfessionalProfileAdmin(admin.ModelAdmin):
@@ -41,7 +36,6 @@ class ProfessionalProfileAdmin(admin.ModelAdmin):
     inlines       = (UserSkillInline, ContractTypeInline)
     readonly_fields = ("total_experience_months",)
 
-
 @admin.register(Skill)
 class SkillAdmin(admin.ModelAdmin):
     list_display  = ("id", "name", "slug", "category")
@@ -49,24 +43,20 @@ class SkillAdmin(admin.ModelAdmin):
     search_fields = ("name", "slug", "aliases__normalized")
     inlines       = (SkillAliasInline,)
 
-
 @admin.register(UserSkill)
 class UserSkillAdmin(admin.ModelAdmin):
     list_display = ("profile", "skill", "level", "level_rank", "years_experience")
     list_filter  = ("level",)
-
 
 @admin.register(WorkExperience)
 class WorkExperienceAdmin(admin.ModelAdmin):
     list_display = ("id", "profile", "title", "company", "start_date", "end_date", "is_current")
     list_filter  = ("is_current", "contract_type")
 
-
 @admin.register(Education)
 class EducationAdmin(admin.ModelAdmin):
     list_display = ("id", "profile", "institution", "degree", "degree_level", "is_current")
     list_filter  = ("degree_level", "is_current")
-
 
 @admin.register(ProfileVideo)
 class ProfileVideoAdmin(admin.ModelAdmin):
@@ -74,7 +64,6 @@ class ProfileVideoAdmin(admin.ModelAdmin):
                     "is_presentation", "visibility", "published_at")
     list_filter  = ("status", "source_type", "is_presentation", "visibility")
     readonly_fields = ("file_blob", "moderated_at", "moderated_by")
-
 
 @admin.register(VideoModerationEvent)
 class VideoModerationEventAdmin(admin.ModelAdmin):
@@ -93,12 +82,10 @@ class VideoModerationEventAdmin(admin.ModelAdmin):
     def has_delete_permission(self, request, obj = None):
         return False
 
-
 @admin.register(Language)
 class LanguageAdmin(admin.ModelAdmin):
     list_display  = ("code", "name")
     search_fields = ("code", "name")
-
 
 admin.site.register(ProfileVisibility)
 admin.site.register(ProfileSearchSettings)

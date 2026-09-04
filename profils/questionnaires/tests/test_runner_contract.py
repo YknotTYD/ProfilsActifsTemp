@@ -1,4 +1,3 @@
-##tests/test_runner_contract.py
 """Ce que l'interface de passage recoit du serveur.
 
 Ces tests protegent un invariant simple : un participant doit pouvoir repondre
@@ -20,9 +19,7 @@ from .factories import (
     add_single_choice, draft_of, make_admin, make_questionnaire, make_user, publish,
 )
 
-#: controles que sait afficher `questionnaire_fields.js`
 KNOWN_WIDGETS = {"choice", "dropdown", "vocabulary", "number", "temporal", "date_range", "address"}
-
 
 class WidgetContractTests(TestCase):
 
@@ -67,11 +64,9 @@ class WidgetContractTests(TestCase):
         self.assertEqual(payload["family"], c.FAMILY_STRUCTURED)
         self.assertEqual(payload["widget"], "number")
 
-
 class EveryTypeIsAnswerableTests(TestCase):
     """Un questionnaire contenant tous les types doit pouvoir etre termine."""
 
-    #: une reponse valide par type, telle que la produirait l'interface
     ANSWERS = {
         c.TYPE_INTEGER: 20, c.TYPE_DECIMAL: "20.5", c.TYPE_PERCENTAGE: 50,
         c.TYPE_TEMPERATURE: 20, c.TYPE_DISTANCE: 20, c.TYPE_WEIGHT: 20,
@@ -137,7 +132,6 @@ class EveryTypeIsAnswerableTests(TestCase):
                 self.assertTrue(question["options"], question["type"])
             if question["widget"] == "vocabulary":
                 self.assertTrue(question["vocabulary"], question["type"])
-
 
 class FinishFeedbackTests(TestCase):
     """Terminer doit dire precisement ce qui bloque."""

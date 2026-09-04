@@ -1,4 +1,3 @@
-##engagement.py
 """Vues et reactions du feed video (`ProfileVideo`).
 
 Le feed est desormais servi par `ProfileVideo` (une seule pile video, moderee).
@@ -31,12 +30,10 @@ _NOTIFICATION_FOR_REACTION = {
     _DISLIKE: notification_types.VIDEO_DISLIKED,
 }
 
-
 def _recount_likes(video: ProfileVideo) -> int:
     likes = video.reactions.filter(reaction = _LIKE).count()
     ProfileVideo.objects.filter(pk = video.pk).update(like_count = likes)
     return likes
-
 
 @transaction.atomic
 def register_view(video: ProfileVideo, *, user = None, session_key: str = "") -> bool:
@@ -67,7 +64,6 @@ def register_view(video: ProfileVideo, *, user = None, session_key: str = "") ->
     if created:
         ProfileVideo.objects.filter(pk = video.pk).update(view_count = F("view_count") + 1)
     return created
-
 
 @transaction.atomic
 def set_reaction(video: ProfileVideo, user, reaction: str) -> dict:

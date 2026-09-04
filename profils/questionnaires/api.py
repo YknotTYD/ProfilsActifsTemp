@@ -1,4 +1,3 @@
-##api.py
 """API utilisateur : passage d'un questionnaire.
 
 Rien de ce que le client envoie n'est cru sur parole. La version utilisee, le
@@ -24,11 +23,6 @@ from .services    import (
 )
 from .snapshots   import attempt_transcript
 
-
-# --------------------------------------------------------------------------- #
-# Catalogue
-# --------------------------------------------------------------------------- #
-
 @api(("GET",))
 def available(request):
     """Questionnaires que l'utilisateur a le droit de voir."""
@@ -38,14 +32,8 @@ def available(request):
     )
     return ok({"questionnaires": [public_questionnaire(q, request.user) for q in questionnaires]})
 
-
-# --------------------------------------------------------------------------- #
-# Cycle de vie d'une tentative
-# --------------------------------------------------------------------------- #
-
 def _questionnaire(pk) -> Questionnaire:
     return get_object_or_404(Questionnaire.objects.prefetch_related("access_rules"), pk = pk)
-
 
 @api(("POST",))
 def start(request, pk):
@@ -56,7 +44,6 @@ def start(request, pk):
 
     attempt = start_attempt(questionnaire, request.user, test = test)
     return ok(runner_state(attempt), status = 201)
-
 
 @api(("GET",))
 def current(request, pk):
@@ -75,7 +62,6 @@ def current(request, pk):
             "can_start": public_questionnaire(questionnaire, request.user)["can_start"],
         })
     return ok(runner_state(attempt))
-
 
 @api(("POST",))
 def answer(request, pk):
@@ -103,7 +89,6 @@ def answer(request, pk):
     state["visible_question_ids"] = state["progress"]["visible"]
     return ok(state)
 
-
 @api(("POST",))
 def clear(request, pk):
     """Efface une reponse."""
@@ -116,7 +101,6 @@ def clear(request, pk):
 
     return ok(clear_answer(attempt, get_int(payload, "question_id")))
 
-
 @api(("GET",))
 def state(request, pk):
     """Etat serveur complet, utilise pour la resynchronisation apres coupure."""
@@ -127,7 +111,6 @@ def state(request, pk):
     if attempt is None:
         return fail("aucune tentative en cours", "no_attempt", 409)
     return ok(runner_state(attempt))
-
 
 @api(("POST",))
 def finish(request, pk):
@@ -142,7 +125,6 @@ def finish(request, pk):
     result = finish_attempt(attempt, force = get_bool(payload, "force", False))
     return ok({"result": result_payload(result, request.user)})
 
-
 @api(("POST",))
 def abandon(request, pk):
     questionnaire = _questionnaire(pk)
@@ -152,11 +134,6 @@ def abandon(request, pk):
     if attempt is None:
         return fail("aucune tentative en cours", "no_attempt", 409)
     return ok(attempt_summary(abandon_attempt(attempt)))
-
-
-# --------------------------------------------------------------------------- #
-# Resultats
-# --------------------------------------------------------------------------- #
 
 @api(("GET",))
 def my_results(request, pk):
@@ -173,7 +150,6 @@ def my_results(request, pk):
         "results":    [result_payload(r, request.user) for r in results],
         "visibility": result_visibility(questionnaire, request.user),
     })
-
 
 @api(("GET",))
 def attempt_detail(request, attempt_id):
@@ -194,11 +170,6 @@ def attempt_detail(request, attempt_id):
     if request.GET.get("transcript") in ("1", "true", "yes"):
         payload["transcript"] = attempt_transcript(attempt)
     return ok(payload)
-
-
-# --------------------------------------------------------------------------- #
-# Badges (section 21)
-# --------------------------------------------------------------------------- #
 
 @api(("GET",))
 def badges(request, user_id):

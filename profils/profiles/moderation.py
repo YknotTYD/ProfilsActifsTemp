@@ -1,4 +1,3 @@
-##moderation.py
 """Machine a etats de la moderation video.
 
 Point d'entree unique pour tout changement de statut d'une `ProfileVideo` :
@@ -32,18 +31,11 @@ from .http import BadRequest
 from .models.video import ProfileVideo, VideoModerationEvent
 from .permissions import ProfileAccessDenied
 
-
-#: statuts qui declenchent une notification au proprietaire (section 5 :
-#: "video acceptee", "video refusee", "changement important concernant une
-#: video"). Un statut absent d'ici n'a rien a annoncer -- `DRAFT`,
-#: `PROCESSING` et `PENDING` sont des etapes internes du pipeline, pas des
-#: evenements pour l'utilisateur.
 _NOTIFICATION_FOR_STATUS = {
     c.VIDEO_APPROVED: notification_types.VIDEO_APPROVED,
     c.VIDEO_REJECTED: notification_types.VIDEO_REJECTED,
     c.VIDEO_HIDDEN:   notification_types.VIDEO_HIDDEN,
 }
-
 
 class ForbiddenTransition(ProfileAccessDenied):
     """La transition existe, mais pas pour ce type d'acteur -- un refus
@@ -57,7 +49,6 @@ class ForbiddenTransition(ProfileAccessDenied):
             "forbidden_transition", 403,
         )
 
-
 class InvalidTransition(BadRequest):
     """La transition n'existe pas du tout, quel que soit l'acteur."""
 
@@ -65,7 +56,6 @@ class InvalidTransition(BadRequest):
         super().__init__(
             f"transition '{from_status}' -> '{to_status}' impossible", "invalid_transition",
         )
-
 
 @transaction.atomic
 def transition_video(video: ProfileVideo, to_status: str, *, actor: str,
@@ -99,7 +89,6 @@ def transition_video(video: ProfileVideo, to_status: str, *, actor: str,
     if to_status == c.VIDEO_REJECTED:
         video.rejection_reason = reason
     elif to_status != c.VIDEO_DELETED:
-        # un motif de refus ne doit pas survivre a la sortie de l'etat refuse
         video.rejection_reason = ""
 
     if actor == c.ACTOR_ADMIN and to_status in (c.VIDEO_APPROVED, c.VIDEO_REJECTED):
@@ -119,10 +108,6 @@ def transition_video(video: ProfileVideo, to_status: str, *, actor: str,
 
     notif_type = _NOTIFICATION_FOR_STATUS.get(to_status)
     if notif_type is not None:
-        # section 5 : "acces rapide a l'element concerne". Ces trois evenements
-        # (acceptee / refusee / masquee) concernent le proprietaire et le
-        # renvoient a la page ou il agit sur sa video -- re-soumettre apres un
-        # refus, confirmer la publication -- pas a sa page publique.
         notifications.notify(
             video.profile.user, notif_type, target = video,
             url = "/profiles/me/video/",
@@ -131,20 +116,8 @@ def transition_video(video: ProfileVideo, to_status: str, *, actor: str,
 
     return video
 
-
-# --------------------------------------------------------------------------- #
-# Historique des refus (spec "Historique de moderation")
-# --------------------------------------------------------------------------- #
-#
-# Chaque refus laisse deja un `VideoModerationEvent` (new_status == REJECTED).
-# La console de moderation en montre deux listes : les refus recents (fenetre
-# vivante, 7 jours par defaut) et les archives (au-dela). Rien n'est jamais
-# supprime -- `archived_at` fait juste passer une ligne d'une liste a l'autre.
-
-
 def _rejection_cutoff():
     return timezone.now() - timedelta(days = c.rejection_history_days())
-
 
 def archive_stale_rejections() -> int:
     """Archive les refus sortis de la fenetre vivante. Renvoie le nombre traite.
@@ -159,7 +132,6 @@ def archive_stale_rejections() -> int:
                 created_at__lt = _rejection_cutoff())
         .update(archived_at = timezone.now())
     )
-
 
 def rejection_history(*, archived: bool = False):
     """Refus de moderation, `archived=False` pour la fenetre vivante.

@@ -1,4 +1,3 @@
-##tests/test_skills.py
 """Referentiel de competences : canonicalisation, niveaux, doublons (sections 3 et 4)."""
 
 from django.core.exceptions import ValidationError
@@ -12,7 +11,6 @@ from profils.profiles.skills import (
 )
 
 from .factories import add_skill, make_profile
-
 
 class NormalizationTests(TestCase):
 
@@ -44,7 +42,6 @@ class NormalizationTests(TestCase):
         for name in ("", "   ", "***", "///"):
             with self.assertRaises(ValidationError):
                 normalize_skill_name(name)
-
 
 class ResolutionTests(TestCase):
 
@@ -84,7 +81,6 @@ class ResolutionTests(TestCase):
     def test_resolve_skills_drops_duplicates_and_keeps_order(self):
         skills = resolve_skills(["Docker", "docker", "Kubernetes"])
         self.assertEqual([s.slug for s in skills], ["docker", "kubernetes"])
-
 
 class UserSkillTests(TestCase):
 
@@ -136,7 +132,6 @@ class UserSkillTests(TestCase):
         row = add_skill(self.profile, "COBOL")
         services.remove_skill(row)
         self.assertEqual(self.profile.skills.count(), 0)
-        # la competence reste au referentiel : d'autres profils la partagent
         self.assertTrue(Skill.objects.filter(slug = "cobol").exists())
 
     def test_reorder_skills(self):

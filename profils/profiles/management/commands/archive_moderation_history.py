@@ -1,4 +1,3 @@
-##management/commands/archive_moderation_history.py
 """Archive les refus de moderation sortis de la fenetre vivante.
 
     python manage.py archive_moderation_history
@@ -15,7 +14,6 @@ from django.core.management.base import BaseCommand
 
 from profils.profiles import constants as c
 from profils.profiles.moderation import archive_stale_rejections
-
 
 class Command(BaseCommand):
     help = "Archive les refus de moderation de plus de REJECTION_HISTORY_DAYS jours."

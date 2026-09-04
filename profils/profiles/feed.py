@@ -1,4 +1,3 @@
-##feed.py
 """Preparation du futur feed video (sections 18 et 19).
 
 **Ce module n'expose aucun feed.** Il n'y a ni route, ni page, ni faux
@@ -23,9 +22,7 @@ from django.db.models import Q
 from . import constants as c
 from .visibility import rank
 
-#: nombre de videos ramenees pour le feed du tableau de bord recruteur/admin.
 DASHBOARD_FEED_LIMIT = 50
-
 
 def _visible_video_filter(viewer) -> Q:
     """Conditions de visibilite communes a toutes les lectures de videos."""
@@ -40,7 +37,6 @@ def _visible_video_filter(viewer) -> Q:
         & Q(profile__visibility_config__videos_visibility__in = allowed)
         & Q(profile__search_config__appear_in_video_feed = True)
     )
-
 
 def video_candidates(query, viewer = None):
     """Videos des profils correspondant a une recherche.
@@ -61,7 +57,6 @@ def video_candidates(query, viewer = None):
         .prefetch_related("skill_links__skill")
         .order_by("-published_at", "-id")
     )
-
 
 def videos_for_skills(skill_ids, viewer = None):
     """Videos portant l'une des competences demandees (section 19).
@@ -84,7 +79,6 @@ def videos_for_skills(skill_ids, viewer = None):
         .order_by("-published_at", "-id")
     )
 
-
 def dashboard_feed(viewer):
     """Videos du feed vertical du tableau de bord (recruteur / admin).
 
@@ -102,11 +96,8 @@ def dashboard_feed(viewer):
         .order_by("-published_at", "-id")[:DASHBOARD_FEED_LIMIT]
     )
 
-
-#: hebergeurs dont l'URL se lit dans une <iframe> plutot que dans un <video>
 _IFRAME_HINTS = ("/embed/", "player.vimeo.com", "youtube.com", "youtu.be", "dailymotion.com/embed")
 _FILE_SUFFIXES = (".mp4", ".webm", ".ogg", ".ogv", ".mov", ".m4v")
-
 
 def _youtube_embed(url: str) -> str:
     """`watch?v=ID` ou `youtu.be/ID` -> `youtube.com/embed/ID`. Sinon inchange."""
@@ -135,7 +126,6 @@ def playback(source_type: str, file_url: str, video_id: int | None = None) -> tu
     if low.rsplit("?", 1)[0].endswith(_FILE_SUFFIXES):
         return ("file", url)
     return ("iframe", url)
-
 
 def dashboard_feed_items(viewer) -> list[dict]:
     """Feed du tableau de bord, pret a afficher.

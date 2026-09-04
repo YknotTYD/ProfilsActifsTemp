@@ -1,4 +1,3 @@
-##tests/test_badges.py
 """Badges (section 21) : modele, relations et API prets, affichage non branche."""
 
 from django.test import Client, TestCase
@@ -10,7 +9,6 @@ from profils.questionnaires.services import finish_attempt, save_answer, start_a
 from .factories import (
     add_single_choice, draft_of, make_admin, make_badge, make_questionnaire, make_user, publish,
 )
-
 
 class BadgeModelTests(TestCase):
 
@@ -32,7 +30,6 @@ class BadgeModelTests(TestCase):
 
         self.assertEqual(user.badges.count(), 1)
         self.assertEqual(badge.holders.count(), 1)
-
 
 class BadgeAwardTests(TestCase):
 
@@ -113,7 +110,6 @@ class BadgeAwardTests(TestCase):
         save_answer(attempt, q2.id, {"option_ids": [q2.options.get(text = "Java").id]})
         finish_attempt(attempt)
         self.assertEqual(UserBadge.objects.filter(user = self.user).count(), 1)
-
 
 class BadgeApiTests(TestCase):
 

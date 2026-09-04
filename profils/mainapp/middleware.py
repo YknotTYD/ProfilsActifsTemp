@@ -1,6 +1,5 @@
 from django.conf import settings
 
-
 class NoCacheStaticFilesMiddleware:
     """In DEBUG, prevent browsers from caching responses (pages and /static/
     files alike) so local changes show up on the next reload instead of a

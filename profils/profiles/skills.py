@@ -1,4 +1,3 @@
-##skills.py
 """Normalisation et resolution canonique des competences (section 3).
 
 Le probleme a resoudre est celui de `Java` / `java` / `JAVA` : trois saisies,
@@ -31,14 +30,12 @@ from django.core.exceptions import ValidationError
 
 from . import constants as c
 
-#: caracteres significatifs dans les noms techniques, traites avant reduction
 _TECHNICAL_SUBSTITUTIONS = (
     ("#", "sharp"),
     ("+", "p"),
 )
 
 _SEPARATORS = re.compile(r"[^a-z0-9]+")
-
 
 def normalize_skill_name(name: str) -> str:
     """Cle canonique d'un nom de competence.
@@ -60,15 +57,9 @@ def normalize_skill_name(name: str) -> str:
         raise ValidationError(f"nom de competence invalide: {name!r}")
     return key[:c.MAX_SKILL_NAME_LENGTH]
 
-
 def clean_display_name(name: str) -> str:
     """Libelle affichable : espaces normalises, longueur bornee."""
     return re.sub(r"\s+", " ", (name or "").strip())[:c.MAX_SKILL_NAME_LENGTH]
-
-
-# --------------------------------------------------------------------------- #
-# Resolution
-# --------------------------------------------------------------------------- #
 
 def find_skill(name: str):
     """Competence correspondant a `name`, alias compris. `None` si inconnue."""
@@ -82,7 +73,6 @@ def find_skill(name: str):
 
     alias = SkillAlias.objects.filter(normalized = key).select_related("skill").first()
     return alias.skill if alias else None
-
 
 def resolve_skill(name: str, *, create: bool = True, category: str = None):
     """Competence canonique pour `name`, creee au besoin.
@@ -109,7 +99,6 @@ def resolve_skill(name: str, *, create: bool = True, category: str = None):
     )
     return skill
 
-
 def resolve_skills(names, *, create: bool = True) -> list:
     """Resout une liste de noms en competences, sans doublon et dans l'ordre."""
     resolved, seen = [], set()
@@ -120,7 +109,6 @@ def resolve_skills(names, *, create: bool = True) -> list:
         seen.add(skill.pk)
         resolved.append(skill)
     return resolved
-
 
 def resolve_skill_reference(reference, *, create: bool = False):
     """Competence designee par un identifiant numerique, un slug ou un nom.
@@ -138,7 +126,6 @@ def resolve_skill_reference(reference, *, create: bool = False):
     if isinstance(reference, int) or (isinstance(reference, str) and reference.isdigit()):
         return Skill.objects.filter(pk = int(reference)).first()
     return resolve_skill(str(reference), create = create)
-
 
 def add_alias(skill, alias: str):
     """Rattache une orthographe supplementaire a une competence existante.

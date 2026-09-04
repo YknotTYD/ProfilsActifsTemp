@@ -1,4 +1,3 @@
-##context_processors.py
 """Contexte de la barre de navigation, identique sur toutes les pages.
 
 Avant, chaque vue decidait quels liens la barre pouvait montrer en passant (ou
@@ -11,7 +10,6 @@ que `partials/_navbar.html` n'ait qu'une seule source.
 from .models import Role
 
 _ROLE_LABELS = {"Admin": "Admin", "Recruiter": "Recruteur", "JobSeeker": "Candidat"}
-
 
 def navigation(request):
     user = getattr(request, "user", None)

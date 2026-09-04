@@ -1,4 +1,3 @@
-##api_admin.py
 """API d'administration des questionnaires.
 
 Chaque endpoint declare la permission qu'il exige ; la verification est faite
@@ -40,10 +39,8 @@ SETTINGS_FIELDS = (
     "answer_edit_mode", "navigation_mode", "allow_back",
 )
 
-
 def _questionnaire(pk) -> Questionnaire:
     return get_object_or_404(Questionnaire.objects.prefetch_related("access_rules", "versions"), pk = pk)
-
 
 def _version(pk, number) -> QuestionnaireVersion:
     return get_object_or_404(
@@ -51,20 +48,10 @@ def _version(pk, number) -> QuestionnaireVersion:
         questionnaire_id = pk, version_number = number,
     )
 
-
-# --------------------------------------------------------------------------- #
-# Catalogue des types
-# --------------------------------------------------------------------------- #
-
 @api(("GET",), perm = c.PERM_VIEW)
 def question_types(request):
     """Types de questions disponibles, pour construire l'editeur dynamiquement."""
     return ok({"families": dict(c.QUESTION_FAMILIES), "types": catalog()})
-
-
-# --------------------------------------------------------------------------- #
-# Questionnaires
-# --------------------------------------------------------------------------- #
 
 @api(("GET", "POST"), perm = c.PERM_VIEW)
 def collection(request):
@@ -82,7 +69,6 @@ def collection(request):
         "capabilities":   admin_capabilities(request.user),
         "statuses":       dict(c.QUESTIONNAIRE_STATUSES),
     })
-
 
 @transaction.atomic
 def _create(request):
@@ -113,7 +99,6 @@ def _create(request):
         status = 201,
     )
 
-
 @api(("GET", "PUT", "PATCH", "POST", "DELETE"), perm = c.PERM_VIEW)
 def item(request, pk):
     questionnaire = _questionnaire(pk)
@@ -126,7 +111,6 @@ def item(request, pk):
     if request.method == "DELETE":
         return _delete(request, questionnaire)
     return _update(request, questionnaire)
-
 
 def _update(request, questionnaire):
     from .permissions import has_perm
@@ -174,7 +158,6 @@ def _update(request, questionnaire):
 
     return ok({"questionnaire": admin_questionnaire(questionnaire, detail = True)})
 
-
 def _delete(request, questionnaire):
     """Suppression : archivage par defaut, effacement reel seulement si vierge."""
     from .permissions import has_perm
@@ -194,7 +177,6 @@ def _delete(request, questionnaire):
         old = {"title": questionnaire.title})
     questionnaire.delete()
     return ok({"archived": False, "deleted": True})
-
 
 @api(("POST",), perm = c.PERM_CREATE)
 @transaction.atomic
@@ -231,7 +213,6 @@ def duplicate(request, pk):
         old = {"source": source.pk}, new = {"title": copy.title})
     return ok({"questionnaire": admin_questionnaire(copy, detail = True)}, status = 201)
 
-
 @api(("GET",), perm = c.PERM_VIEW)
 def export(request, pk):
     """Document JSON portable du questionnaire et d'une de ses versions."""
@@ -242,7 +223,6 @@ def export(request, pk):
         version = _version(pk, int(number))
 
     return ok(export_questionnaire(questionnaire, version))
-
 
 @api(("POST",), perm = c.PERM_CREATE)
 def import_(request):
@@ -260,7 +240,6 @@ def import_(request):
         "questions":     questionnaire.latest_version().questions.count(),
     }, status = 201)
 
-
 @api(("POST",), perm = c.PERM_ARCHIVE)
 def archive(request, pk):
     questionnaire = _questionnaire(pk)
@@ -270,7 +249,6 @@ def archive(request, pk):
         new = {"status": c.STATUS_ARCHIVED})
     return ok({"questionnaire": admin_questionnaire(questionnaire)})
 
-
 @api(("POST",), perm = c.PERM_UPDATE)
 def disable(request, pk):
     questionnaire = _questionnaire(pk)
@@ -279,7 +257,6 @@ def disable(request, pk):
     log(request.user, c.AUDIT_DISABLE, questionnaire, questionnaire = questionnaire,
         new = {"status": c.STATUS_DISABLED})
     return ok({"questionnaire": admin_questionnaire(questionnaire)})
-
 
 @api(("POST",), perm = c.PERM_PUBLISH)
 def reactivate(request, pk):
@@ -293,7 +270,6 @@ def reactivate(request, pk):
     log(request.user, c.AUDIT_PUBLISH, questionnaire, questionnaire = questionnaire,
         new = {"status": c.STATUS_PUBLISHED})
     return ok({"questionnaire": admin_questionnaire(questionnaire)})
-
 
 @api(("POST",), perm = c.PERM_INVALIDATE)
 @transaction.atomic
@@ -312,11 +288,6 @@ def invalidate(request, pk):
         new = {"status": c.STATUS_INVALIDATED, "reason": reason})
 
     return ok({"questionnaire": admin_questionnaire(questionnaire, detail = True)})
-
-
-# --------------------------------------------------------------------------- #
-# Versions
-# --------------------------------------------------------------------------- #
 
 @api(("GET", "POST"), perm = c.PERM_VIEW)
 def versions(request, pk):
@@ -344,7 +315,6 @@ def versions(request, pk):
         copy_content = get_bool(payload, "copy_content", True),
     )
     return ok({"version": admin_version(version, with_questions = True)}, status = 201)
-
 
 @api(("GET", "PUT", "PATCH"), perm = c.PERM_VIEW)
 def version_item(request, pk, number):
@@ -378,14 +348,12 @@ def version_item(request, pk, number):
         new = {"title": version.title})
     return ok({"version": admin_version(version, with_questions = True)})
 
-
 @api(("GET",), perm = c.PERM_VIEW)
 def version_compare(request, pk):
     """GET ?from=1&to=3 - differences question par question."""
     left  = _version(pk, int(request.GET.get("from", 1)))
     right = _version(pk, int(request.GET.get("to", 1)))
     return ok({"diff": compare_versions(left, right)})
-
 
 @api(("GET",), perm = c.PERM_VIEW)
 def version_impact(request, pk, number):
@@ -397,7 +365,6 @@ def version_impact(request, pk, number):
         "carry_over_enabled": version.questionnaire.carry_over_answers,
         "impact": carry_preview(version.questionnaire, version),
     })
-
 
 @api(("POST",), perm = c.PERM_PUBLISH)
 def version_publish(request, pk, number):
@@ -414,7 +381,6 @@ def version_publish(request, pk, number):
         "carry_over":     getattr(version, "carry_over_report", None),
     })
 
-
 @api(("POST",), perm = c.PERM_TEST)
 def version_test(request, pk, number):
     version = _version(pk, number)
@@ -424,20 +390,17 @@ def version_test(request, pk, number):
         "questionnaire": admin_questionnaire(version.questionnaire),
     })
 
-
 @api(("POST",), perm = c.PERM_INVALIDATE)
 def version_invalidate(request, pk, number):
     version = _version(pk, number)
     invalidate_version(version, actor = request.user, reason = str(body(request).get("reason", "")))
     return ok({"version": admin_version(version)})
 
-
 @api(("POST",), perm = c.PERM_MANAGE_VERSIONS)
 def version_restore(request, pk, number):
     source  = _version(pk, number)
     version = restore_version(source.questionnaire, source, actor = request.user)
     return ok({"version": admin_version(version, with_questions = True)}, status = 201)
-
 
 @api(("GET",), perm = c.PERM_VIEW)
 def version_preview(request, pk, number):
@@ -456,18 +419,12 @@ def version_preview(request, pk, number):
         },
     })
 
-
 @api(("POST",), perm = c.PERM_UPDATE)
 def version_editable(request, pk):
     """Rend une version modifiable, en la derivant si la courante est figee."""
     questionnaire = _questionnaire(pk)
     version       = editable_version(questionnaire, actor = request.user)
     return ok({"version": admin_version(version, with_questions = True)})
-
-
-# --------------------------------------------------------------------------- #
-# Questions et options
-# --------------------------------------------------------------------------- #
 
 @api(("POST",), perm = c.PERM_UPDATE)
 def questions(request, pk, number):
@@ -476,7 +433,6 @@ def questions(request, pk, number):
     from .serializers import admin_question
 
     return ok({"question": admin_question(question)}, status = 201)
-
 
 @api(("PUT", "PATCH", "DELETE"), perm = c.PERM_UPDATE)
 def question_item(request, pk, number, question_id):
@@ -492,13 +448,11 @@ def question_item(request, pk, number, question_id):
 
     return ok({"question": admin_question(question)})
 
-
 @api(("POST",), perm = c.PERM_UPDATE)
 def questions_reorder(request, pk, number):
     version = _version(pk, number)
     reorder_questions(version, body(request).get("order", []), actor = request.user)
     return ok({"version": admin_version(version, with_questions = True)})
-
 
 @api(("POST",), perm = c.PERM_UPDATE)
 def options(request, pk, number, question_id):
@@ -508,7 +462,6 @@ def options(request, pk, number, question_id):
     from .serializers import admin_option
 
     return ok({"option": admin_option(option)}, status = 201)
-
 
 @api(("PUT", "PATCH", "DELETE"), perm = c.PERM_UPDATE)
 def option_item(request, pk, number, question_id, option_id):
@@ -525,11 +478,6 @@ def option_item(request, pk, number, question_id, option_id):
     from .serializers import admin_option
 
     return ok({"option": admin_option(option)})
-
-
-# --------------------------------------------------------------------------- #
-# Acces et visibilite
-# --------------------------------------------------------------------------- #
 
 @api(("GET", "PUT", "POST"), perm = c.PERM_VIEW)
 def access(request, pk):
@@ -561,7 +509,6 @@ def access(request, pk):
         }
         questionnaire.save(update_fields = ["result_visibility", "updated_at"])
 
-    # requete fraiche : le cache de prefetch date d'avant l'ecriture
     rules = QuestionnaireAccessRule.objects.filter(questionnaire = questionnaire) \
         .select_related("target_user", "badge")
     return ok({
@@ -569,11 +516,6 @@ def access(request, pk):
         "visibility": [admin_access_rule(r) for r in rules if r.kind == c.RULE_KIND_VISIBILITY],
         "result_visibility": questionnaire.visibility_settings,
     })
-
-
-# --------------------------------------------------------------------------- #
-# Tentatives, resultats, audit
-# --------------------------------------------------------------------------- #
 
 @api(("GET",), perm = c.PERM_VIEW_ATTEMPTS)
 def attempts(request, pk):
@@ -589,7 +531,6 @@ def attempts(request, pk):
         queryset = queryset.filter(version__version_number = version_number)
 
     return ok({"attempts": [attempt_summary(a, for_admin = True) for a in queryset[:500]]})
-
 
 @api(("GET",), perm = c.PERM_VIEW_RESULTS)
 def results(request, pk):
@@ -621,7 +562,6 @@ def results(request, pk):
         ],
     })
 
-
 @api(("GET",), perm = c.PERM_VIEW_ATTEMPTS)
 def attempt_transcript_view(request, pk, attempt_id):
     attempt = get_object_or_404(
@@ -630,20 +570,17 @@ def attempt_transcript_view(request, pk, attempt_id):
     )
     return ok({"transcript": attempt_transcript(attempt)})
 
-
 @api(("POST",), perm = c.PERM_INVALIDATE)
 def attempt_invalidate(request, pk, attempt_id):
     attempt = get_object_or_404(QuestionnaireAttempt, pk = attempt_id, questionnaire_id = pk)
     invalidate_attempt(attempt, actor = request.user, reason = str(body(request).get("reason", "")))
     return ok({"attempt": attempt_summary(attempt, for_admin = True)})
 
-
 @api(("GET",), perm = c.PERM_VIEW)
 def audit(request, pk):
     questionnaire = _questionnaire(pk)
     entries = AuditLog.objects.filter(questionnaire = questionnaire).select_related("actor")[:300]
     return ok({"entries": [audit_entry(e) for e in entries]})
-
 
 @api(("GET",), perm = c.PERM_VIEW_STATS)
 def statistics(request, pk):
@@ -677,11 +614,6 @@ def statistics(request, pk):
         ),
     })
 
-
-# --------------------------------------------------------------------------- #
-# Badges
-# --------------------------------------------------------------------------- #
-
 @api(("GET", "POST"), perm = c.PERM_VIEW)
 def badge_collection(request):
     if request.method == "GET":
@@ -713,9 +645,6 @@ def badge_collection(request):
     )
     log(request.user, c.AUDIT_CREATE, badge, new = {"code": badge.code})
     return ok({"badge": {"id": badge.id, "code": badge.code}}, status = 201)
-
-
-# --------------------------------------------------------------------------- #
 
 def _parse_dt(value):
     if value in (None, ""):

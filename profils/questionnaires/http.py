@@ -1,4 +1,3 @@
-##http.py
 """Petite couche HTTP JSON.
 
 Le projet n'utilise pas de framework d'API : ce module fournit le strict
@@ -16,21 +15,17 @@ from .access         import AccessDenied
 from .permissions    import has_perm
 from .question_types import AnswerError, ConfigError
 
-
 class BadRequest(Exception):
     def __init__(self, message: str, code: str = "bad_request"):
         super().__init__(message)
         self.message = message
         self.code    = code
 
-
 def ok(payload = None, status: int = 200) -> JsonResponse:
     return JsonResponse(payload if payload is not None else {"ok": True}, status = status)
 
-
 def fail(message: str, code: str = "error", status: int = 400, **extra) -> JsonResponse:
     return JsonResponse({"error": message, "code": code, **extra}, status = status)
-
 
 def body(request) -> dict:
     """Corps JSON de la requete (ou formulaire, pour rester compatible)."""
@@ -45,7 +40,6 @@ def body(request) -> dict:
             raise BadRequest("un objet JSON est attendu", "invalid_json")
         return payload
     return request.POST.dict()
-
 
 def api(methods = ("GET",), *, perm: str = None, login: bool = True):
     """Decorateur de vue JSON.
@@ -96,7 +90,6 @@ def api(methods = ("GET",), *, perm: str = None, login: bool = True):
 
     return decorator
 
-
 def get_int(payload: dict, key: str, *, required: bool = True, default = None):
     if key not in payload or payload[key] in (None, ""):
         if required:
@@ -106,7 +99,6 @@ def get_int(payload: dict, key: str, *, required: bool = True, default = None):
         return int(payload[key])
     except (TypeError, ValueError):
         raise BadRequest(f"champ invalide: {key}", "invalid_field")
-
 
 def get_bool(payload: dict, key: str, default: bool = False) -> bool:
     value = payload.get(key, default)

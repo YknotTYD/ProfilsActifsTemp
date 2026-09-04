@@ -1,4 +1,3 @@
-##services.py
 """Ecritures metier sur un profil professionnel.
 
 Toute la logique vit ici ; `api.py` n'est qu'une couche de transport. Deux
@@ -33,11 +32,6 @@ from .models import (
 )
 from .skills import resolve_skill, resolve_skill_reference
 
-
-# --------------------------------------------------------------------------- #
-# Nettoyage des valeurs
-# --------------------------------------------------------------------------- #
-
 def _text(payload, key, *, maximum: int = 255, required: bool = False, default = "") -> str:
     if key not in payload or payload[key] is None:
         if required:
@@ -47,7 +41,6 @@ def _text(payload, key, *, maximum: int = 255, required: bool = False, default =
     if required and not value:
         raise BadRequest(f"champ vide: {key}", "missing_field")
     return value[:maximum]
-
 
 def _choice(payload, key, choices, *, default = "", required: bool = False):
     allowed = dict(choices)
@@ -60,7 +53,6 @@ def _choice(payload, key, choices, *, default = "", required: bool = False):
         raise BadRequest(f"valeur invalide pour {key}: {value!r}", "invalid_field")
     return value
 
-
 def _bool(payload, key, default: bool = False) -> bool:
     if key not in payload:
         return default
@@ -68,7 +60,6 @@ def _bool(payload, key, default: bool = False) -> bool:
     if isinstance(value, str):
         return value.lower() in ("1", "true", "yes", "on")
     return bool(value)
-
 
 def _date(payload, key, *, required: bool = False):
     if key not in payload or payload[key] in (None, ""):
@@ -81,13 +72,7 @@ def _date(payload, key, *, required: bool = False):
         raise BadRequest(f"date invalide pour {key}: {value!r}", "invalid_field")
     return parsed
 
-
-#: `http`/`https` seulement : un `javascript:` ou `data:` stocke tel quel
-#: finirait dans un `href` echappe par Django, mais pas neutralise pour
-#: autant — l'echappement empeche de sortir de l'attribut, pas d'executer un
-#: schema actif quand l'utilisateur clique le lien.
 _validate_url = URLValidator(schemes = ["http", "https"])
-
 
 def _url(payload, key, *, maximum: int = 1024, required: bool = False, default = "") -> str:
     value = _text(payload, key, maximum = maximum, required = required, default = default)
@@ -97,7 +82,6 @@ def _url(payload, key, *, maximum: int = 1024, required: bool = False, default =
         except DjangoValidationError:
             raise BadRequest(f"URL invalide pour {key}: {value!r}", "invalid_field")
     return value
-
 
 def _int(payload, key, *, minimum: int = 0, maximum: int = None, default = None):
     if key not in payload or payload[key] in (None, ""):
@@ -112,7 +96,6 @@ def _int(payload, key, *, minimum: int = 0, maximum: int = None, default = None)
         raise BadRequest(f"{key} ne peut pas depasser {maximum}", "invalid_field")
     return number
 
-
 def _apply(instance, payload, fields: dict):
     """Recopie sur `instance` les seuls champs declares dans `fields`.
 
@@ -125,14 +108,8 @@ def _apply(instance, payload, fields: dict):
             setattr(instance, name, reader(payload))
     return instance
 
-
-# --------------------------------------------------------------------------- #
-# Profil
-# --------------------------------------------------------------------------- #
-
 def get_profile(user) -> ProfessionalProfile:
     return ProfessionalProfile.for_user(user)
-
 
 def profile_by_username(username: str):
     return (
@@ -142,8 +119,6 @@ def profile_by_username(username: str):
         .first()
     )
 
-
-#: champs du profil modifiables par son proprietaire
 _PROFILE_FIELDS = {
     "headline":            lambda p: _text(p, "headline", maximum = 160),
     "summary":             lambda p: _text(p, "summary", maximum = 5000),
@@ -168,14 +143,12 @@ _PROFILE_FIELDS = {
                                              default = c.VISIBILITY_REGISTERED_USERS),
 }
 
-
 @transaction.atomic
 def update_profile(profile: ProfessionalProfile, payload: dict) -> ProfessionalProfile:
     """Met a jour les informations generales, la disponibilite et la mobilite."""
     _apply(profile, payload, _PROFILE_FIELDS)
     profile.save()
 
-    # le nom et le prenom appartiennent a `auth.User`
     user, changed = profile.user, []
     if "first_name" in payload:
         user.first_name = _text(payload, "first_name", maximum = 150)
@@ -189,7 +162,6 @@ def update_profile(profile: ProfessionalProfile, payload: dict) -> ProfessionalP
     if "contract_types" in payload:
         set_contract_types(profile, payload["contract_types"])
     return profile
-
 
 @transaction.atomic
 def set_contract_types(profile: ProfessionalProfile, codes) -> list[str]:
@@ -211,7 +183,6 @@ def set_contract_types(profile: ProfessionalProfile, codes) -> list[str]:
     )
     return wanted
 
-
 @transaction.atomic
 def update_visibility(profile: ProfessionalProfile, payload: dict):
     """Regle la visibilite section par section."""
@@ -225,7 +196,6 @@ def update_visibility(profile: ProfessionalProfile, payload: dict):
     settings.save()
     return settings
 
-
 @transaction.atomic
 def update_search_settings(profile: ProfessionalProfile, payload: dict):
     """Regle l'apparition dans les resultats de recherche."""
@@ -237,11 +207,6 @@ def update_search_settings(profile: ProfessionalProfile, payload: dict):
     settings.profile = profile
     settings.save()
     return settings
-
-
-# --------------------------------------------------------------------------- #
-# Liens
-# --------------------------------------------------------------------------- #
 
 @transaction.atomic
 def set_links(profile: ProfessionalProfile, items) -> list:
@@ -261,11 +226,6 @@ def set_links(profile: ProfessionalProfile, items) -> list:
         ))
     ProfileLink.objects.bulk_create(links)
     return list(profile.links.all())
-
-
-# --------------------------------------------------------------------------- #
-# Competences (section 3)
-# --------------------------------------------------------------------------- #
 
 @transaction.atomic
 def add_skill(profile: ProfessionalProfile, payload: dict) -> UserSkill:
@@ -294,11 +254,6 @@ def add_skill(profile: ProfessionalProfile, payload: dict) -> UserSkill:
     years = _int(payload, "years_experience", maximum = c.MAX_YEARS_EXPERIENCE)
 
     try:
-        # point de sauvegarde dedie : deux requetes concurrentes peuvent toutes
-        # deux passer le controle d'existence ci-dessus puis se heurter a la
-        # contrainte d'unicite. Sans ce `atomic()` imbrique, l'erreur ferait
-        # echouer toute la transaction (Postgres l'exige, meme si SQLite est
-        # plus permissif) au lieu de retomber proprement sur une mise a jour.
         with transaction.atomic():
             return UserSkill.objects.create(
                 profile = profile, skill = skill, level = level, years_experience = years,
@@ -307,7 +262,6 @@ def add_skill(profile: ProfessionalProfile, payload: dict) -> UserSkill:
             )
     except IntegrityError:
         return update_skill(UserSkill.objects.get(profile = profile, skill = skill), payload)
-
 
 def _skill_from_payload(payload: dict):
     reference = payload.get("skill_id") or payload.get("skill") or payload.get("name")
@@ -322,7 +276,6 @@ def _skill_from_payload(payload: dict):
     if skill is None:
         raise BadRequest(f"competence introuvable: {reference!r}", "not_found")
     return skill
-
 
 @transaction.atomic
 def update_skill(user_skill: UserSkill, payload: dict) -> UserSkill:
@@ -348,10 +301,8 @@ def update_skill(user_skill: UserSkill, payload: dict) -> UserSkill:
     user_skill.save()
     return user_skill
 
-
 def remove_skill(user_skill: UserSkill):
     user_skill.delete()
-
 
 @transaction.atomic
 def reorder_skills(profile: ProfessionalProfile, skill_ids) -> list:
@@ -367,11 +318,6 @@ def reorder_skills(profile: ProfessionalProfile, skill_ids) -> list:
             row.order = index
             row.save(update_fields = ["order"])
     return list(profile.skills.all())
-
-
-# --------------------------------------------------------------------------- #
-# Competences associees a une entree de parcours
-# --------------------------------------------------------------------------- #
 
 def set_entry_skills(entry, link_model, field_name: str, references):
     """Remplace les competences associees a une experience, formation, etc.
@@ -396,11 +342,6 @@ def set_entry_skills(entry, link_model, field_name: str, references):
         links.append(link_model(**{field_name: entry}, skill = skill, order = index))
     link_model.objects.bulk_create(links)
 
-
-# --------------------------------------------------------------------------- #
-# Experiences (section 5)
-# --------------------------------------------------------------------------- #
-
 _EXPERIENCE_FIELDS = {
     "title":            lambda p: _text(p, "title", maximum = 160, required = True),
     "company":          lambda p: _text(p, "company", maximum = 160, required = True),
@@ -413,7 +354,6 @@ _EXPERIENCE_FIELDS = {
     "is_current":       lambda p: _bool(p, "is_current"),
     "order":            lambda p: _int(p, "order", default = 0),
 }
-
 
 @transaction.atomic
 def create_experience(profile: ProfessionalProfile, payload: dict) -> WorkExperience:
@@ -430,7 +370,6 @@ def create_experience(profile: ProfessionalProfile, payload: dict) -> WorkExperi
     profile.recompute_experience()
     return experience
 
-
 @transaction.atomic
 def update_experience(experience: WorkExperience, payload: dict) -> WorkExperience:
     _apply(experience, payload, _EXPERIENCE_FIELDS)
@@ -440,17 +379,11 @@ def update_experience(experience: WorkExperience, payload: dict) -> WorkExperien
     experience.profile.recompute_experience()
     return experience
 
-
 @transaction.atomic
 def delete_experience(experience: WorkExperience):
     profile = experience.profile
     experience.delete()
     profile.recompute_experience()
-
-
-# --------------------------------------------------------------------------- #
-# Formations (section 6)
-# --------------------------------------------------------------------------- #
 
 _EDUCATION_FIELDS = {
     "institution":    lambda p: _text(p, "institution", maximum = 160, required = True),
@@ -465,7 +398,6 @@ _EDUCATION_FIELDS = {
     "order":          lambda p: _int(p, "order", default = 0),
 }
 
-
 @transaction.atomic
 def create_education(profile: ProfessionalProfile, payload: dict) -> Education:
     education = Education(
@@ -478,7 +410,6 @@ def create_education(profile: ProfessionalProfile, payload: dict) -> Education:
     set_entry_skills(education, EducationSkill, "education", payload.get("skills"))
     return education
 
-
 @transaction.atomic
 def update_education(education: Education, payload: dict) -> Education:
     _apply(education, payload, _EDUCATION_FIELDS)
@@ -487,14 +418,8 @@ def update_education(education: Education, payload: dict) -> Education:
         set_entry_skills(education, EducationSkill, "education", payload["skills"])
     return education
 
-
 def delete_education(education: Education):
     education.delete()
-
-
-# --------------------------------------------------------------------------- #
-# Certifications (section 7)
-# --------------------------------------------------------------------------- #
 
 _CERTIFICATION_FIELDS = {
     "name":             lambda p: _text(p, "name", maximum = 160, required = True),
@@ -506,7 +431,6 @@ _CERTIFICATION_FIELDS = {
     "order":            lambda p: _int(p, "order", default = 0),
 }
 
-
 @transaction.atomic
 def create_certification(profile: ProfessionalProfile, payload: dict) -> Certification:
     certification = Certification(
@@ -517,7 +441,6 @@ def create_certification(profile: ProfessionalProfile, payload: dict) -> Certifi
     set_entry_skills(certification, CertificationSkill, "certification", payload.get("skills"))
     return certification
 
-
 @transaction.atomic
 def update_certification(certification: Certification, payload: dict) -> Certification:
     _apply(certification, payload, _CERTIFICATION_FIELDS)
@@ -526,14 +449,8 @@ def update_certification(certification: Certification, payload: dict) -> Certifi
         set_entry_skills(certification, CertificationSkill, "certification", payload["skills"])
     return certification
 
-
 def delete_certification(certification: Certification):
     certification.delete()
-
-
-# --------------------------------------------------------------------------- #
-# Projets (section 9)
-# --------------------------------------------------------------------------- #
 
 _PROJECT_FIELDS = {
     "title":       lambda p: _text(p, "title", maximum = 160, required = True),
@@ -545,7 +462,6 @@ _PROJECT_FIELDS = {
     "order":       lambda p: _int(p, "order", default = 0),
 }
 
-
 @transaction.atomic
 def create_project(profile: ProfessionalProfile, payload: dict) -> Project:
     project = Project(profile = profile,
@@ -556,7 +472,6 @@ def create_project(profile: ProfessionalProfile, payload: dict) -> Project:
     set_entry_skills(project, ProjectSkill, "project", payload.get("skills"))
     return project
 
-
 @transaction.atomic
 def update_project(project: Project, payload: dict) -> Project:
     _apply(project, payload, _PROJECT_FIELDS)
@@ -565,7 +480,6 @@ def update_project(project: Project, payload: dict) -> Project:
     if "skills" in payload:
         set_entry_skills(project, ProjectSkill, "project", payload["skills"])
     return project
-
 
 def _attach_project_video(project: Project, payload: dict):
     """Rattache une video de presentation, si elle appartient bien au profil."""
@@ -580,14 +494,8 @@ def _attach_project_video(project: Project, payload: dict):
             raise BadRequest("video introuvable", "not_found")
     project.video = video
 
-
 def delete_project(project: Project):
     project.delete()
-
-
-# --------------------------------------------------------------------------- #
-# Langues (section 8)
-# --------------------------------------------------------------------------- #
 
 @transaction.atomic
 def set_language(profile: ProfessionalProfile, payload: dict) -> UserLanguage:
@@ -611,19 +519,9 @@ def set_language(profile: ProfessionalProfile, payload: dict) -> UserLanguage:
         row.save()
     return row
 
-
 def remove_language(row: UserLanguage):
     row.delete()
 
-
-# --------------------------------------------------------------------------- #
-# Videos (section 15)
-# --------------------------------------------------------------------------- #
-
-#: champs de metadonnees, jamais le statut : celui-ci ne se change plus que
-#: par `moderation.transition_video`, via les fonctions ci-dessous. Le laisser
-#: dans une charge utile librement appliquee serait un trou de securite --
-#: un simple PATCH aurait suffi a publier une video jamais moderee.
 _VIDEO_FIELDS = {
     "title":            lambda p: _text(p, "title", maximum = 160, required = True),
     "description":      lambda p: _text(p, "description", maximum = 5000),
@@ -633,13 +531,11 @@ _VIDEO_FIELDS = {
                                           default = c.VISIBILITY_PUBLIC),
 }
 
-
 def _clean_video_url(value: str, *, required: bool = False) -> str:
     """Meme validation qu'un champ de formulaire (`_url`), pour un lien recu
     a part -- soumission, re-soumission, remplacement.
     """
     return _url({"file_url": value}, "file_url", maximum = 1024, required = required)
-
 
 def create_video(profile: ProfessionalProfile, payload: dict) -> ProfileVideo:
     """Primitive interne : cree une fiche video sans passer par la moderation.
@@ -661,7 +557,6 @@ def create_video(profile: ProfessionalProfile, payload: dict) -> ProfileVideo:
     set_entry_skills(video, ProfileVideoSkill, "video", payload.get("skills"))
     return video
 
-
 def update_video(video: ProfileVideo, payload: dict) -> ProfileVideo:
     """Modifie les metadonnees d'une video (titre, description, visibilite...).
 
@@ -677,13 +572,11 @@ def update_video(video: ProfileVideo, payload: dict) -> ProfileVideo:
         set_entry_skills(video, ProfileVideoSkill, "video", payload["skills"])
     return video
 
-
 def _tags(payload: dict) -> list:
     tags = payload.get("tags") or []
     if isinstance(tags, str):
         tags = [part.strip() for part in tags.split(",")]
     return [str(tag).strip()[:40] for tag in tags if str(tag).strip()][:20]
-
 
 def delete_video(video: ProfileVideo, *, actor: str = c.ACTOR_OWNER, user = None):
     """Suppression logique (section 1) : une video referencee par un projet
@@ -692,12 +585,6 @@ def delete_video(video: ProfileVideo, *, actor: str = c.ACTOR_OWNER, user = None
     statut.
     """
     moderation.transition_video(video, c.VIDEO_DELETED, actor = actor, user = user)
-
-
-# --------------------------------------------------------------------------- #
-# Soumission et moderation (section "Moderation video, presentation,
-# messagerie et notifications")
-# --------------------------------------------------------------------------- #
 
 def submit_video_link(profile: ProfessionalProfile, payload: dict) -> ProfileVideo:
     """Soumet une nouvelle video par lien externe (section 1).
@@ -742,7 +629,6 @@ def submit_video_link(profile: ProfessionalProfile, payload: dict) -> ProfileVid
     set_entry_skills(video, ProfileVideoSkill, "video", payload.get("skills"))
     return video
 
-
 def resubmit_video(video: ProfileVideo, *, user, new_file_url: str = None) -> ProfileVideo:
     """Nouvelle soumission apres un refus (section 1).
 
@@ -754,7 +640,6 @@ def resubmit_video(video: ProfileVideo, *, user, new_file_url: str = None) -> Pr
         video.file_url = _clean_video_url(new_file_url)
         video.save(update_fields = ["file_url"])
     return moderation.transition_video(video, c.VIDEO_PENDING, actor = c.ACTOR_OWNER, user = user)
-
 
 def replace_video_link(video: ProfileVideo, new_file_url: str, *, user) -> ProfileVideo:
     """Change le lien d'une video deja en ligne (section "Securite") :
@@ -770,7 +655,6 @@ def replace_video_link(video: ProfileVideo, new_file_url: str, *, user) -> Profi
     if video.status == c.VIDEO_PUBLISHED:
         moderation.transition_video(video, c.VIDEO_PENDING, actor = c.ACTOR_OWNER, user = user)
     return video
-
 
 @transaction.atomic
 def publish_presentation_video(video: ProfileVideo, *, user) -> ProfileVideo:
@@ -799,11 +683,9 @@ def publish_presentation_video(video: ProfileVideo, *, user) -> ProfileVideo:
     moderation.transition_video(video, c.VIDEO_PUBLISHED, actor = c.ACTOR_OWNER, user = user)
     return video
 
-
 def approve_video(video: ProfileVideo, *, user) -> ProfileVideo:
     """Validation administrateur (section 1) : ne publie jamais la video."""
     return moderation.transition_video(video, c.VIDEO_APPROVED, actor = c.ACTOR_ADMIN, user = user)
-
 
 def reject_video(video: ProfileVideo, reason: str, *, user) -> ProfileVideo:
     """Refus administrateur (section 1) : le motif est obligatoire, verifie

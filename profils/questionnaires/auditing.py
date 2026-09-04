@@ -1,4 +1,3 @@
-##auditing.py
 """Ecriture du journal d'audit.
 
 Un point d'entree unique afin qu'aucune action importante ne puisse etre
@@ -6,7 +5,6 @@ enregistree de facon incoherente.
 """
 
 from .models import AuditLog
-
 
 def log(actor, action: str, obj, *, questionnaire = None, old = None, new = None, **metadata):
     """Enregistre une action.
@@ -33,7 +31,6 @@ def log(actor, action: str, obj, *, questionnaire = None, old = None, new = None
         new_value     = new,
         metadata      = metadata or {},
     )
-
 
 def snapshot_fields(instance, fields) -> dict:
     """Photographie d'un sous-ensemble de champs, pour `old`/`new`."""

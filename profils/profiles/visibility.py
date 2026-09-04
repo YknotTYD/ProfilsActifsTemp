@@ -1,4 +1,3 @@
-##visibility.py
 """Application des regles de visibilite (section 11).
 
 Trois reglages independants, qui repondent a trois questions distinctes :
@@ -18,7 +17,6 @@ Tout passe par ce module. Aucune vue, aucun serialiseur ne decide seul.
 from . import constants as c
 from .permissions import ProfileAccessDenied, can_see_private, owns
 
-
 class PreviewViewer:
     """Visiteur simule, pour la previsualisation du profil public (section 22).
 
@@ -35,7 +33,6 @@ class PreviewViewer:
     @property
     def is_authenticated(self) -> bool:
         return self.audience >= c.AUDIENCE_REGISTERED
-
 
 def audience_of(viewer, profile, *, privileged: bool = None) -> int:
     """Audience du visiteur vis-a-vis de ce profil.
@@ -58,18 +55,14 @@ def audience_of(viewer, profile, *, privileged: bool = None) -> int:
         return c.AUDIENCE_REGISTERED
     return c.AUDIENCE_ANONYMOUS
 
-
 def rank(visibility: str) -> int:
-    # une valeur inconnue est traitee comme la plus restrictive
     return c.VISIBILITY_RANKS.get(visibility, c.VISIBILITY_RANKS[c.VISIBILITY_PRIVATE])
-
 
 def can_view_profile(viewer, profile) -> bool:
     """Le visiteur peut-il ouvrir cette page de profil ?"""
     if profile is None:
         return False
     return audience_of(viewer, profile) >= rank(profile.visibility)
-
 
 def assert_can_view(viewer, profile):
     """Leve `ProfileAccessDenied` si la page n'est pas consultable.
@@ -80,16 +73,13 @@ def assert_can_view(viewer, profile):
     if not can_view_profile(viewer, profile):
         raise ProfileAccessDenied("profil introuvable", "not_found", 404)
 
-
 def effective_section_visibility(profile, section: str) -> str:
     """Visibilite reellement appliquee a une section."""
     declared = profile.visibility_settings().of(section)
     return declared if rank(declared) >= rank(profile.visibility) else profile.visibility
 
-
 def can_view_section(viewer, profile, section: str) -> bool:
     return audience_of(viewer, profile) >= rank(effective_section_visibility(profile, section))
-
 
 def visible_sections(viewer, profile, *, privileged: bool = None) -> dict:
     """Carte section -> booleen, calculee une seule fois par rendu."""
@@ -98,11 +88,6 @@ def visible_sections(viewer, profile, *, privileged: bool = None) -> dict:
         section: audience >= rank(effective_section_visibility(profile, section))
         for section, _ in c.PROFILE_SECTIONS
     }
-
-
-# --------------------------------------------------------------------------- #
-# Videos (section 15)
-# --------------------------------------------------------------------------- #
 
 def can_view_video(viewer, video) -> bool:
     """Une video se voit si sa section, son statut et sa propre visibilite le permettent."""
@@ -115,9 +100,7 @@ def can_view_video(viewer, video) -> bool:
         return False
     if video.is_published:
         return True
-    # brouillons, traitements et videos masquees : proprietaire seulement
     return audience >= c.AUDIENCE_OWNER
-
 
 def visible_videos(viewer, profile):
     """Videos de `profile` que `viewer` a le droit de voir.

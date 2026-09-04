@@ -1,4 +1,3 @@
-##types.py
 """Registre des types de notification (spec section 5).
 
 Un simple dictionnaire plutot qu'un `choices=` sur le modele : ajouter un
@@ -14,8 +13,6 @@ NEW_MESSAGE     = "NEW_MESSAGE"
 VIDEO_LIKED     = "VIDEO_LIKED"
 VIDEO_DISLIKED  = "VIDEO_DISLIKED"
 
-#: code -> libellé affiché. Le sens humain du type ; le comportement (email,
-#: push...) viendra se greffer ici plus tard sans toucher au modèle.
 LABELS = {
     VIDEO_APPROVED: "Votre vidéo a été validée",
     VIDEO_REJECTED: "Votre vidéo a été refusée",
@@ -25,10 +22,8 @@ LABELS = {
     VIDEO_DISLIKED: "Votre vidéo a reçu un dislike",
 }
 
-
 def is_known(type_code: str) -> bool:
     return type_code in LABELS
-
 
 def label_for(type_code: str) -> str:
     return LABELS.get(type_code, type_code)

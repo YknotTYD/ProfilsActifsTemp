@@ -1,4 +1,3 @@
-##templatetags/versioned_static.py
 """URL de fichier statique suffixee par sa date de modification.
 
 En developpement, Django sert les fichiers statiques sans marqueur de version :
@@ -18,13 +17,12 @@ from django.templatetags.static import static
 
 register = template.Library()
 
-
 @register.simple_tag
 def vstatic(path: str) -> str:
     url = static(path)
     try:
         located = finders.find(path)
         stamp   = int(os.path.getmtime(located)) if located else None
-    except (OSError, ValueError):        # pragma: no cover
+    except (OSError, ValueError):
         stamp = None
     return f"{url}?v={stamp}" if stamp else url

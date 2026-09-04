@@ -1,4 +1,3 @@
-##tests/test_autosave.py
 """Sauvegarde automatique, idempotence et concurrence (sections 11 a 13, 33)."""
 
 import json
@@ -14,7 +13,6 @@ from .factories import (
     add_single_choice, add_temperature, draft_of, make_admin,
     make_questionnaire, make_user, publish,
 )
-
 
 class AutosaveTests(TestCase):
 
@@ -99,7 +97,6 @@ class AutosaveTests(TestCase):
             save_answer(self.attempt, foreign.id, {"option_ids": [foreign.options.first().id]})
         self.assertEqual(ctx.exception.code, "unknown_question")
 
-
 class IdempotencyTests(TestCase):
 
     def setUp(self):
@@ -134,7 +131,6 @@ class IdempotencyTests(TestCase):
         answer = UserAnswer.objects.get(attempt = self.attempt)
         self.assertEqual(answer.value["option_ids"], [cobol.id])
         self.assertEqual(answer.revision, 2)
-
 
 class ConcurrencyTests(TestCase):
 
@@ -201,7 +197,6 @@ class ConcurrencyTests(TestCase):
             save_answer(self.attempt, self.question.id, {"option_ids": [self.java.id]},
                         client_sequence = index + 1, idempotency_key = f"k{index}")
         self.assertEqual(UserAnswer.objects.filter(attempt = self.attempt).count(), 1)
-
 
 class AutosaveApiTests(TestCase):
     """Le contrat HTTP consomme par le client d'autosave."""

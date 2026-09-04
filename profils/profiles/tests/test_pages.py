@@ -1,4 +1,3 @@
-##tests/test_pages.py
 """Rendu des pages : la page de profil est lisible sans JavaScript.
 
 Ces tests ne verifient pas l'ergonomie, seulement que le HTML se produit sans
@@ -16,7 +15,6 @@ from .factories import (
     add_certification, add_education, add_experience, add_language, add_project,
     add_skill, add_video, make_admin, make_profile, make_user,
 )
-
 
 class ProfilePageTests(TestCase):
 
@@ -86,7 +84,6 @@ class ProfilePageTests(TestCase):
         self.assertContains(response, "p-video-player")
         self.assertContains(response, "https://www.youtube.com/embed/abc123")
 
-
 class SearchPageTests(TestCase):
 
     def test_the_search_page_renders(self):
@@ -110,7 +107,6 @@ class SearchPageTests(TestCase):
         self.assertContains(response, '"name": "Rust"')
         self.assertContains(response, f'"id": {skill.id}')
 
-
 class EditorPageTests(TestCase):
 
     def test_requires_authentication(self):
@@ -124,7 +120,6 @@ class EditorPageTests(TestCase):
         response = client.get("/profiles/edit/")
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Modifier mon profil")
-
 
 class MyVideoPageTests(TestCase):
     """`/profiles/me/video/` : une seule video de presentation a la fois."""
@@ -195,7 +190,6 @@ class MyVideoPageTests(TestCase):
         self.assertContains(response, "Nouvelle")
         self.assertNotContains(response, "Ancienne")
 
-
 class AdminVideosPageTests(TestCase):
     """`/profiles/admin/videos/` : la meme garde que la console questionnaires."""
 
@@ -215,7 +209,6 @@ class AdminVideosPageTests(TestCase):
         response = client.get("/profiles/admin/videos/")
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Moderation des videos de profil")
-
 
 class RedirectTests(TestCase):
 

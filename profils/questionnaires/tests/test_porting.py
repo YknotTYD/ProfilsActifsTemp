@@ -1,4 +1,3 @@
-##tests/test_porting.py
 """Export et import de questionnaires."""
 
 import json
@@ -18,7 +17,6 @@ from profils.questionnaires.versioning import publish_version
 from .factories import (
     add_single_choice, draft_of, make_admin, make_badge, make_questionnaire, make_user, publish,
 )
-
 
 class ExportTests(TestCase):
 
@@ -65,7 +63,6 @@ class ExportTests(TestCase):
         empty = Questionnaire.objects.create(title = "Vide", created_by = self.admin)
         with self.assertRaises(ValidationError):
             export_questionnaire(empty)
-
 
 class ImportTests(TestCase):
 
@@ -129,7 +126,6 @@ class ImportTests(TestCase):
             "type": c.TYPE_YES_NO, "text": "Seconde"}, actor = self.admin)
 
         doc = export_questionnaire(self.source)
-        # la premiere question depend de la seconde
         doc["content"]["questions"][0]["condition"] = {
             "question": second.stable_key, "operator": "ANSWERED"}
 
@@ -201,7 +197,6 @@ class ImportTests(TestCase):
             sorted(clone.questions.values_list("type", flat = True)),
             sorted(self.version.questions.values_list("type", flat = True)))
 
-
 class ImportRulesTests(TestCase):
 
     def test_role_rules_are_reimported(self):
@@ -244,7 +239,6 @@ class ImportRulesTests(TestCase):
 
         copy = import_questionnaire(doc, actor = admin)
         self.assertEqual(copy.access_rules.first().target_user_id, target.id)
-
 
 class DocumentValidationTests(TestCase):
 
@@ -292,7 +286,6 @@ class DocumentValidationTests(TestCase):
                 {"text": "Correcte", "type": c.TYPE_INTEGER},
                 {"text": "Ville ?",  "type": c.TYPE_CITY, "config": {}}]}}, actor = admin)
         self.assertEqual(Questionnaire.objects.count(), before)
-
 
 class PortingApiTests(TestCase):
 
@@ -355,12 +348,10 @@ class PortingApiTests(TestCase):
 
         doc = self.client.get(f"/api/questionnaires/{self.q.id}/export/").json()
 
-        # le document n'expose que la definition du questionnaire
         self.assertEqual(set(doc), {"format", "format_version", "exported_at", "source",
                                     "questionnaire", "content"})
         self.assertEqual(set(doc["content"]), {"title", "description", "scoring_config", "questions"})
 
-        # aucune trace du participant ni de son passage
         self.assertNotIn(self.user.username, json.dumps(doc))
         for question_doc in doc["content"]["questions"]:
             self.assertEqual(

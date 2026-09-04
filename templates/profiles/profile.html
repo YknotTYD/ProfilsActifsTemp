@@ -2,18 +2,7 @@
 {% load profile_extras %}
 {% block title %}{{ p.profile.full_name }}{% endblock %}
 
-{% comment %}
-Page publique d'un profil.
-
-Rendue entierement cote serveur a partir de `p`, la charge utile deja expurgee
-par `serializers.public_profile`. Une section que le visiteur n'a pas le droit
-de voir est donc **absente du HTML**, et non masquee en CSS : le code source de
-la page ne la contient pas.
-{% endcomment %}
-
 {% block content %}
-
-
 
 <article class="p-hero">
     <div class="p-cover" data-cover="{{ p.profile.cover_color|default:'navy' }}" {% if p.profile.cover_url %}style="background-image:url('{{ p.profile.cover_url }}')"{% endif %}>
@@ -173,7 +162,7 @@ la page ne la contient pas.
             </figcaption>
         </figure>
         {% if live_video.stats %}
-        {# section 6 : n'apparait que si le serialiseur a inclus les stats -- proprietaire ou admin seulement. #}
+
         <ul class="p-facts mt-2">
             <li><b>{{ live_video.stats.views }}</b> vue{{ live_video.stats.views|pluralize }}</li>
             <li><b>{{ live_video.stats.likes }}</b> like{{ live_video.stats.likes|pluralize }}</li>

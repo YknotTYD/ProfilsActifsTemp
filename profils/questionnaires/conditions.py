@@ -1,4 +1,3 @@
-##conditions.py
 """Moteur de conditions d'affichage.
 
 Une condition est un arbre JSON porte par `Question.condition` :
@@ -19,14 +18,8 @@ from decimal import Decimal, InvalidOperation
 from . import constants as c
 from .question_types import ConfigError
 
-
 class ConditionError(ConfigError):
     """Condition mal formee."""
-
-
-# --------------------------------------------------------------------------- #
-# Validation
-# --------------------------------------------------------------------------- #
 
 def validate_condition(condition, known_keys: set[str], _depth: int = 0):
     """Valide un arbre de conditions. `known_keys` = cles stables disponibles."""
@@ -65,7 +58,6 @@ def validate_condition(condition, known_keys: set[str], _depth: int = 0):
         node["value"] = condition["value"]
     return node
 
-
 def referenced_keys(condition) -> set[str]:
     """Cles stables de questions citees par une condition."""
     if not condition:
@@ -76,11 +68,6 @@ def referenced_keys(condition) -> set[str]:
             keys |= referenced_keys(child)
         return keys
     return {str(condition["question"])}
-
-
-# --------------------------------------------------------------------------- #
-# Evaluation
-# --------------------------------------------------------------------------- #
 
 def _condition_value(question, value, operator):
     """Valeur d'une reponse telle que le moteur de conditions la compare.
@@ -100,7 +87,6 @@ def _condition_value(question, value, operator):
 
     return handler.comparable(question, value)
 
-
 def _coerce_pair(left, right):
     """Aligne deux operandes pour une comparaison ordonnee."""
     if isinstance(left, (int, float, Decimal)) or isinstance(right, (int, float, Decimal)):
@@ -110,7 +96,6 @@ def _coerce_pair(left, right):
             return str(left), str(right)
     return left, right
 
-
 def _evaluate_leaf(node, question, answered: bool, value) -> bool:
     operator = node["operator"]
 
@@ -119,7 +104,6 @@ def _evaluate_leaf(node, question, answered: bool, value) -> bool:
     if operator == c.OP_NOT_ANSWERED:
         return not answered
     if not answered:
-        # une question sans reponse ne satisfait aucune comparaison
         return False
 
     actual   = _condition_value(question, value, operator)
@@ -162,7 +146,6 @@ def _evaluate_leaf(node, question, answered: bool, value) -> bool:
         return False
     raise ConditionError(f"operateur non gere: {operator!r}")
 
-
 def evaluate(condition, questions_by_key: dict, answers_by_key: dict, visible_keys: set[str]) -> bool:
     """Evalue un arbre de conditions.
 
@@ -190,7 +173,6 @@ def evaluate(condition, questions_by_key: dict, answers_by_key: dict, visible_ke
     value   = answers_by_key.get(key) if usable else None
     answered = usable and question.handler.is_answered(value)
     return _evaluate_leaf(condition, question, answered, value)
-
 
 def compute_visible(questions, answers_by_key: dict) -> list:
     """Retourne les questions visibles, dans l'ordre.

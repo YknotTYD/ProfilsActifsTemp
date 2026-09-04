@@ -1,4 +1,3 @@
-##tests/test_versioning.py
 
 from django.core.exceptions import ValidationError
 from django.test import TestCase
@@ -12,7 +11,6 @@ from profils.questionnaires.versioning import (
 )
 
 from .factories import add_single_choice, draft_of, make_admin, make_questionnaire, make_user
-
 
 class VersionLifecycleTests(TestCase):
 
@@ -99,7 +97,6 @@ class VersionLifecycleTests(TestCase):
         self.draft.refresh_from_db()
         self.assertFalse(self.draft.is_editable)
 
-
 class VersionComparisonTests(TestCase):
 
     def setUp(self):
@@ -147,7 +144,6 @@ class VersionComparisonTests(TestCase):
         self.assertEqual(diff["from"]["created_by"], self.admin.username)
         self.assertEqual(diff["to"]["created_by"], self.admin.username)
 
-
 class HistoricalIntegrityTests(TestCase):
     """Une modification du questionnaire ne doit jamais toucher l'historique."""
 
@@ -167,7 +163,6 @@ class HistoricalIntegrityTests(TestCase):
         self.assertTrue(result.passed)
         original = (str(result.score), str(result.percentage), result.version_id)
 
-        # une nouvelle version change l'enonce, les options et la bonne reponse
         v2 = editable_version(q, actor = admin)
         clone = v2.questions.first()
         update_question(clone, {

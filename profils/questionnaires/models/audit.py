@@ -1,10 +1,8 @@
-##models/audit.py
 
 from django.contrib.auth.models import User
 from django.db                   import models
 
 from .. import constants as c
-
 
 class AuditLog(models.Model):
     """Journal des actions importantes.

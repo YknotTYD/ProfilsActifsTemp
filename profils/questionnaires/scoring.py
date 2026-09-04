@@ -1,4 +1,3 @@
-##scoring.py
 """Moteur de scoring.
 
 Separe de l'affichage et des modeles : il ne connait que des questions, des
@@ -27,10 +26,8 @@ CENT   = Decimal("100")
 QUANT3 = Decimal("0.001")
 QUANT2 = Decimal("0.01")
 
-
 def _d(value) -> Decimal:
     return Decimal(str(value))
-
 
 def _effective_ratio(ratio: float, scoring: dict) -> Decimal:
     """Convertit un ratio de justesse brut en ratio retenu pour le score."""
@@ -44,7 +41,6 @@ def _effective_ratio(ratio: float, scoring: dict) -> Decimal:
     if mode == c.PARTIAL_THRESHOLD:
         return Decimal(1) if ratio >= _d(scoring.get("partial_threshold", 0.5)) else ZERO
     return ratio
-
 
 def score_question(question, value, answered: bool) -> dict:
     """Score une reponse unique.
@@ -98,7 +94,6 @@ def score_question(question, value, answered: bool) -> dict:
     }
     return entry
 
-
 def _level_for(percentage: Decimal, version_scoring: dict) -> str:
     best, best_min = "", None
     for level in version_scoring.get("levels") or []:
@@ -106,7 +101,6 @@ def _level_for(percentage: Decimal, version_scoring: dict) -> str:
         if percentage >= minimum and (best_min is None or minimum > best_min):
             best, best_min = level.get("name", ""), minimum
     return best
-
 
 def score_attempt(attempt) -> dict:
     """Calcule le score complet d'une tentative.

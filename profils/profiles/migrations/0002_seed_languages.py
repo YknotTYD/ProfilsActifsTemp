@@ -1,4 +1,3 @@
-##migrations/0002_seed_languages.py
 """Charge le referentiel de langues.
 
 Les langues sont une donnee de reference, pas une donnee utilisateur : elles
@@ -10,7 +9,6 @@ from django.db import migrations
 
 from profils.profiles.constants import SEED_LANGUAGES
 
-
 def seed(apps, schema_editor):
     Language = apps.get_model("profiles", "Language")
     Language.objects.bulk_create(
@@ -18,14 +16,11 @@ def seed(apps, schema_editor):
         ignore_conflicts = True,
     )
 
-
 def unseed(apps, schema_editor):
     Language = apps.get_model("profiles", "Language")
-    # ne supprime que les langues que personne ne declare
     Language.objects.filter(
         code__in = [code for code, _ in SEED_LANGUAGES], speakers__isnull = True,
     ).delete()
-
 
 class Migration(migrations.Migration):
 
