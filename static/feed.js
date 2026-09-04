@@ -27,10 +27,10 @@
         );
         const like = item.querySelector('[data-reaction="like"]');
         const dislike = item.querySelector('[data-reaction="dislike"]');
-        like.classList.toggle('is-active-like', data.reaction === 'like');
-        dislike.classList.toggle('is-active-dislike', data.reaction === 'dislike');
-        const count = like.querySelector('.feed-react-count');
-        if (count && count.textContent.trim() !== '') count.textContent = data.likes;
+        like.classList.toggle('is-on', data.reaction === 'like');
+        dislike.classList.toggle('is-on', data.reaction === 'dislike');
+        const count = like.querySelector('.feed-btn-count');
+        if (count) count.textContent = data.likes;
       } catch (err) {
         console.error(err);
       }

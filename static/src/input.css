@@ -440,27 +440,28 @@
   .feed-title {
     @apply text-xs text-white/85 line-clamp-2;
   }
-  .feed-views {
-    @apply cursor-default;
-  }
+  /* Boutons d'action du feed : petits, sobres, dans l'esprit des boutons du
+     centre de notifications -- plus les gros ronds blancs. */
   .feed-actions {
-    @apply absolute right-3 bottom-4 z-10 flex flex-col items-center gap-4;
+    @apply absolute right-3 bottom-4 z-10 flex flex-col items-center gap-2;
   }
-  .feed-react-btn {
-    @apply flex flex-col items-center gap-1 text-white cursor-pointer;
+  .feed-btn {
+    @apply inline-flex items-center justify-center gap-1 h-8 min-w-[2rem] px-2 rounded-full border-0 cursor-pointer text-white;
+    background: rgba(17, 29, 51, 0.55);
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
   }
-  .feed-react-btn .feed-react-icon {
-    @apply flex items-center justify-center rounded-full bg-white/90 text-text w-11 h-11 text-lg leading-none shadow;
+  .feed-btn:hover {
+    background: rgba(17, 29, 51, 0.8);
   }
-  .feed-react-btn span {
-    @apply text-[11px] font-semibold;
-    text-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
+  .feed-btn.is-on {
+    background: var(--color-primary, #1b3a6b);
   }
-  .feed-react-btn.is-active-like .feed-react-icon {
-    @apply bg-primary text-white;
+  .feed-btn-count {
+    @apply text-[11px] font-semibold leading-none;
   }
-  .feed-react-btn.is-active-dislike .feed-react-icon {
-    @apply bg-secondary text-white;
+  .feed-message-form {
+    @apply contents;
   }
 
   /* Footer */

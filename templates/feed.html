@@ -30,32 +30,30 @@ Feed vertical du tableau de bord recruteur / admin. Une seule source :
 
     <div class="feed-actions">
       <button
-        class="feed-react-btn react-btn {% if item.liked %}is-active-like{% endif %}"
+        type="button"
+        class="feed-btn react-btn {% if item.liked %}is-on{% endif %}"
         data-video-id="{{ item.id }}"
         data-reaction="like"
+        aria-label="J'aime" title="J'aime"
       >
-        <span class="feed-react-icon">👍</span>
-        <span class="feed-react-count" data-count="like">{% if role == "Admin" %}{{ item.likes|default:0 }}{% endif %}</span>
+        <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path fill="currentColor" d="M2 21h3V9H2v12ZM22 10.2c0-.9-.7-1.6-1.6-1.6h-5.1l.8-3.9v-.3c0-.4-.2-.8-.4-1.1L14.8 2 8.6 8.3c-.3.3-.5.7-.5 1.2V19c0 .9.7 1.6 1.6 1.6h7.2c.6 0 1.2-.4 1.5-1l2.7-6.4c.1-.2.1-.4.1-.6v-2.4Z"/></svg>
+        {% if role == "Admin" %}<span class="feed-btn-count" data-count="like">{{ item.likes|default:0 }}</span>{% endif %}
       </button>
       <button
-        class="feed-react-btn react-btn {% if item.disliked %}is-active-dislike{% endif %}"
+        type="button"
+        class="feed-btn react-btn {% if item.disliked %}is-on{% endif %}"
         data-video-id="{{ item.id }}"
         data-reaction="dislike"
+        aria-label="Je n'aime pas" title="Je n'aime pas"
       >
-        <span class="feed-react-icon">👎</span>
+        <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path fill="currentColor" d="M22 3h-3v12h3V3ZM2 13.8c0 .9.7 1.6 1.6 1.6h5.1l-.8 3.9v.3c0 .4.2.8.4 1.1L9.2 22l6.2-6.3c.3-.3.5-.7.5-1.2V5c0-.9-.7-1.6-1.6-1.6H7.1c-.6 0-1.2.4-1.5 1L2.9 10.8c-.1.2-.1.4-.1.6v2.4Z"/></svg>
       </button>
-      {% if role == "Admin" %}
-      <span class="feed-react-btn feed-views" title="Vues">
-        <span class="feed-react-icon">👁</span>
-        <span>{{ item.views|default:0 }}</span>
-      </span>
-      {% endif %}
       {% if role == "Recruiter" %}
       <form method="post" action="/messages/start/" class="feed-message-form">
         {% csrf_token %}
         <input type="hidden" name="recipient" value="{{ item.username }}" />
-        <button type="submit" class="feed-react-btn" title="Contacter {{ item.display_name }}">
-          <span class="feed-react-icon">✉️</span>
+        <button type="submit" class="feed-btn" aria-label="Contacter {{ item.display_name }}" title="Contacter {{ item.display_name }}">
+          <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path fill="currentColor" d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2Zm8 7 8-5H4l8 5Zm0 2L4 8v10h16V8l-8 5Z"/></svg>
         </button>
       </form>
       {% endif %}
