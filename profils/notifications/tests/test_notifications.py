@@ -121,6 +121,9 @@ class VideoModerationNotificationTests(TestCase):
         notif = Notification.objects.get(recipient = self.owner)
         self.assertEqual(notif.type, types.VIDEO_APPROVED)
         self.assertEqual(notif.target_id, video.pk)
+        # section 5 : le lien mene la ou le proprietaire agit sur sa video,
+        # pas sur sa page publique.
+        self.assertEqual(notif.url, "/profiles/me/video/")
 
     def test_rejection_notifies_the_owner_with_the_reason(self):
         video = profile_services.submit_video_link(self.profile, {

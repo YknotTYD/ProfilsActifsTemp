@@ -163,28 +163,41 @@ la page ne la contient pas.
 
     {% if p.sections.videos %}
     <section class="p-panel">
-        <h2>Videos <span class="p-count">{{ p.videos|length }}</span></h2>
-        <div class="p-videos">
-            {% for v in p.videos %}
-            <figure class="p-video" {% if v.thumbnail_url %}style="background-image:url('{{ v.thumbnail_url }}')"{% endif %}>
-                {% if v.duration_seconds %}<span class="p-duration">{{ v.duration_seconds|duration_seconds }}</span>{% endif %}
-                <figcaption>{{ v.title }}</figcaption>
-            </figure>
-            {% empty %}
-            {# Etat vide : la grille annonce ce qui viendra, sans simuler de contenu. #}
-            <div class="p-video-empty">
-                <div class="p-ghosts"><i></i><i></i><i></i></div>
-                <p>
-                    {% if is_owner %}
-                        Vous n'avez pas encore de video. Les videos courtes de presentation
-                        arriveront dans une prochaine version.
-                    {% else %}
-                        {{ p.profile.full_name }} n'a pas encore publie de video.
-                    {% endif %}
-                </p>
-            </div>
-            {% endfor %}
+        <h2>Video de presentation</h2>
+        {% if live_video %}
+        <figure class="p-video-single">
+            {% include "profiles/_video_player.html" with player=live_video.playback title=live_video.title %}
+            <figcaption>
+                {{ live_video.title }}
+                {% if live_video.duration_seconds %}<span class="p-duration">{{ live_video.duration_seconds|duration_seconds }}</span>{% endif %}
+            </figcaption>
+        </figure>
+        {% if live_video.stats %}
+        {# section 6 : n'apparait que si le serialiseur a inclus les stats -- proprietaire ou admin seulement. #}
+        <ul class="p-facts mt-2">
+            <li><b>{{ live_video.stats.views }}</b> vue{{ live_video.stats.views|pluralize }}</li>
+            <li><b>{{ live_video.stats.likes }}</b> like{{ live_video.stats.likes|pluralize }}</li>
+        </ul>
+        {% endif %}
+        {% else %}
+        <div class="p-video-empty">
+            <div class="p-ghosts"><i></i><i></i><i></i></div>
+            <p>
+                {% if is_owner %}
+                    Vous n'avez pas encore de video de presentation.
+                {% else %}
+                    {{ p.profile.full_name }} n'a pas encore publie de video.
+                {% endif %}
+            </p>
         </div>
+        {% endif %}
+        {% if is_owner %}
+        <p class="mt-3">
+            <a href="/profiles/me/video/" class="p-btn small">
+                {% if live_video %}Gerer ma video de presentation{% else %}Ajouter ma video de presentation{% endif %}
+            </a>
+        </p>
+        {% endif %}
     </section>
     {% endif %}
 

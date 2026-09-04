@@ -133,6 +133,10 @@ class ProfessionalProfile(models.Model):
         return name or self.user.username
 
     @property
+    def initials(self) -> str:
+        return "".join(part[0] for part in self.full_name.split()[:2]).upper() or "?"
+
+    @property
     def location_label(self) -> str:
         parts = [self.location_city, self.location_region, self.location_country]
         return ", ".join(part for part in parts if part)

@@ -14,6 +14,8 @@ has_participant`), pas d'ouverture, et les deux participants y ont
 toujours droit une fois la conversation en cours.
 """
 
+from profils.mainapp import constants as mc
+from profils.mainapp.models import VideoLink
 from profils.profiles import constants as pc
 from profils.profiles.models import ProfileVideo
 from profils.profiles.permissions import is_recruiter
@@ -27,9 +29,16 @@ def rule(fn):
 
 
 def _has_a_published_video(user) -> bool:
-    return ProfileVideo.objects.filter(
-        profile__user = user, status = pc.VIDEO_PUBLISHED,
-    ).exists()
+    """Le projet a deux chemins de video en parallele (`profiles.
+    ProfileVideo`, moderee, et l'ancien `mainapp.VideoLink`) : tant qu'ils
+    ne sont pas unifies, "a publie une video" doit reconnaitre les deux,
+    sous peine de rendre injoignable tout candidat qui n'est passe que par
+    l'un des deux chemins.
+    """
+    return (
+        ProfileVideo.objects.filter(profile__user = user, status = pc.VIDEO_PUBLISHED).exists()
+        or VideoLink.objects.filter(user = user, status = mc.VIDEO_LINK_APPROVED).exists()
+    )
 
 
 @rule

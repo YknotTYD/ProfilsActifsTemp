@@ -19,6 +19,8 @@ l'historique -- il peut manquer (`None`) pour un traitement automatique, ou
 pour un appel interne qui ne feint pas d'avoir une identite (scripts, tests).
 """
 
+from datetime import timedelta
+
 from django.db    import transaction
 from django.utils import timezone
 
@@ -117,10 +119,58 @@ def transition_video(video: ProfileVideo, to_status: str, *, actor: str,
 
     notif_type = _NOTIFICATION_FOR_STATUS.get(to_status)
     if notif_type is not None:
+        # section 5 : "acces rapide a l'element concerne". Ces trois evenements
+        # (acceptee / refusee / masquee) concernent le proprietaire et le
+        # renvoient a la page ou il agit sur sa video -- re-soumettre apres un
+        # refus, confirmer la publication -- pas a sa page publique.
         notifications.notify(
             video.profile.user, notif_type, target = video,
-            url = f"/profile/{video.profile.username}/",
+            url = "/profiles/me/video/",
             title = video.title, reason = reason,
         )
 
     return video
+
+
+# --------------------------------------------------------------------------- #
+# Historique des refus (spec "Historique de moderation")
+# --------------------------------------------------------------------------- #
+#
+# Chaque refus laisse deja un `VideoModerationEvent` (new_status == REJECTED).
+# La console de moderation en montre deux listes : les refus recents (fenetre
+# vivante, 7 jours par defaut) et les archives (au-dela). Rien n'est jamais
+# supprime -- `archived_at` fait juste passer une ligne d'une liste a l'autre.
+
+
+def _rejection_cutoff():
+    return timezone.now() - timedelta(days = c.rejection_history_days())
+
+
+def archive_stale_rejections() -> int:
+    """Archive les refus sortis de la fenetre vivante. Renvoie le nombre traite.
+
+    Idempotent : une ligne deja archivee est ignoree. Appele par la commande
+    `archive_moderation_history` et, paresseusement, a chaque lecture de
+    l'historique -- l'un n'empeche pas l'autre.
+    """
+    return (
+        VideoModerationEvent.objects
+        .filter(new_status = c.VIDEO_REJECTED, archived_at__isnull = True,
+                created_at__lt = _rejection_cutoff())
+        .update(archived_at = timezone.now())
+    )
+
+
+def rejection_history(*, archived: bool = False):
+    """Refus de moderation, `archived=False` pour la fenetre vivante.
+
+    Archive d'abord ce qui doit l'etre, pour que les deux listes soient justes
+    meme si la commande planifiee n'a jamais tourne.
+    """
+    archive_stale_rejections()
+    return (
+        VideoModerationEvent.objects
+        .filter(new_status = c.VIDEO_REJECTED, archived_at__isnull = not archived)
+        .select_related("video", "video__profile__user", "actor")
+        .order_by("-created_at")
+    )

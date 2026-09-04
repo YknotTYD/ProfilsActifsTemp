@@ -15,6 +15,7 @@ urlpatterns = [
     # ------------------------------------------------------------------ #
     path("profiles/",              views.search_page,        name = "p_search"),
     path("profiles/edit/",         views.editor_page,        name = "p_editor"),
+    path("profiles/me/video/",     views.my_video_page,      name = "p_my_video"),
     path("profile/",               views.my_profile_redirect, name = "p_me"),
     path("profile/<str:username>/", views.profile_page,      name = "p_profile"),
     path("profiles/admin/videos/", views.admin_videos_page,  name = "p_admin_videos"),
@@ -62,11 +63,16 @@ urlpatterns = [
     path("api/profiles/me/videos/<int:pk>/publish/",  api.me_video_publish),
     path("api/profiles/me/videos/<int:pk>/resubmit/", api.me_video_resubmit),
 
+    # feed video : vues et reactions (spectateur)
+    path("api/profiles/videos/<int:pk>/view/",  api.video_view),
+    path("api/profiles/videos/<int:pk>/react/", api.video_react),
+
     # ------------------------------------------------------------------ #
     # API - moderation administrateur (spec "Moderation video, presentation,
     # messagerie et notifications")
     # ------------------------------------------------------------------ #
     path("api/profiles/admin/videos/pending/",        api.admin_video_queue),
+    path("api/profiles/admin/videos/rejected/",       api.admin_video_rejections),
     path("api/profiles/admin/videos/<int:pk>/approve/", api.admin_video_approve),
     path("api/profiles/admin/videos/<int:pk>/reject/",  api.admin_video_reject),
     path("api/profiles/admin/videos/<int:pk>/history/", api.admin_video_history),

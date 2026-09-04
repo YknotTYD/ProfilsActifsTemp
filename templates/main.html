@@ -1,4 +1,4 @@
-{% load static %}
+{% load static %}{% load versioned_static %}
 
 <!doctype html>
 <html lang="fr">
@@ -11,7 +11,7 @@
       href="https://fonts.googleapis.com/css2?family=Spectral:wght@400;500;600;700&family=Spectral:ital@1&family=Montserrat:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="{% static 'style.css' %}" />
+    <link rel="stylesheet" href="{% vstatic 'style.css' %}" />
     <meta name="csrf-token" content="{{ csrf_token }}" />
   </head>
   <body>
@@ -29,48 +29,28 @@
 
       <div class="dash-grid">
         {% if role == "JobSeeker" %}
-        <form
-          method="post"
-          action="/api/upload/video/?camefrom=/"
-          class="grid gap-[14px] mt-[14px]"
-        >
-          {% csrf_token %}
-          <div class="field">
-            <input
-              id="video-url"
-              name="url"
-              placeholder=" "
-              autocomplete="off"
-              required
-              class="peer field-input"
-            />
-            <label for="video-url" class="field-label"
-              >URL de votre vidéo de présentation</label
-            >
-          </div>
-          <button type="submit" class="btn-primary">UPLOADER</button>
-        </form>
-
-        {% include "upload.html" %}
-
-        {% if my_video %}
-        <div class="mt-5 text-center">
-          {% if my_video.status == "PENDING" %}
-          <p class="text-[#4a4a4a]">Votre video est en attente de moderation.</p>
-          {% elif my_video.status == "APPROVED" %}
-          <p class="text-[#4a4a4a]">Votre video a ete validee et est visible des recruteurs.</p>
-          {% elif my_video.status == "REJECTED" %}
-          <p class="text-[#4a4a4a]">
-            Votre video a ete refusee{% if my_video.rejection_reason %} : {{ my_video.rejection_reason }}{% endif %}
-          </p>
+        <div class="mt-2">
+          {% with current=my_video_status.current pending=my_video_status.pending %}
+          {% if not current and not pending %}
+          <p class="text-[#4a4a4a]">Vous n'avez pas encore de video de presentation.</p>
+          {% else %}
+            {% if current %}
+            <p class="text-[#4a4a4a]"><strong>{{ current.title }}</strong> — en ligne</p>
+            {% endif %}
+            {% if pending %}
+            <p class="text-[#4a4a4a]">
+              <strong>{{ pending.title }}</strong> —
+              {% if pending.status == "PENDING" %}en attente de moderation
+              {% elif pending.status == "APPROVED" %}validee, en attente de votre confirmation
+              {% elif pending.status == "REJECTED" %}refusee{% if pending.rejection_reason %} : {{ pending.rejection_reason }}{% endif %}
+              {% else %}{{ pending.status }}{% endif %}
+            </p>
+            {% endif %}
           {% endif %}
-          <form method="post" action="/api/delete/video/?camefrom=/" class="mt-2">
-            {% csrf_token %}
-            <input type="hidden" name="video_id" value="{{ my_video.id }}" />
-            <button type="submit" class="link-btn">Supprimer ma video</button>
-          </form>
+          {% endwith %}
+          <a href="/profiles/me/video/" class="btn-primary inline-block mt-2">GERER MA VIDEO DE PRESENTATION</a>
         </div>
-        {% endif %}
+
         {% elif role == "Recruiter" or role == "Admin" %}
         <div class="dash-panel">
           <h2 class="dash-panel-title">Vidéos des candidats</h2>
@@ -83,7 +63,7 @@
             <a href="/profiles/admin/videos/" class="btn-ghost">Modération des vidéos de profil →</a>
           </p>
           {% endif %}
-          {% if videos_ld %}
+          {% if feed_items %}
             {% include "feed.html" %}
           {% else %}
           <div class="dash-empty">
@@ -126,28 +106,6 @@
 
     {% include "partials/_footer.html" %}
 
-    <script>
-      const csrftoken = document.querySelector(
-        'meta[name="csrf-token"]',
-      ).content;
-
-      document.querySelectorAll('.react-btn').forEach((btn) => {
-        btn.addEventListener('click', () => {
-          fetch('/api/react/', {
-            method: 'POST',
-            headers: {
-              'X-CSRFToken': csrftoken,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              video_id: btn.dataset.videoId,
-              reaction: btn.dataset.reaction,
-            }),
-          })
-            .then(() => window.location.reload())
-            .catch((err) => console.error(err));
-        });
-      });
-    </script>
+    <script src="{% static 'feed.js' %}"></script>
   </body>
 </html>

@@ -144,8 +144,10 @@ def link(row) -> dict:
 
 def video(row, *, include_moderation: bool = False) -> dict:
     """`include_moderation` n'est jamais a `True` sur une route publique :
-    le motif de refus et l'identite de qui a modere ne regardent que le
-    proprietaire et les administrateurs (sections 1 et "Securite").
+    le motif de refus, l'identite de qui a modere, et les statistiques de
+    reactions ne regardent que le proprietaire et les administrateurs
+    (sections 1, 6 et "Securite" -- "le public ne doit jamais pouvoir
+    connaitre... les statistiques correspondantes").
     """
     payload = {
         "id":               row.id,
@@ -153,6 +155,7 @@ def video(row, *, include_moderation: bool = False) -> dict:
         "description":      row.description,
         "source_type":      row.source_type,
         "file_url":         row.file_url,
+        "playback":         row.playback,
         "thumbnail_url":    row.thumbnail_url,
         "duration_seconds": row.duration_seconds,
         "status":           row.status,
@@ -161,15 +164,15 @@ def video(row, *, include_moderation: bool = False) -> dict:
         "tags":             row.tags,
         "created_at":       _iso(row.created_at),
         "published_at":     _iso(row.published_at),
-        "stats": {
-            "views":  row.view_count,
-            "likes":  row.like_count,
-            "shares": row.share_count,
-        },
         "skills": _linked_skills(row),
     }
     if include_moderation:
         payload.update({
+            "stats": {
+                "views":  row.view_count,
+                "likes":  row.like_count,
+                "shares": row.share_count,
+            },
             "rejection_reason":     row.rejection_reason,
             "moderated_at":         _iso(row.moderated_at),
             "moderated_by":         row.moderated_by.username if row.moderated_by_id else None,
@@ -236,11 +239,12 @@ def public_profile(profile, viewer) -> dict:
     """
     from .visibility import visible_videos
 
-    allowed = visible_sections(viewer, profile)
+    allowed  = visible_sections(viewer, profile)
+    is_owner = audience_of(viewer, profile) >= c.AUDIENCE_OWNER
     payload = {
         "profile":  identity(profile),
         "sections": allowed,
-        "is_owner": audience_of(viewer, profile) >= c.AUDIENCE_OWNER,
+        "is_owner": is_owner,
         "visibility": profile.visibility,
     }
 
@@ -274,8 +278,11 @@ def public_profile(profile, viewer) -> dict:
     if allowed[c.SECTION_AVAILABILITY]:
         payload["availability"] = availability(profile)
     if allowed[c.SECTION_VIDEOS]:
+        # section 6 : les statistiques de reactions ne regardent que le
+        # proprietaire et les administrateurs -- exactement ce que dit deja
+        # `is_owner` ici (voir `visibility.audience_of`).
         payload["videos"] = [
-            video(row) for row in
+            video(row, include_moderation = is_owner) for row in
             visible_videos(viewer, profile).prefetch_related("skill_links__skill")
         ]
 

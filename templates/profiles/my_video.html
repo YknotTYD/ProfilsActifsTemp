@@ -1,0 +1,110 @@
+{% extends "profiles/base.html" %}
+{% block title %}Ma video de presentation{% endblock %}
+
+{% comment %}
+Une seule page, un seul objet : la video de presentation. Jamais de liste,
+puisqu'un profil n'a jamais plus d'une video de presentation active a la fois
+(section 2). Pendant un remplacement, l'ancienne reste affichee comme "en
+ligne" jusqu'a la confirmation explicite -- c'est le point le plus facile a
+rater de la specification.
+{% endcomment %}
+
+{% block content %}
+<div class="p-pagehead">
+    <h1>Ma video de presentation</h1>
+    <p class="p-muted">Une nouvelle video passe toujours par la moderation avant de pouvoir
+       remplacer l'actuelle. Une validation ne la rend jamais publique toute seule : c'est
+       vous qui confirmez.</p>
+</div>
+
+{% if messages %}
+<div class="p-callout warn">
+    {% for message in messages %}<p>{{ message }}</p>{% endfor %}
+</div>
+{% endif %}
+
+{% if current %}
+<section class="p-panel">
+    <h2>Video actuelle <span class="p-badge p-ok">En ligne</span></h2>
+    <p><strong>{{ current.title }}</strong></p>
+    {% include "profiles/_video_player.html" with player=current.playback title=current.title %}
+    <p><a href="{{ current.file_url }}" target="_blank" rel="noopener" class="p-btn small">Ouvrir dans un nouvel onglet</a></p>
+</section>
+{% endif %}
+
+{% if pending %}
+<section class="p-panel">
+    <h2>
+        {% if current %}Nouvelle video{% else %}Ma video{% endif %}
+        {% if pending.status == "PENDING" %}<span class="p-badge p-warn">En attente de moderation</span>
+        {% elif pending.status == "APPROVED" %}<span class="p-badge p-info">Validee</span>
+        {% elif pending.status == "REJECTED" %}<span class="p-badge p-ko">Refusee</span>
+        {% else %}<span class="p-badge">{{ pending.status }}</span>{% endif %}
+    </h2>
+    <p><strong>{{ pending.title }}</strong></p>
+    {% include "profiles/_video_player.html" with player=pending.playback title=pending.title %}
+    <p class="p-muted"><a href="{{ pending.file_url }}" target="_blank" rel="noopener">{{ pending.file_url }}</a></p>
+
+    {% if pending.status == "REJECTED" and pending.rejection_reason %}
+    <p class="p-muted">Motif du refus : {{ pending.rejection_reason }}</p>
+    {% endif %}
+
+    <div class="p-actions">
+        {% if pending.requires_user_action == "CONFIRM_PUBLICATION" %}
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="publish">
+            <button type="submit" class="p-btn p-primary">
+                {% if current %}Publier et remplacer ma video actuelle{% else %}Publier{% endif %}
+            </button>
+        </form>
+        {% endif %}
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="delete">
+            <input type="hidden" name="video_id" value="{{ pending.id }}">
+            <button type="submit" class="p-btn small p-danger">Supprimer</button>
+        </form>
+    </div>
+
+    {% if pending.status == "REJECTED" %}
+    <form method="post" class="mt-4">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="resubmit">
+        <div class="p-field">
+            <label>Nouveau lien (facultatif, pour corriger le probleme signale)</label>
+            <input type="url" name="file_url" placeholder="https://...">
+        </div>
+        <button type="submit" class="p-btn p-primary" style="margin-top:.5rem">Re-soumettre</button>
+    </form>
+    {% endif %}
+</section>
+{% endif %}
+
+{% if not current and not pending %}
+<section class="p-panel p-video-empty">
+    <div class="p-ghosts"><i></i><i></i><i></i></div>
+    <h2>Vous n'avez pas encore de video de presentation</h2>
+    <p>Ajoutez un lien vers votre video : elle passera en moderation avant de pouvoir etre publiee.</p>
+</section>
+{% endif %}
+
+{% if not pending %}
+<section class="p-panel">
+    <h2>{% if current %}Remplacer ma video{% else %}Ajouter ma video{% endif %}</h2>
+    <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="submit">
+        <div class="p-field">
+            <label>Titre</label>
+            <input type="text" name="title" placeholder="Ma presentation" required>
+        </div>
+        <div class="p-field">
+            <label>Lien de la video</label>
+            <input type="url" name="file_url" placeholder="https://..." required>
+        </div>
+        <button type="submit" class="p-btn p-primary" style="margin-top:.5rem">Soumettre a la moderation</button>
+    </form>
+</section>
+{% endif %}
+{% endblock %}

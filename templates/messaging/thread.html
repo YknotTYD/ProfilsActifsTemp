@@ -7,25 +7,34 @@
     <p class="p-muted"><a href="/messages/" class="link-btn">← Toutes mes conversations</a></p>
 </div>
 
-<div class="p-panel msg-thread">
-    {% if messages_list %}
-    <ul class="msg-list">
-        {% for m in messages_list %}
-        <li class="msg-bubble {% if m.sender_id == request.user.id %}msg-mine{% else %}msg-theirs{% endif %}">
-            <span class="msg-author">@{{ m.sender.username }}</span>
-            <p class="msg-body">{{ m.body }}</p>
-            <span class="msg-date">{{ m.created_at }}</span>
-        </li>
-        {% endfor %}
-    </ul>
-    {% else %}
-    <p class="p-empty">Aucun message pour le moment -- ecrivez le premier.</p>
-    {% endif %}
+<div class="msg-window">
+    <div class="msg-thread" id="msg-thread">
+        {% if messages_list %}
+        <ul class="msg-list">
+            {% for m in messages_list %}
+            <li class="msg-bubble {% if m.sender_id == request.user.id %}msg-mine{% else %}msg-theirs{% endif %}">
+                <p class="msg-body">{{ m.body }}</p>
+                <span class="msg-date">{{ m.created_at|date:"d/m H:i" }}</span>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="p-empty">Aucun message pour le moment — écrivez le premier.</p>
+        {% endif %}
+    </div>
+
+    <form method="post" class="msg-bar">
+        {% csrf_token %}
+        <input type="text" name="body" required autocomplete="off" class="msg-input" placeholder="Écrire un message…">
+        <button type="submit" class="msg-send" aria-label="Envoyer">➤</button>
+    </form>
 </div>
 
-<form method="post" class="msg-compose">
-    {% csrf_token %}
-    <textarea name="body" rows="3" required class="field-select" placeholder="Votre message…"></textarea>
-    <button type="submit" class="p-btn p-primary">Envoyer</button>
-</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const thread = document.getElementById('msg-thread');
+    thread.scrollTop = thread.scrollHeight;
+</script>
 {% endblock %}

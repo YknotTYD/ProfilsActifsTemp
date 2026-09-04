@@ -435,6 +435,16 @@ DELETE_ACTORS = {ACTOR_OWNER, ACTOR_ADMIN}
 #: statuts pour lesquels un motif est obligatoire (section 1)
 REASON_REQUIRED_STATUSES = {VIDEO_REJECTED}
 
+#: duree pendant laquelle un refus reste dans l'historique "vivant" de la
+#: console de moderation avant de basculer dans les archives. La ligne n'est
+#: jamais supprimee. Surchargeable par `settings.REJECTION_HISTORY_DAYS`.
+REJECTION_HISTORY_DAYS = 7
+
+
+def rejection_history_days() -> int:
+    from django.conf import settings
+    return int(getattr(settings, "REJECTION_HISTORY_DAYS", REJECTION_HISTORY_DAYS))
+
 VIDEO_SOURCE_LINK = "LINK"
 VIDEO_SOURCE_FILE = "FILE"
 

@@ -14,7 +14,7 @@ qu'il appartient bien au profil avant toute ecriture.
 from django.db.models import Q
 
 from . import constants as c
-from . import moderation, permissions, serializers, services
+from . import engagement, moderation, permissions, serializers, services
 from .http import BadRequest, api, body, fail, ok
 from .models import (
     Certification, Education, Language, ProfileVideo, Project, Skill, UserLanguage,
@@ -22,7 +22,9 @@ from .models import (
 )
 from .search import ProfileQuery, search as run_search
 from .skills import resolve_skill
-from .visibility import PreviewViewer, assert_can_view, visible_videos
+from .visibility import (
+    PreviewViewer, assert_can_view, audience_of, can_view_video, visible_videos,
+)
 
 
 # --------------------------------------------------------------------------- #
@@ -107,11 +109,12 @@ def profile_videos(request, username):
         return fail("profil introuvable", "not_found", 404)
 
     assert_can_view(request.user, profile)
-    viewer = _viewer(request, profile)
-    rows   = visible_videos(viewer, profile).prefetch_related("skill_links__skill")
+    viewer   = _viewer(request, profile)
+    is_owner = audience_of(viewer, profile) >= c.AUDIENCE_OWNER
+    rows     = visible_videos(viewer, profile).prefetch_related("skill_links__skill")
     return ok({
         "username": profile.username,
-        "videos":   [serializers.video(row) for row in rows],
+        "videos":   [serializers.video(row, include_moderation = is_owner) for row in rows],
     })
 
 
@@ -407,6 +410,54 @@ def me_video_resubmit(request, pk):
 
 
 # --------------------------------------------------------------------------- #
+# Videos : engagement du feed (vues, reactions)
+# --------------------------------------------------------------------------- #
+
+def _feed_video(request, pk):
+    """Video visible du spectateur, ou None -- meme reponse 404 dans les deux
+    cas, pour ne pas divulguer l'existence d'une video cachee."""
+    video = ProfileVideo.objects.filter(pk = pk).select_related("profile__user").first()
+    if video is None or not can_view_video(request.user, video):
+        return None
+    return video
+
+
+@api(("POST",), login = False)
+def video_view(request, pk):
+    """Enregistre une vue sur une video du feed (section 6 : statistiques).
+
+    Ouverte aux visiteurs anonymes -- une vue est une vue. Le dedoublonnage
+    par session evite qu'un simple rechargement regonfle le compteur.
+    """
+    video = _feed_video(request, pk)
+    if video is None:
+        return fail("video introuvable", "not_found", 404)
+
+    if not request.session.session_key:
+        request.session.save()
+    engagement.register_view(
+        video,
+        user = request.user if request.user.is_authenticated else None,
+        session_key = request.session.session_key or "",
+    )
+    return ok({"views": ProfileVideo.objects.values_list("view_count", flat = True).get(pk = pk)})
+
+
+@api(("POST",))
+def video_react(request, pk):
+    """Pose / retire / remplace un like-dislike sur une video du feed."""
+    video = _feed_video(request, pk)
+    if video is None:
+        return fail("video introuvable", "not_found", 404)
+
+    reaction = (body(request).get("reaction") or "").strip()
+    try:
+        return ok(engagement.set_reaction(video, request.user, reaction))
+    except ValueError:
+        return fail(f"reaction invalide: {reaction!r}", "invalid_field", 400)
+
+
+# --------------------------------------------------------------------------- #
 # Videos : moderation administrateur
 # --------------------------------------------------------------------------- #
 
@@ -443,6 +494,34 @@ def admin_video_reject(request, pk):
     reason = (body(request).get("reason") or "").strip()
     services.reject_video(video, reason, user = request.user)
     return ok(serializers.video(video, include_moderation = True))
+
+
+@api(("GET",), perm = c.PERM_MODERATE)
+def admin_video_rejections(request):
+    """Historique des videos refusees (spec "Historique de moderation").
+
+    `?archived=1` renvoie les archives (au-dela de la fenetre vivante) ; sinon
+    les refus recents. Chaque entree porte le motif, l'auteur et la date, plus
+    le statut *actuel* de la video (une video refusee puis re-soumise est
+    de nouveau en attente -- l'historique, lui, garde la trace du refus).
+    """
+    archived = (request.GET.get("archived") or "").lower() in ("1", "true", "yes", "on")
+    events = list(moderation.rejection_history(archived = archived)[:200])
+    return ok({
+        "archived":       archived,
+        "retention_days": c.rejection_history_days(),
+        "rejections": [{
+            "video_id":       event.video_id,
+            "title":          event.video.title,
+            "username":       event.video.profile.username,
+            "file_url":       event.video.file_url,
+            "reason":         event.reason,
+            "rejected_at":    event.created_at.isoformat(),
+            "rejected_by":    event.actor.username if event.actor_id else event.source,
+            "current_status": event.video.status,
+            "archived_at":    event.archived_at.isoformat() if event.archived_at else None,
+        } for event in events],
+    })
 
 
 @api(("GET",), perm = c.PERM_MODERATE)

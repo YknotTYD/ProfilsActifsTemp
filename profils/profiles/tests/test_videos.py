@@ -8,12 +8,14 @@ respecte les memes regles de visibilite que le reste, et que le chemin
 """
 
 import json
+from datetime import timedelta
 
 from django.contrib.auth.models import AnonymousUser
 from django.test import Client, TestCase
+from django.utils import timezone
 
 from profils.profiles import constants as c
-from profils.profiles import moderation, services
+from profils.profiles import moderation, serializers, services
 from profils.profiles.feed import video_candidates, videos_for_skills
 from profils.profiles.http import BadRequest
 from profils.profiles.models import (
@@ -51,7 +53,7 @@ class EmptySectionTests(TestCase):
     def test_the_page_renders_the_empty_state(self):
         response = self.client.get(f"/profile/{self.profile.username}/")
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Videos")
+        self.assertContains(response, "Video de presentation")
 
 
 class VideoModelTests(TestCase):
@@ -146,6 +148,54 @@ class VideoSkillTests(TestCase):
 
         slugs = sorted(link.skill.slug for link in video.skill_links.all())
         self.assertEqual(slugs, ["go", "grpc"])
+
+
+class VideoStatsPrivacyTests(TestCase):
+    """Section 6 : "le public ne doit jamais pouvoir connaitre... les
+    statistiques" de reactions.
+    """
+
+    def test_the_default_serializer_never_exposes_stats(self):
+        video = add_video(make_profile("videaste"), status = c.VIDEO_PUBLISHED)
+        payload = serializers.video(video)
+        self.assertNotIn("stats", payload)
+
+    def test_the_owner_and_admin_view_still_includes_stats(self):
+        video = add_video(make_profile("videaste"), status = c.VIDEO_PUBLISHED)
+        payload = serializers.video(video, include_moderation = True)
+        self.assertIn("stats", payload)
+
+    def test_a_visitor_never_receives_stats_from_the_public_route(self):
+        profile = make_profile("videaste", visibility = c.VISIBILITY_PUBLIC)
+        add_video(profile, status = c.VIDEO_PUBLISHED)
+
+        response = Client().get(f"/api/profiles/{profile.username}/videos/")
+        payload  = json.loads(response.content)
+        self.assertNotIn("stats", payload["videos"][0])
+
+    def test_the_owner_does_see_their_own_stats_on_their_profile_page(self):
+        profile = make_profile("videaste", visibility = c.VISIBILITY_PUBLIC)
+        add_video(profile, status = c.VIDEO_PUBLISHED)
+
+        client = Client()
+        client.force_login(profile.user)
+        response = json.loads(client.get(f"/api/profiles/{profile.username}/videos/").content)
+        self.assertIn("stats", response["videos"][0])
+
+    def test_the_owner_sees_stats_via_the_full_profile_payload_too(self):
+        profile = make_profile("videaste", visibility = c.VISIBILITY_PUBLIC)
+        add_video(profile, status = c.VIDEO_PUBLISHED)
+
+        payload = serializers.public_profile(profile, profile.user)
+        self.assertIn("stats", payload["videos"][0])
+
+    def test_a_visitor_does_not_see_stats_via_the_full_profile_payload(self):
+        profile = make_profile("videaste", visibility = c.VISIBILITY_PUBLIC)
+        add_video(profile, status = c.VIDEO_PUBLISHED)
+        visitor = make_user("passant")
+
+        payload = serializers.public_profile(profile, visitor)
+        self.assertNotIn("stats", payload["videos"][0])
 
 
 class VideoVisibilityTests(TestCase):
@@ -507,3 +557,152 @@ class PresentationReplacementTests(TestCase):
         )
         with self.assertRaises(Exception):
             second.save()
+
+
+class FeedPlaybackTests(TestCase):
+    """`profiles.feed.playback` : lien d'integration vs fichier."""
+
+    def test_a_youtube_watch_url_becomes_an_embed_iframe(self):
+        from profils.profiles.feed import playback
+        mode, url = playback(c.VIDEO_SOURCE_LINK, "https://www.youtube.com/watch?v=abc123XYZ")
+        self.assertEqual(mode, "iframe")
+        self.assertEqual(url, "https://www.youtube.com/embed/abc123XYZ")
+
+    def test_an_embed_url_is_kept_as_an_iframe(self):
+        from profils.profiles.feed import playback
+        self.assertEqual(
+            playback(c.VIDEO_SOURCE_LINK, "https://www.youtube.com/embed/abc123XYZ"),
+            ("iframe", "https://www.youtube.com/embed/abc123XYZ"),
+        )
+
+    def test_a_bare_mp4_link_is_served_as_a_file(self):
+        from profils.profiles.feed import playback
+        self.assertEqual(
+            playback(c.VIDEO_SOURCE_LINK, "https://cdn.example.test/clip.mp4?t=1"),
+            ("file", "https://cdn.example.test/clip.mp4?t=1"),
+        )
+
+
+class FeedEngagementTests(TestCase):
+    """Vues et reactions du feed video (`profiles.engagement` + API)."""
+
+    def setUp(self):
+        self.author  = make_profile("auteur", visibility = c.VISIBILITY_PUBLIC)
+        self.video   = add_video(self.author, title = "Ma presentation",
+                                 file_url = "https://www.youtube.com/embed/xyz")
+        self.watcher = make_user("spectateur")
+        self.client  = Client()
+        self.client.force_login(self.watcher)
+
+    def _react(self, reaction):
+        return self.client.post(
+            f"/api/profiles/videos/{self.video.id}/react/",
+            data = json.dumps({"reaction": reaction}), content_type = "application/json",
+        )
+
+    def test_a_like_is_counted_and_toggles_off_on_a_second_click(self):
+        self._react("like")
+        self.video.refresh_from_db()
+        self.assertEqual(self.video.like_count, 1)
+
+        self._react("like")
+        self.video.refresh_from_db()
+        self.assertEqual(self.video.like_count, 0)
+
+    def test_a_like_then_a_dislike_replaces_it(self):
+        self._react("like")
+        payload = json.loads(self._react("dislike").content)
+        self.assertEqual(payload["reaction"], "dislike")
+        self.assertEqual(payload["likes"], 0)
+
+    def test_a_new_reaction_notifies_the_author(self):
+        from profils.notifications.models import Notification
+        self._react("like")
+        notif = Notification.objects.get(recipient = self.author.user)
+        self.assertEqual(notif.url, "/profiles/me/video/")
+
+    def test_reacting_to_ones_own_video_does_not_notify(self):
+        from profils.notifications.models import Notification
+        self.client.force_login(self.author.user)
+        self._react("like")
+        self.assertFalse(Notification.objects.filter(recipient = self.author.user).exists())
+
+    def test_a_view_is_counted_once_per_user(self):
+        url = f"/api/profiles/videos/{self.video.id}/view/"
+        self.client.post(url)
+        self.client.post(url)
+        self.video.refresh_from_db()
+        self.assertEqual(self.video.view_count, 1)
+
+    def test_an_invalid_reaction_is_rejected(self):
+        self.assertEqual(self._react("meh").status_code, 400)
+
+    def test_a_hidden_video_cannot_be_reacted_to(self):
+        self.video.status = c.VIDEO_DRAFT
+        self.video.save()
+        self.assertEqual(self._react("like").status_code, 404)
+
+
+class RejectionHistoryTests(TestCase):
+    """Console de moderation : historique des refus, 7 jours puis archives."""
+
+    def setUp(self):
+        self.profile = make_profile("refuse")
+        self.admin   = make_admin("moderateur")
+        self.client  = Client()
+        self.client.force_login(self.admin)
+
+    def _reject(self, title = "V", *, days_ago = 0):
+        from profils.profiles.models import VideoModerationEvent
+        video = services.submit_video_link(self.profile, {
+            "title": title, "file_url": "https://exemple.test/v.mp4",
+        })
+        services.reject_video(video, "hors sujet", user = self.admin)
+        if days_ago:
+            old = timezone.now() - timedelta(days = days_ago)
+            VideoModerationEvent.objects.filter(
+                video = video, new_status = c.VIDEO_REJECTED,
+            ).update(created_at = old)
+        return video
+
+    def test_a_recent_rejection_shows_in_the_live_window(self):
+        self._reject("Recente")
+        rows = list(moderation.rejection_history(archived = False))
+        self.assertEqual([e.video.title for e in rows], ["Recente"])
+
+    def test_an_old_rejection_is_archived_on_read(self):
+        self._reject("Ancienne", days_ago = 9)
+        self.assertEqual(list(moderation.rejection_history(archived = False)), [])
+        archived = list(moderation.rejection_history(archived = True))
+        self.assertEqual([e.video.title for e in archived], ["Ancienne"])
+
+    def test_the_archive_command_moves_stale_rejections(self):
+        self._reject("Ancienne", days_ago = 9)
+        self._reject("Recente")
+        moved = moderation.archive_stale_rejections()
+        self.assertEqual(moved, 1)
+
+    def test_the_endpoint_requires_the_moderation_permission(self):
+        self.client.force_login(make_user("simple"))
+        self.assertEqual(
+            self.client.get("/api/profiles/admin/videos/rejected/").status_code, 403,
+        )
+
+    def test_the_endpoint_splits_recent_and_archived(self):
+        self._reject("Ancienne", days_ago = 9)
+        self._reject("Recente")
+
+        recent = self.client.get("/api/profiles/admin/videos/rejected/").json()
+        self.assertEqual([r["title"] for r in recent["rejections"]], ["Recente"])
+        self.assertEqual(recent["retention_days"], 7)
+
+        archived = self.client.get("/api/profiles/admin/videos/rejected/?archived=1").json()
+        self.assertEqual([r["title"] for r in archived["rejections"]], ["Ancienne"])
+
+    def test_history_keeps_the_rejection_after_a_resubmission(self):
+        video = self._reject("Re-soumise")
+        services.resubmit_video(video, user = self.profile.user)
+
+        rows = list(moderation.rejection_history(archived = False))
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0].video.status, c.VIDEO_PENDING)

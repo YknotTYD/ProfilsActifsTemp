@@ -6,7 +6,38 @@ from django.test import Client, TestCase
 from profils.notifications import types as notification_types
 from profils.notifications.models import Notification
 
-from .models import VideoLink
+from .models import Role, VideoLink
+
+
+class NavbarConsistencyTests(TestCase):
+    """La barre de navigation est la meme sur toutes les pages (context
+    processor `navigation`), et distingue l'administrateur."""
+
+    PAGES = ("/", "/profiles/", "/questionnaires/", "/messages/", "/profile/")
+
+    def _body(self, client, path):
+        return client.get(path, follow = True).content.decode()
+
+    def test_an_admin_sees_the_admin_menu_on_every_page(self):
+        admin = User.objects.create_user("adm", None, None, is_superuser = True, is_staff = True)
+        client = Client(); client.force_login(admin)
+        for path in self.PAGES:
+            body = self._body(client, path)
+            self.assertIn("topbar", body, path)
+            self.assertIn("Administration", body, path)
+            self.assertIn("/profiles/admin/videos/", body, path)
+
+    def test_a_plain_user_never_sees_the_admin_menu(self):
+        user = User.objects.create_user("js", None, None)
+        Role.objects.create(user = user, role = "JobSeeker")
+        client = Client(); client.force_login(user)
+        for path in self.PAGES:
+            self.assertNotIn("Administration", self._body(client, path), path)
+
+    def test_an_anonymous_visitor_gets_the_sign_in_actions(self):
+        body = Client().get("/").content.decode()
+        self.assertIn("Se connecter", body)
+        self.assertNotIn("notif-bell", body)
 
 
 class ReactionNotificationTests(TestCase):
