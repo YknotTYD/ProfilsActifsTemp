@@ -1,10 +1,21 @@
 <form id="video-file-form" enctype="multipart/form-data">
-    <input type="text" name="title" placeholder="Titre" required>
-    <textarea name="description" placeholder="Description"></textarea>
-    <input type="file" name="file" accept=".mp4,.mov,.avi,.webm" required>
-    <button type="submit">Téléverser</button>
+    <div class="p-field">
+        <label>Titre</label>
+        <input type="text" name="title" placeholder="Ma presentation" required>
+    </div>
+    <div class="p-field">
+        <label>Description</label>
+        <textarea name="description" placeholder="Description (facultatif)"></textarea>
+    </div>
+    <div class="p-field">
+        <label>Fichier video</label>
+        <input type="file" name="file" accept=".mp4,.mov,.avi,.webm" required>
+    </div>
+    <button type="submit" class="p-btn p-primary" style="margin-top:.5rem">
+        Soumettre a la moderation
+    </button>
 </form>
-<p id="video-file-status"></p>
+<p id="video-file-status" class="p-muted" style="margin-top:.5rem"></p>
 
 <script>
 document.getElementById('video-file-form').addEventListener('submit', function (e) {
