@@ -24,6 +24,80 @@
   }
 }
 
+/* Animations partagees par toutes les routes. Elles sont toutes neutralisees
+   d'un bloc en fin de fichier quand le visiteur demande moins de mouvement.
+
+   Aucune ne se termine en `forwards` : une transformation qui reste posee sur
+   un element en ferait un bloc conteneur, et le `position: sticky` du feed
+   cesserait de coller. L'entree se joue donc en `backwards` -- l'element part
+   masque, et retrouve son etat normal une fois l'animation finie. */
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes pop-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.04);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes wiggle {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-12deg);
+  }
+  75% {
+    transform: rotate(12deg);
+  }
+}
+@keyframes bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+@keyframes halo {
+  0% {
+    box-shadow: 0 0 0 0 rgba(246, 209, 121, 0.6);
+  }
+  70% {
+    box-shadow: 0 0 0 12px rgba(246, 209, 121, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(246, 209, 121, 0);
+  }
+}
+@keyframes drop-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 /* Police officielle Marianne (fichiers dans /static/fonts) */
 @font-face {
   font-family: 'Marianne';
@@ -568,5 +642,473 @@
   }
   .msg-send:hover {
     @apply bg-[#14294d];
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Feed vidéo vertical (recruteur / admin)                             */
+  /* ------------------------------------------------------------------ */
+
+  .vfeed {
+    @apply relative overflow-hidden rounded-2xl bg-bg;
+    height: min(720px, 80vh);
+  }
+  .vfeed-scroller {
+    @apply h-full w-full overflow-y-auto overscroll-y-contain outline-none;
+    scroll-snap-type: y mandatory;
+    scrollbar-width: none;
+  }
+  .vfeed-scroller::-webkit-scrollbar {
+    display: none;
+  }
+  .vfeed-item {
+    @apply h-full w-full;
+    scroll-snap-align: start;
+    /* interdit d'enjamber une vidéo sur une inertie de molette un peu vive */
+    scroll-snap-stop: always;
+  }
+  .vfeed-stage {
+    @apply relative flex h-full w-full items-center justify-center sm:gap-4 sm:px-4 sm:py-4;
+  }
+
+  /* Le lecteur : plein cadre sur mobile, portrait centré ailleurs. */
+  .vfeed-player {
+    @apply relative h-full w-full overflow-hidden bg-black;
+  }
+  @media (min-width: 640px) {
+    .vfeed-player {
+      /* la hauteur mène, la largeur en découle : le cadre reste en 9:16
+         quelle que soit la fenêtre. Le plafond évite qu'un très grand écran
+         n'étire la vidéo au-delà du confortable. */
+      height: min(100%, 820px);
+      width: auto;
+      max-width: 100%;
+      aspect-ratio: 9 / 16;
+      @apply rounded-xl;
+    }
+  }
+  .vfeed-video {
+    /* `contain` plutôt que `cover` : une vidéo filmée en paysage garde ses
+       bandes noires au lieu d'être rognée au milieu du visage. */
+    @apply absolute inset-0 h-full w-full cursor-pointer object-contain;
+  }
+
+  .vfeed-paused {
+    @apply pointer-events-none absolute inset-0 z-10 flex items-center justify-center text-white/85 opacity-0;
+    transition: opacity 120ms ease-out;
+  }
+  .vfeed-item.is-paused .vfeed-paused {
+    @apply opacity-100;
+  }
+
+  .vfeed-sound {
+    @apply absolute left-3 top-3 z-20 flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border-0 bg-black/45 text-white;
+  }
+  .vfeed-sound:hover {
+    @apply bg-black/65;
+  }
+  .vfeed-sound-on {
+    @apply hidden;
+  }
+  .vfeed-sound[aria-pressed='false'] .vfeed-sound-off {
+    @apply hidden;
+  }
+  .vfeed-sound[aria-pressed='false'] .vfeed-sound-on {
+    @apply block;
+  }
+
+  /* Informations du candidat, superposées en bas de la vidéo. Le dégradé
+     porte la lisibilité du texte, rien d'autre. */
+  .vfeed-overlay {
+    @apply pointer-events-none absolute inset-x-0 bottom-0 z-10 px-4 pb-4 pr-20 pt-16 text-white sm:pr-4;
+    background: linear-gradient(
+      to top,
+      rgba(0, 0, 0, 0.72) 0%,
+      rgba(0, 0, 0, 0.32) 45%,
+      rgba(0, 0, 0, 0) 100%
+    );
+  }
+  .vfeed-name {
+    @apply font-title text-[15px] font-bold leading-tight;
+  }
+  .vfeed-title {
+    @apply mt-0.5 text-[13px] leading-snug text-white/80;
+  }
+  .vfeed-desc {
+    @apply mt-1.5 text-[13px] leading-snug text-white/90;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+  }
+  .vfeed-desc.is-expanded {
+    -webkit-line-clamp: unset;
+    overflow: visible;
+  }
+  .vfeed-more {
+    @apply pointer-events-auto mt-1 cursor-pointer border-0 bg-transparent p-0 text-[12px] text-white/70 underline;
+  }
+
+  /* Barre d'actions. Les couleurs passent par des variables parce qu'elles
+     changent de fond : posée à côté de la vidéo sur grand écran, posée
+     dessus sur mobile faute de place. */
+  .vfeed-rail {
+    --rail-fg: #33404f;
+    --rail-bg: #ffffff;
+    --rail-border: #e6e4e0;
+    --rail-label: #5b6472;
+    --rail-like: var(--color-secondary);
+    --rail-save: var(--color-primary);
+    --rail-ring: transparent;
+
+    @apply z-20 flex flex-col items-center gap-4;
+  }
+  @media (max-width: 639px) {
+    .vfeed-rail {
+      --rail-fg: #ffffff;
+      --rail-bg: rgba(255, 255, 255, 0.18);
+      --rail-border: transparent;
+      --rail-label: #ffffff;
+      --rail-save: var(--color-cta);
+      --rail-ring: rgba(255, 255, 255, 0.85);
+
+      @apply absolute bottom-4 right-3;
+    }
+    .vfeed-action-count {
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.55);
+    }
+  }
+  @media (min-width: 640px) {
+    /* même hauteur que le lecteur : les deux bas s'alignent au pixel. */
+    .vfeed-rail {
+      height: min(100%, 820px);
+      @apply justify-end pb-1;
+    }
+  }
+
+  .vfeed-avatar {
+    @apply flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-primary font-title text-base font-bold text-white no-underline;
+    border: 2px solid var(--rail-ring);
+  }
+  .vfeed-avatar:hover,
+  .vfeed-avatar:visited {
+    @apply text-white no-underline;
+  }
+  .vfeed-avatar img {
+    @apply h-full w-full object-cover;
+  }
+
+  .vfeed-action {
+    @apply flex cursor-pointer flex-col items-center gap-1 border-0 bg-transparent p-0;
+    color: var(--rail-fg);
+  }
+  .vfeed-action-icon {
+    @apply flex h-12 w-12 items-center justify-center rounded-full;
+    background: var(--rail-bg);
+    border: 1px solid var(--rail-border);
+  }
+  .vfeed-action:hover .vfeed-action-icon {
+    filter: brightness(0.96);
+  }
+  .vfeed-action-count {
+    @apply text-[12px] font-medium;
+    color: var(--rail-label);
+  }
+
+  /* Actif : l'icône se remplit, et prend une couleur de la charte. */
+  .vfeed-icon-on {
+    @apply hidden;
+  }
+  .vfeed-action[aria-pressed='true'] .vfeed-icon-off {
+    @apply hidden;
+  }
+  .vfeed-action[aria-pressed='true'] .vfeed-icon-on {
+    @apply block;
+  }
+  .vfeed-action--like[aria-pressed='true'] {
+    color: var(--rail-like);
+  }
+  .vfeed-action--save[aria-pressed='true'] {
+    color: var(--rail-save);
+  }
+
+  .vfeed-action--share {
+    @apply relative;
+  }
+  .vfeed-share-toast {
+    @apply pointer-events-none absolute right-full top-1/2 mr-2 -translate-y-1/2 whitespace-nowrap rounded-full bg-black/80 px-3 py-1 text-[12px] font-medium text-white;
+  }
+
+  .vfeed-action:focus-visible,
+  .vfeed-avatar:focus-visible,
+  .vfeed-sound:focus-visible,
+  .vfeed-more:focus-visible {
+    outline: 2px solid var(--color-link);
+    outline-offset: 2px;
+  }
+
+  .vfeed-empty {
+    @apply flex h-full flex-col items-center justify-center gap-2 px-6 text-center text-[#b0aeaa];
+  }
+  .vfeed-empty-title {
+    @apply mt-1 font-title text-base font-bold text-primary;
+  }
+  .vfeed-empty-text {
+    @apply max-w-[34ch] text-sm text-[#7a7a7a];
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Tableau de bord en deux colonnes : accueil a gauche, feed a droite   */
+  /* ------------------------------------------------------------------ */
+
+  /* La colonne du feed a une largeur fixe -- c'est un cadre 9:16, il n'a
+     rien a gagner a s'etirer. C'est donc l'accueil, a sa gauche, qui prend
+     la place restante. En dessous de `lg`, les deux se remettent l'un sous
+     l'autre : cote a cote, il ne resterait ni assez de large pour le texte,
+     ni assez pour la video. */
+  .dash-split {
+    @apply grid items-start gap-6;
+  }
+  .dash-col {
+    @apply min-w-0;
+  }
+  .dash-feed-col {
+    @apply mx-auto w-full;
+    max-width: 500px;
+  }
+  @media (min-width: 1024px) {
+    .dashboard-page--wide {
+      max-width: 1180px;
+    }
+    .dashboard-page--wide .dash-split {
+      grid-template-columns: minmax(0, 1fr) 500px;
+    }
+    /* le feed reste sous les yeux pendant que la colonne de gauche defile. */
+    .dash-feed-col {
+      @apply sticky;
+      top: 5.5rem;
+    }
+    /* borne a la hauteur visible sous la barre de navigation, sinon le bas
+       du feed passe sous le pli et ses boutons deviennent inatteignables. */
+    .dash-feed-col .vfeed {
+      height: min(720px, calc(100vh - 9rem));
+    }
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Animations : la meme vie sur toutes les routes                       */
+  /* ------------------------------------------------------------------ */
+
+  /* Entree de page : les blocs montent, legerement decales pour que l'oeil
+     descende la page au lieu de tout recevoir d'un coup. */
+  .card,
+  .dash-hero,
+  .dash-panel,
+  .home-hero,
+  .msg-window,
+  .p-main,
+  .q-main,
+  .vfeed {
+    animation: rise-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  }
+  .dash-hero {
+    animation-delay: 0.04s;
+  }
+  .dash-grid > * {
+    animation: rise-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) 0.12s backwards;
+  }
+  .dash-feed-col .vfeed {
+    animation-delay: 0.18s;
+  }
+  .hero-badge,
+  .hero-title,
+  .hero-subtitle,
+  .hero-cta-row {
+    animation: rise-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  }
+  .hero-title {
+    animation-delay: 0.08s;
+  }
+  .hero-subtitle {
+    animation-delay: 0.16s;
+  }
+  .hero-cta-row {
+    animation-delay: 0.24s;
+  }
+
+  /* Boutons : ils repondent au doigt -- ils montent au survol, s'enfoncent
+     au clic. Meme geste pour les trois, c'est ce qui fait charte. */
+  .btn-primary,
+  .btn-primary-sm,
+  .btn-ghost,
+  .link-btn,
+  .topbar-cta,
+  .topbar-ghost,
+  .topbar-link,
+  .topbar-menu-btn {
+    transition:
+      transform 140ms cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 140ms ease-out,
+      background-color 140ms ease-out,
+      color 140ms ease-out;
+  }
+  .btn-primary:hover,
+  .btn-primary-sm:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 18px rgba(27, 58, 107, 0.18);
+  }
+  .btn-primary:active,
+  .btn-primary-sm:active {
+    transform: translateY(0) scale(0.97);
+    box-shadow: none;
+  }
+  .btn-ghost:hover,
+  .link-btn:hover {
+    transform: translateX(2px);
+  }
+
+  /* Pastille d'identite : elle arrive en rebond, et gigote au survol. */
+  .dash-avatar {
+    @apply cursor-default;
+    animation: pop-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.12s backwards;
+    transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .dash-avatar:hover {
+    transform: rotate(-8deg) scale(1.08);
+  }
+  .dash-role {
+    animation: pop-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) 0.24s backwards;
+  }
+  .dash-empty-icon {
+    animation: bob 3s ease-in-out infinite;
+  }
+
+  /* Cartes : elles se soulevent quand on les designe. */
+  .dash-panel,
+  .testimonial-card {
+    transition:
+      transform 180ms cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 180ms ease-out;
+  }
+  .dash-panel:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 28px rgba(27, 58, 107, 0.1);
+  }
+  .testimonial-card:hover {
+    transform: translateY(-6px) rotate(-1deg);
+  }
+
+  /* Barre d'actions du feed : chaque bouton rebondit sous le doigt, et
+     l'icone fait un point d'exclamation quand elle s'allume. */
+  .vfeed-action,
+  .vfeed-sound,
+  .vfeed-avatar {
+    transition: transform 160ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .vfeed-action:hover,
+  .vfeed-sound:hover {
+    transform: scale(1.1);
+  }
+  .vfeed-avatar:hover {
+    transform: scale(1.08) rotate(-4deg);
+  }
+  .vfeed-action:active {
+    transform: scale(0.92);
+  }
+  .vfeed-action[aria-pressed='true'] .vfeed-action-icon {
+    animation: pop-in 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Navigation : la finition, comme le veut `partials/_navbar.html`      */
+  /* (le gabarit ne porte en ligne que le strict necessaire a la lecture) */
+  /* ------------------------------------------------------------------ */
+
+  /* Le logo salue au passage. */
+  .topbar-brand img {
+    transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .topbar-brand:hover img {
+    animation: wiggle 0.6s ease-in-out;
+  }
+
+  /* Un trait glisse sous le lien survole, depuis son centre. */
+  .topbar-link {
+    @apply relative;
+  }
+  .topbar-link::after {
+    @apply absolute bottom-0.5 left-2.5 right-2.5 block h-[2px] rounded-full bg-cta;
+    content: '';
+    transform: scaleX(0);
+    transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .topbar-link:hover::after {
+    transform: scaleX(1);
+  }
+
+  .topbar-menu-btn:hover,
+  .topbar-ghost:hover {
+    transform: translateY(-1px);
+  }
+  .topbar-cta:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.25);
+  }
+  .topbar-cta:active,
+  .topbar-menu-btn:active {
+    transform: translateY(0) scale(0.97);
+  }
+  /* le seul appel a l'action de la barre : il respire pour se signaler. */
+  .topbar-cta {
+    animation: halo 3s ease-out 1.5s infinite;
+  }
+
+  /* La cloche sonne au survol, et sa pastille bat tant qu'il reste du
+     non-lu. */
+  .topbar-icon-btn svg {
+    transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .topbar-icon-btn:hover svg {
+    animation: wiggle 0.55s ease-in-out;
+  }
+  .topbar-badge {
+    animation: pop-in 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .topbar-avatar {
+    transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .topbar-menu-btn:hover .topbar-avatar {
+    transform: scale(1.12) rotate(-6deg);
+  }
+  /* le chevron pivote quand son menu est ouvert. */
+  .topbar-caret {
+    transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .topbar-menu-btn[aria-expanded='true'] .topbar-caret {
+    transform: rotate(180deg);
+  }
+  .topbar-dropdown {
+    animation: drop-in 0.18s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .topbar-dropdown a {
+    transition:
+      background-color 140ms ease-out,
+      padding-left 140ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .topbar-dropdown a:hover {
+    @apply pl-[1.15rem];
+  }
+}
+
+/* Le mouvement est un agrement, jamais le message : quand le systeme demande
+   moins d'animation, tout ce qui precede se joue instantanement. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
