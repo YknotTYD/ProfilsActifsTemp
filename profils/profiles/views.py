@@ -11,12 +11,16 @@ Les pages d'edition et de recherche, elles, sont interactives et dialoguent
 avec l'API apres le premier rendu.
 """
 
+from django.contrib import messages
 from django.http      import Http404
 from django.shortcuts import redirect, render
 
 from . import constants as c
 from . import permissions, serializers, services
 from .api        import _viewer
+from .http       import BadRequest
+from .models     import ProfileVideo
+from .permissions import ProfileAccessDenied
 from .search     import ProfileQuery
 from .visibility import can_view_profile
 
@@ -37,8 +41,19 @@ def profile_page(request, username):
 
     from profils.messaging.rules import can_start as can_message
 
+    # une seule vidéo de présentation compte jamais qu'une à la fois
+    # (section 2) : la page publique montre celle-là, jamais la liste
+    # brute que le propriétaire peut voir (qui inclut une éventuelle
+    # vidéo en cours de remplacement -- ça, c'est le travail de
+    # `/profiles/me/video/`, pas de cette page).
+    live_video = next(
+        (video for video in payload.get("videos", []) if video["status"] == c.VIDEO_PUBLISHED),
+        None,
+    )
+
     return render(request, "profiles/profile.html", {
         "p":          payload,
+        "live_video": live_video,
         "profile":    profile,
         "is_owner":   permissions.owns(request.user, profile),
         "preview":    request.GET.get("preview") or "",
@@ -125,6 +140,61 @@ def admin_videos_page(request):
         raise Http404
     return render(request, "profiles/admin_videos.html", {
         "capabilities": permissions.capabilities(request.user),
+    })
+
+
+def my_video_page(request):
+    """Vidéo de présentation : `/profiles/me/video/`.
+
+    Une seule page pour un seul objet qui compte : la vidéo publiée (s'il y
+    en a une) et, éventuellement, celle qui la remplacera une fois validée
+    et confirmée -- jamais une liste, puisqu'un profil n'a jamais plus
+    d'une vidéo de présentation active (section 2).
+    """
+    if response := _login_required(request):
+        return response
+
+    profile = services.get_profile(request.user)
+    rows = list(
+        ProfileVideo.objects.filter(profile = profile, is_presentation = True)
+            .exclude(status__in = (c.VIDEO_DELETED, c.VIDEO_HIDDEN))
+            .order_by("-created_at")
+    )
+    current = next((v for v in rows if v.status == c.VIDEO_PUBLISHED), None)
+    pending = next((v for v in rows if v.status != c.VIDEO_PUBLISHED), None)
+
+    if request.method == "POST":
+        action = request.POST.get("action")
+        try:
+            if action == "submit":
+                payload = {
+                    "title": request.POST.get("title", "").strip() or "Ma video de presentation",
+                    "file_url": request.POST.get("file_url", "").strip(),
+                }
+                if current is not None:
+                    payload["replaces"] = current.pk
+                services.submit_video_link(profile, payload)
+            elif action == "resubmit" and pending is not None:
+                services.resubmit_video(
+                    pending, user = request.user,
+                    new_file_url = request.POST.get("file_url", "").strip() or None,
+                )
+            elif action == "publish" and pending is not None:
+                services.publish_presentation_video(pending, user = request.user)
+            elif action == "delete":
+                target = ProfileVideo.objects.filter(
+                    pk = request.POST.get("video_id"), profile = profile,
+                ).first()
+                if target is not None:
+                    services.delete_video(target, actor = c.ACTOR_OWNER, user = request.user)
+        except (BadRequest, ProfileAccessDenied) as exc:
+            reason = getattr(exc, "message", None) or getattr(exc, "reason", None) or str(exc)
+            messages.error(request, reason)
+        return redirect("/profiles/me/video/")
+
+    return render(request, "profiles/my_video.html", {
+        "current": current,
+        "pending": pending,
     })
 
 

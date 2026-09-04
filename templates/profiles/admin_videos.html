@@ -16,11 +16,28 @@ n'est dupliquee ici, seulement son affichage.
        toute seule : c'est un choix explicite laisse a l'utilisateur.</p>
 </div>
 
-<div id="p-mod-empty" class="p-panel" hidden>
-    <p class="p-empty">Aucune video en attente de moderation.</p>
-</div>
+<nav class="p-mod-tabs">
+    <button type="button" class="p-mod-tab is-active" data-tab="queue">File d'attente</button>
+    <button type="button" class="p-mod-tab" data-tab="rejected">Refus recents</button>
+    <button type="button" class="p-mod-tab" data-tab="archived">Archives</button>
+</nav>
 
-<div id="p-mod-list" class="p-col"></div>
+<section data-panel="queue">
+    <div id="p-mod-empty" class="p-panel" hidden>
+        <p class="p-empty">Aucune video en attente de moderation.</p>
+    </div>
+    <div id="p-mod-list" class="p-col"></div>
+</section>
+
+<section data-panel="rejected" hidden>
+    <p class="p-muted" id="p-rej-note"></p>
+    <div id="p-rej-list" class="p-col"></div>
+</section>
+
+<section data-panel="archived" hidden>
+    <p class="p-muted">Refus sortis de la fenetre vivante. Conserves, jamais supprimes.</p>
+    <div id="p-arc-list" class="p-col"></div>
+</section>
 
 <template id="p-mod-item-tpl">
     <section class="p-panel p-mod-item">
@@ -165,6 +182,64 @@ n'est dupliquee ici, seulement son affichage.
             list.innerHTML = `<p class="p-empty">${err.message}</p>`;
         }
     }
+
+    // --- Historique des refus (7 jours, puis archives) --------------------
+    const STATUS_LABELS = {
+        PENDING: 'de nouveau en attente', APPROVED: 'validee depuis',
+        PUBLISHED: 'publiee depuis', REJECTED: 'toujours refusee',
+        DELETED: 'supprimee depuis', HIDDEN: 'masquee', DRAFT: 'brouillon',
+    };
+
+    function renderRejections(box, rejections) {
+        if (rejections.length === 0) {
+            box.innerHTML = '<p class="p-empty">Aucun refus a afficher.</p>';
+            return;
+        }
+        box.innerHTML = rejections.map((r) => `
+            <section class="p-panel p-mod-item">
+                <h2>
+                    <span>${r.title}</span>
+                    <span class="p-badge p-ko">REFUSEE</span>
+                </h2>
+                <p class="p-muted">
+                    <a href="/profile/${r.username}/" target="_blank" rel="noopener">@${r.username}</a>
+                    &middot; refusee le ${new Date(r.rejected_at).toLocaleString('fr-FR')}
+                    par ${r.rejected_by}
+                    &middot; <em>${STATUS_LABELS[r.current_status] || r.current_status}</em>
+                </p>
+                <p class="p-mod-description">Motif : ${r.reason || '—'}</p>
+                ${r.file_url ? `<p><a class="p-btn small" href="${r.file_url}" target="_blank" rel="noopener">Ouvrir le lien de la video</a></p>` : ''}
+            </section>
+        `).join('');
+    }
+
+    async function loadRejections(archived, box, note) {
+        try {
+            const data = await api(`/api/profiles/admin/videos/rejected/?archived=${archived ? 1 : 0}`);
+            if (note) note.textContent =
+                `Refus des ${data.retention_days} derniers jours. Au-dela, ils passent dans les archives.`;
+            renderRejections(box, data.rejections);
+        } catch (err) {
+            box.innerHTML = `<p class="p-empty">${err.message}</p>`;
+        }
+    }
+
+    // --- Onglets ---------------------------------------------------------
+    const tabs   = document.querySelectorAll('.p-mod-tab');
+    const panels = document.querySelectorAll('[data-panel]');
+    const loaded = {};
+    tabs.forEach((tab) => tab.addEventListener('click', () => {
+        tabs.forEach((t) => t.classList.toggle('is-active', t === tab));
+        panels.forEach((p) => { p.hidden = p.dataset.panel !== tab.dataset.tab; });
+        if (loaded[tab.dataset.tab]) return;
+        loaded[tab.dataset.tab] = true;
+        if (tab.dataset.tab === 'rejected') {
+            loadRejections(false, document.getElementById('p-rej-list'),
+                           document.getElementById('p-rej-note'));
+        } else if (tab.dataset.tab === 'archived') {
+            loadRejections(true, document.getElementById('p-arc-list'), null);
+        }
+    }));
 
     load();
 })();

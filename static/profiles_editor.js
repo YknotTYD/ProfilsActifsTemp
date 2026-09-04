@@ -551,57 +551,57 @@
     /* Videos                                                             */
     /* --------------------------------------------------------------- */
 
+    /* section 1 : statut -> ce que l'utilisateur voit. Les badges
+     * reprennent les couleurs deja utilisees ailleurs dans l'app
+     * (.p-ok/.p-info/.p-warn/.p-ko). */
+    const VIDEO_STATUS_LABELS = {
+        PENDING:   ['En attente de moderation', 'p-warn'],
+        APPROVED:  ['Validee, en attente de votre confirmation', 'p-info'],
+        PUBLISHED: ['Publiee', 'p-ok'],
+        REJECTED:  ['Refusee', 'p-ko'],
+    };
+
+    /* Un seul onglet ne suffisait pas a montrer qu'une seule video de
+     * presentation compte a la fois (section 2) : une liste laisse
+     * penser qu'on peut en poster plusieurs. La gestion complete --
+     * soumission, remplacement, confirmation -- vit desormais sur sa
+     * propre page (/profiles/me/video/) ; cet onglet n'en est qu'un
+     * resume, pour ne pas dupliquer cette logique a deux endroits.
+     */
     async function renderVideos(root) {
         root.innerHTML = '';
         const panel = qEl('div', { class: 'p-panel' });
         root.appendChild(panel);
-        panel.appendChild(qEl('h2', { text: 'Videos' }));
-        panel.appendChild(qEl('p', { class: 'p-help' }, [
-            "L'upload video n'est pas encore disponible dans cette version. ",
-            'Vous pouvez des a present preparer la fiche de vos videos : titre, ',
-            'description et competences presentees.',
-        ]));
+        panel.appendChild(qEl('h2', { text: 'Video de presentation' }));
 
-        const list = qEl('div');
-        panel.appendChild(list);
+        const summary = qEl('div');
+        panel.appendChild(summary);
 
-        async function refresh() {
-            const { videos } = await QAPI.get('/api/profiles/me/videos/');
-            list.innerHTML = '';
-            if (!videos.length) list.appendChild(qEl('p', { class: 'p-empty', text: 'Aucune video pour le moment.' }));
-            for (const video of videos) {
-                list.appendChild(qEl('div', { class: 'p-row' }, [
-                    qEl('div', { class: 'p-row-main' }, [
-                        qEl('strong', { text: video.title }),
-                        qEl('div', { class: 'p-muted', text: video.status }),
-                    ]),
-                    qEl('button', {
-                        type: 'button', class: 'p-btn small p-danger', text: 'Supprimer',
-                        onclick: async () => { await saved(QAPI.del(`/api/profiles/me/videos/${video.id}/`)); refresh(); },
-                    }),
+        const { videos } = await QAPI.get('/api/profiles/me/videos/');
+        const current = videos.find(v => v.status === 'PUBLISHED');
+        const pending = videos.find(v => v.status !== 'PUBLISHED');
+
+        if (!current && !pending) {
+            summary.appendChild(qEl('p', { class: 'p-empty', text: "Vous n'avez pas encore de video de presentation." }));
+        } else {
+            if (current) {
+                summary.appendChild(qEl('div', { class: 'p-row-main mb-2' }, [
+                    qEl('strong', { text: current.title }),
+                    qEl('div', { class: 'p-badge p-ok', text: 'En ligne' }),
+                ]));
+            }
+            if (pending) {
+                const [label, badgeClass] = VIDEO_STATUS_LABELS[pending.status] || [pending.status, 'p-badge'];
+                summary.appendChild(qEl('div', { class: 'p-row-main' }, [
+                    qEl('strong', { text: pending.title }),
+                    qEl('div', { class: 'p-badge ' + badgeClass, text: label }),
                 ]));
             }
         }
 
-        const titleInput = qEl('input', { type: 'text', placeholder: 'Titre de la video' });
-        let skillNames = [];
-        panel.appendChild(qEl('div', { class: 'p-add-row', style: 'display:block' }, [
-            qEl('div', { class: 'p-field' }, [qEl('label', { text: 'Titre' }), titleInput]),
-            renderSkillPicker([], (names) => { skillNames = names; }),
-            qEl('button', {
-                type: 'button', class: 'p-btn p-primary', text: 'Ajouter la fiche', style: 'margin-top:.5rem',
-                onclick: async () => {
-                    if (!titleInput.value.trim()) return;
-                    await saved(QAPI.post('/api/profiles/me/videos/', {
-                        title: titleInput.value.trim(), skills: skillNames, status: 'DRAFT',
-                    }));
-                    titleInput.value = '';
-                    refresh();
-                },
-            }),
+        panel.appendChild(qEl('p', { class: 'mt-3' }, [
+            qEl('a', { class: 'p-btn p-primary', href: '/profiles/me/video/', text: 'Gerer ma video de presentation' }),
         ]));
-
-        await refresh();
     }
 
     /* --------------------------------------------------------------- */
