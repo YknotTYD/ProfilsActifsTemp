@@ -1,4 +1,4 @@
-{% load static %}
+{% load static %}{% load versioned_static %}
 
 <!doctype html>
 <html lang="fr">
@@ -11,7 +11,7 @@
       href="https://fonts.googleapis.com/css2?family=Spectral:wght@400;500;600;700&family=Spectral:ital@1&family=Montserrat:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="{% static 'style.css' %}" />
+    <link rel="stylesheet" href="{% vstatic 'style.css' %}" />
   </head>
   <body>
     {% include "partials/_navbar.html" %}
