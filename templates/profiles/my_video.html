@@ -28,7 +28,7 @@ rater de la specification.
     <h2>Video actuelle <span class="p-badge p-ok">En ligne</span></h2>
     <p><strong>{{ current.title }}</strong></p>
     {% include "profiles/_video_player.html" with player=current.playback title=current.title %}
-    <p><a href="{{ current.playback.url }}" target="_blank" rel="noopener" class="p-btn small">Ouvrir dans un nouvel onglet</a></p>
+    <p><a href="{{ current.file_url|default:current.playback.url }}" target="_blank" rel="noopener" class="p-btn small">Ouvrir dans un nouvel onglet</a></p>
 </section>
 {% endif %}
 

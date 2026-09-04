@@ -14,7 +14,6 @@ avec l'API apres le premier rendu.
 from django.contrib import messages
 from django.http      import Http404, HttpResponse
 from django.shortcuts import redirect, render
-from django.shortcuts import get_object_or_404
 
 from . import constants as c
 from . import permissions, serializers, services
