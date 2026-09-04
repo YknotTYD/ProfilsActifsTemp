@@ -9,6 +9,19 @@ from django.utils               import timezone
 from . import constants
 from django.db import connections
 from django.db.utils import OperationalError
+from profils.profiles           import constants as pc
+from profils.profiles.feed      import playback
+
+def _embed_src(mode: str, url: str) -> str:
+    """URL d'iframe prete a l'emploi : lecture en boucle, muette, sans
+    intervention manuelle -- la lecture d'une iframe ne peut pas etre pilotee
+    comme celle d'un `<video>`, ces parametres remplacent `loop`/`muted`.
+    """
+    if mode != "iframe" or "youtube.com/embed/" not in url:
+        return url
+
+    video_id = url.rsplit("/embed/", 1)[-1].split("?", 1)[0]
+    return f"{url}?autoplay=1&mute=1&loop=1&playlist={video_id}&playsinline=1"
 
 def _candidate(user) -> dict:
     """Carte d'identite du candidat, affichee en bas de sa video.
@@ -64,6 +77,7 @@ def get_video_filepaths(request: HttpRequest) -> list[dict]:
         {
             "id":             f"file-{video.id}",
             "video_url":      video.file.url,
+            "video_mode":     "file",
             "poster_url":     "",
             "candidate":      _candidate(video.user),
             "likes_count":    0,
@@ -96,10 +110,13 @@ def get_videos(request: HttpRequest) -> list[dict]:
 
     liked = _liked_video_ids(request.user, videos)
 
-    return [
-        {
+    items = []
+    for vid in videos:
+        mode, url = playback(pc.VIDEO_SOURCE_LINK, vid.url)
+        items.append({
             "id":             vid.id,
-            "video_url":      vid.url,
+            "video_url":      _embed_src(mode, url),
+            "video_mode":     mode,
             "poster_url":     "",
             "candidate":      _candidate(vid.user),
             "likes_count":    vid.like_total,
@@ -107,9 +124,9 @@ def get_videos(request: HttpRequest) -> list[dict]:
             "saves_count":    0,
             "shares_count":   0,
             "liked":          vid.id in liked,
-        }
-        for vid in videos
-    ] + get_video_filepaths(request)
+        })
+
+    return items + get_video_filepaths(request)
 
 def _my_video_status(user):
     """Statut de la video de presentation de `user`, cote pipeline

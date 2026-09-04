@@ -8,6 +8,16 @@
       <div class="vfeed-stage">
 
         <div class="vfeed-player">
+          {% if v.video_mode == "iframe" %}
+          <iframe
+            class="vfeed-video vfeed-video--iframe"
+            src="{{ v.video_url }}"
+            frameborder="0"
+            allow="autoplay; encrypted-media"
+            referrerpolicy="strict-origin-when-cross-origin"
+            title="Vidéo de présentation de {{ v.candidate.name }}"
+          ></iframe>
+          {% else %}
           <video
             class="vfeed-video"
             src="{{ v.video_url }}"
@@ -18,6 +28,7 @@
             preload="metadata"
             aria-label="Vidéo de présentation de {{ v.candidate.name }}"
           ></video>
+          {% endif %}
 
           <span class="vfeed-paused" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="currentColor" width="34" height="34">
@@ -161,15 +172,20 @@
   function activate(index) {
     activeIndex = index;
     videos.forEach((video, i) => {
-      video.muted = muted;
-      if (i === index) {
-        // `play()` renvoie une promesse rejetee si l'onglet interdit encore la
-        // lecture : sans le `catch`, la console se remplit d'erreurs non
-        // capturees a chaque changement de video.
-        video.play().catch(() => {});
-      } else {
-        video.pause();
-        video.currentTime = 0;
+      // Les iframes (videos YouTube) se pilotent par leurs propres parametres
+      // (autoplay/mute/loop dans l'URL) : ni `.play()`, ni `.muted` n'existent
+      // dessus, seule la classe `is-active` (pour l'affichage) s'applique.
+      if (video.tagName === 'VIDEO') {
+        video.muted = muted;
+        if (i === index) {
+          // `play()` renvoie une promesse rejetee si l'onglet interdit encore la
+          // lecture : sans le `catch`, la console se remplit d'erreurs non
+          // capturees a chaque changement de video.
+          video.play().catch(() => {});
+        } else {
+          video.pause();
+          video.currentTime = 0;
+        }
       }
       video.closest('[data-vfeed-item]').classList.toggle('is-active', i === index);
     });
@@ -183,8 +199,8 @@
 
   items.forEach((item) => observer.observe(item));
 
-  /* Clic sur la video : lecture / pause. */
-  videos.forEach((video) => {
+  /* Clic sur la video : lecture / pause (sans effet sur les iframes). */
+  videos.filter((video) => video.tagName === 'VIDEO').forEach((video) => {
     const item = video.closest('[data-vfeed-item]');
     const sync = () => item.classList.toggle('is-paused', video.paused);
 
@@ -195,11 +211,12 @@
     });
   });
 
-  /* Son : un seul etat pour tout le feed. */
+  /* Son : un seul etat pour tout le feed (sans effet sur les iframes,
+     deja muettes via leurs parametres d'URL). */
   scroller.querySelectorAll('[data-vfeed-sound]').forEach((button) => {
     button.addEventListener('click', () => {
       muted = !muted;
-      videos.forEach((video) => { video.muted = muted; });
+      videos.filter((video) => video.tagName === 'VIDEO').forEach((video) => { video.muted = muted; });
       scroller.querySelectorAll('[data-vfeed-sound]').forEach((other) => {
         other.setAttribute('aria-pressed', String(muted));
         other.setAttribute('aria-label', muted ? 'Activer le son' : 'Couper le son');
