@@ -850,6 +850,13 @@ def submit_video_file(profile, file, title, description=""):
         file_size=file.size,
         file_blob=file.read(),
     )
+
+    current = ProfileVideo.objects.filter(
+        profile=profile, is_presentation=True, status=c.VIDEO_PUBLISHED,
+    ).first()
+    if current is not None:
+        video.replaces = current
+
     video.save()
     moderation.transition_video(video, c.VIDEO_PROCESSING, actor=c.ACTOR_OWNER, user=profile.user)
     process_video_file(video)
