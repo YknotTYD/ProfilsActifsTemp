@@ -16,10 +16,6 @@ elif [ "$1" = "shell" ]; then
 elif [ "$1" = "run" ]; then
     PORT="${2:-8080}"
     echo "Lancement sur le port $PORT"
-    # compose.yaml monte ./db.sqlite3 dans le conteneur : si ce fichier
-    # n'existe pas encore (premier clone), Docker cree un dossier a sa
-    # place et sqlite refuse ensuite de l'ouvrir. `touch` est sans effet
-    # si le fichier existe deja.
     touch db.sqlite3
     PORT="$PORT" docker compose up --watch --build
     docker compose down
