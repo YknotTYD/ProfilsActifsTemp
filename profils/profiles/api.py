@@ -544,19 +544,15 @@ def admin_video_history(request, pk):
 
 pass
 
-#def video_file(request, pk):
-#    video = get_object_or_404(
-#        ProfileVideo, pk=pk, status=c.VIDEO_PUBLISHED, source_type=c.VIDEO_SOURCE_FILE
-#    )
-#    if not video.file_blob:
-#        raise Http404
-#    return HttpResponse(video.file_blob, content_type=video.file_content_type)
+# TODO: replace
 
 def video_file(request, pk):
     video = get_object_or_404(ProfileVideo, pk=pk, source_type=c.VIDEO_SOURCE_FILE)
 
     if video.status != c.VIDEO_PUBLISHED:
-        if not (request.user.is_authenticated and request.user.has_perm(c.PERM_MODERATE)):
+        is_owner = request.user.is_authenticated and video.profile.user_id == request.user.id
+        is_moderator = request.user.is_authenticated and request.user.has_perm(c.PERM_MODERATE)
+        if not (is_owner or is_moderator):
             raise Http404
 
     if not video.file_blob:

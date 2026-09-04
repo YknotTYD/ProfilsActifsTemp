@@ -839,16 +839,18 @@ def process_video_file(video):
     return video
 
 def submit_video_file(profile, file, title, description=""):
-    video = ProfileVideo.objects.create(
+    video = ProfileVideo(
         profile=profile,
         title=title,
         description=description,
         source_type=c.VIDEO_SOURCE_FILE,
         status=c.VIDEO_DRAFT,
-        file_blob=file.read(),
+        is_presentation=True,
         file_content_type=file.content_type,
         file_size=file.size,
+        file_blob=file.read(),
     )
+    video.save()
     moderation.transition_video(video, c.VIDEO_PROCESSING, actor=c.ACTOR_OWNER, user=profile.user)
     process_video_file(video)
     return video
