@@ -1,0 +1,29 @@
+{% load static %}{% load versioned_static %}
+
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Erreur serveur — ProfilsActifs</title>
+    <link rel="stylesheet" href="{% vstatic 'style.css' %}" />
+  </head>
+  <body>
+    {% include "partials/_navbar.html" %}
+
+    <div class="home-hero">
+      <span class="hero-badge">Erreur 500</span>
+      <h1 class="hero-title">Une erreur inattendue est survenue.</h1>
+      <p class="hero-subtitle">
+        Le problème vient de nous, pas de vous. Réessayez dans un instant ou
+        repartez de l'accueil.
+      </p>
+
+      <div class="hero-cta-row">
+        <a href="/" class="btn-primary">RETOUR À L'ACCUEIL</a>
+      </div>
+    </div>
+
+    {% include "partials/_footer.html" %}
+  </body>
+</html>
