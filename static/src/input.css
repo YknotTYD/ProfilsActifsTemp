@@ -311,7 +311,7 @@
 
   /* Accueil */
   .home-hero {
-    @apply max-w-[1020px] mx-auto px-4 sm:px-[26px] pt-[10px] pb-[70px] text-center;
+    @apply max-w-[1020px] mx-auto px-4 sm:px-[26px] pt-[96px] pb-[70px] text-center;
   }
   .hero-badge {
     @apply inline-flex items-center gap-2 rounded-full bg-white border border-[#ececec] px-4 py-1.5 text-xs sm:text-sm font-title font-bold tracking-[0.02em] text-primary shadow-sm;
