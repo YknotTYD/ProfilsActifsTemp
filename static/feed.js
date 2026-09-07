@@ -29,8 +29,7 @@
         const dislike = item.querySelector('[data-reaction="dislike"]');
         like.classList.toggle('is-on', data.reaction === 'like');
         dislike.classList.toggle('is-on', data.reaction === 'dislike');
-        const count = like.querySelector('.feed-btn-count');
-        if (count) count.textContent = data.likes;
+        // Pas de compteur de "j'aime" affiche : l'API ne renvoie plus de total.
       } catch (err) {
         console.error(err);
       }
