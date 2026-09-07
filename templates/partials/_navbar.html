@@ -1,5 +1,11 @@
 {% load static %}
 <style>
+  .legal-banner{display:block;width:100%;box-sizing:border-box;
+    padding:.6rem 1rem;background:#fff7e3;color:#1c1c1c;
+    font-family:"Poppins","Helvetica Neue",Arial,sans-serif;font-weight:700;
+    font-size:14px;line-height:1.4;text-align:center;
+    border-bottom:1px solid #e8d9ad}
+  @media(min-width:640px){.legal-banner{padding-left:26px;padding-right:26px}}
   .topbar{position:sticky;top:0;z-index:50;display:flex;flex-wrap:wrap;
     align-items:center;gap:.5rem 1.25rem;padding:.75rem 1rem;
     background:#1b3a6b;color:#fff;font-family:"Poppins","Helvetica Neue",Arial,sans-serif}
@@ -37,6 +43,7 @@
   .topbar-dropdown a:hover{background:#f5f4f2}
   .topbar-dropdown[hidden]{display:none}
 </style>
+<p class="legal-banner">Aucune donnée de ce service n'est utilisée pour déterminer vos droits ni le montant de vos allocations.</p>
 <header class="topbar">
   <a href="/" class="topbar-brand">
     <img src="{% static 'logo.svg' %}" alt="" width="24" height="24" />

@@ -403,8 +403,11 @@
     height: 100%;
     border: 0;
   }
+  /* `w-full` n'est pas decoratif : `body` est une colonne flex, et une marge
+     horizontale automatique y desactive l'etirement -- sans lui, la page se
+     retrecit au contenu et la grille n'obtient jamais sa largeur. */
   .dashboard-page {
-    @apply max-w-[760px] mx-auto px-4 sm:px-[26px] pb-[70px];
+    @apply w-full max-w-[760px] mx-auto px-4 sm:px-[26px] pb-[70px];
     margin-top: 2.75rem;
   }
 
@@ -450,92 +453,6 @@
 
   .dash-foot {
     @apply mt-8 text-center;
-  }
-
-  /* Feed vidéos (recruteur) - inspiré de static/feedapp */
-  .feed {
-    @apply relative mx-auto overflow-y-scroll overscroll-y-contain rounded-[25px] bg-black;
-    width: 100%;
-    max-width: 375px;
-    height: min(667px, 78vh);
-    scroll-snap-type: y mandatory;
-    scrollbar-width: none;
-    font-family: 'Montserrat', var(--font-sans, sans-serif);
-  }
-  .feed::-webkit-scrollbar {
-    display: none;
-  }
-  .feed-item {
-    @apply relative w-full;
-    height: 100%;
-    scroll-snap-align: start;
-    scroll-snap-stop: always;
-  }
-  .feed-item iframe,
-  .feed-item video {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    border: 0;
-    object-fit: cover;
-    background: #000;
-  }
-  .feed-item::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    background: linear-gradient(
-      to top,
-      rgba(0, 0, 0, 0.75) 0%,
-      rgba(0, 0, 0, 0) 30%
-    );
-  }
-  .feed-caption {
-    @apply absolute left-3 bottom-4 z-10 flex flex-col gap-1 max-w-[72%] text-white;
-    text-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
-  }
-  .feed-author {
-    @apply flex items-center gap-2 text-white no-underline;
-  }
-  .feed-author:hover,
-  .feed-author:visited,
-  .feed-author:active {
-    @apply text-white no-underline;
-  }
-  .feed-author strong {
-    @apply text-sm font-semibold text-white;
-  }
-  .feed-avatar {
-    @apply flex items-center justify-center shrink-0 w-9 h-9 rounded-full object-cover bg-white/20 text-white text-xs font-semibold uppercase;
-    border: 1.5px solid rgba(255, 255, 255, 0.8);
-  }
-  .feed-title {
-    @apply text-xs text-white/85 line-clamp-2;
-  }
-  /* Boutons d'action du feed : petits, sobres, dans l'esprit des boutons du
-     centre de notifications -- plus les gros ronds blancs. */
-  .feed-actions {
-    @apply absolute right-3 bottom-4 z-10 flex flex-col items-center gap-2;
-  }
-  .feed-btn {
-    @apply inline-flex items-center justify-center gap-1 h-8 min-w-[2rem] px-2 rounded-full border-0 cursor-pointer text-white;
-    background: rgba(17, 29, 51, 0.55);
-    -webkit-backdrop-filter: blur(4px);
-    backdrop-filter: blur(4px);
-  }
-  .feed-btn:hover {
-    background: rgba(17, 29, 51, 0.8);
-  }
-  .feed-btn.is-on {
-    background: var(--color-primary, #1b3a6b);
-  }
-  .feed-btn-count {
-    @apply text-[11px] font-semibold leading-none;
-  }
-  .feed-message-form {
-    @apply contents;
   }
 
   /* Footer */
@@ -648,252 +565,121 @@
   }
 
   /* ------------------------------------------------------------------ */
-  /* Feed vidéo vertical (recruteur / admin)                             */
+  /* Grille de profils (recruteur / admin)                               */
   /* ------------------------------------------------------------------ */
 
-  .vfeed {
-    @apply relative overflow-hidden rounded-2xl bg-bg;
-    height: min(720px, 80vh);
+  /* Une grille, pas un feed : rien ne demarre tant qu'on n'a pas clique.
+     Les cartes se repartissent d'elles-memes sur la largeur disponible --
+     deux colonnes sur telephone, quatre sur grand ecran -- sans qu'aucun
+     palier n'ait a etre ecrit. */
+  .cgrid-list {
+    @apply grid gap-5 list-none m-0 p-0;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 210px), 1fr));
   }
-  .vfeed-scroller {
-    @apply h-full w-full overflow-y-auto overscroll-y-contain outline-none;
-    scroll-snap-type: y mandatory;
-    scrollbar-width: none;
+  .cgrid-card {
+    @apply flex flex-col overflow-hidden bg-white border border-[#ececec] rounded-lg;
   }
-  .vfeed-scroller::-webkit-scrollbar {
+
+  /* Cadre video identique pour toutes les cartes, sinon la grille se
+     desaligne d'une ligne a l'autre. `contain` plutot que `cover` : une
+     video de presentation ne se recadre pas, on ne coupe pas un visage. */
+  .cgrid-media {
+    @apply relative w-full bg-black;
+    aspect-ratio: 3 / 4;
+  }
+  .cgrid-poster,
+  .cgrid-video {
+    @apply absolute inset-0 w-full h-full;
+    border: 0;
+    object-fit: contain;
+  }
+  .cgrid-play {
+    @apply absolute inset-0 flex items-center justify-center w-full h-full border-0 p-0 cursor-pointer text-white;
+    background: rgba(17, 29, 51, 0.32);
+  }
+  .cgrid-play:hover {
+    background: rgba(17, 29, 51, 0.5);
+  }
+  .cgrid-play svg {
+    @apply rounded-full;
+    box-sizing: content-box;
+    padding: 0.85rem;
+    background: rgba(17, 29, 51, 0.78);
+  }
+  /* Le lecteur remplace la vignette : le bouton "Lire" n'a plus de raison
+     d'etre par-dessus, et masquerait les commandes de la video. */
+  .cgrid-media.is-playing .cgrid-play,
+  .cgrid-media.is-playing .cgrid-poster {
     display: none;
   }
-  .vfeed-item {
-    @apply h-full w-full;
-    scroll-snap-align: start;
-    /* interdit d'enjamber une vidéo sur une inertie de molette un peu vive */
-    scroll-snap-stop: always;
+
+  .cgrid-body {
+    @apply flex flex-col gap-2 px-3.5 py-3;
   }
-  .vfeed-stage {
-    @apply relative flex h-full w-full items-center justify-center sm:gap-4 sm:px-4 sm:py-4;
+  .cgrid-identity {
+    @apply flex items-center gap-2.5 min-w-0 text-text no-underline;
+  }
+  .cgrid-identity:hover {
+    @apply text-text no-underline;
+  }
+  .cgrid-identity:hover .cgrid-name {
+    @apply text-link underline;
+  }
+  .cgrid-avatar {
+    @apply flex items-center justify-center shrink-0 w-9 h-9 rounded-full overflow-hidden bg-primary text-white text-xs font-title font-bold uppercase;
+  }
+  .cgrid-avatar img {
+    @apply w-full h-full object-cover;
+  }
+  .cgrid-names {
+    @apply flex flex-col min-w-0;
+  }
+  .cgrid-name {
+    @apply font-title font-bold text-sm text-primary truncate;
+  }
+  .cgrid-title {
+    @apply text-xs text-[#7a7a7a] truncate;
+  }
+  .cgrid-desc {
+    @apply m-0 text-xs leading-relaxed text-[#4a4a4a] line-clamp-3;
   }
 
-  /* Le lecteur : plein cadre sur mobile, portrait centré ailleurs. */
-  .vfeed-player {
-    @apply relative h-full w-full overflow-hidden bg-black;
+  /* Pagination : deux pas et un reperage. Les bornes gardent la place du
+     lien qu'elles remplacent, pour que la barre ne saute pas entre la
+     premiere page et les suivantes. */
+  .cgrid-pagination {
+    @apply flex flex-wrap items-center justify-center gap-3 mt-6;
   }
-  @media (min-width: 640px) {
-    .vfeed-player {
-      /* la hauteur mène, la largeur en découle : le cadre reste en 9:16
-         quelle que soit la fenêtre. Le plafond évite qu'un très grand écran
-         n'étire la vidéo au-delà du confortable. */
-      height: min(100%, 820px);
-      width: auto;
-      max-width: 100%;
-      aspect-ratio: 9 / 16;
-      @apply rounded-xl;
-    }
+  .cgrid-page-link {
+    @apply inline-flex items-center rounded border border-[#d9d9d9] bg-white px-3 py-1.5 font-title text-sm font-bold text-primary no-underline;
   }
-  .vfeed-video {
-    /* `contain` plutôt que `cover` : une vidéo filmée en paysage garde ses
-       bandes noires au lieu d'être rognée au milieu du visage. */
-    @apply absolute inset-0 h-full w-full cursor-pointer object-contain;
+  a.cgrid-page-link:hover {
+    @apply bg-bg text-primary no-underline;
+  }
+  .cgrid-page-link.is-off {
+    @apply border-[#f0f0f0] text-[#c4c4c4] cursor-default;
+  }
+  .cgrid-page-count {
+    @apply text-sm text-[#7a7a7a];
   }
 
-  .vfeed-paused {
-    @apply pointer-events-none absolute inset-0 z-10 flex items-center justify-center text-white/85 opacity-0;
-    transition: opacity 120ms ease-out;
-  }
-  .vfeed-item.is-paused .vfeed-paused {
-    @apply opacity-100;
-  }
-
-  .vfeed-sound {
-    @apply absolute left-3 top-3 z-20 flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border-0 bg-black/45 text-white;
-  }
-  .vfeed-sound:hover {
-    @apply bg-black/65;
-  }
-  .vfeed-sound-on {
-    @apply hidden;
-  }
-  .vfeed-sound[aria-pressed='false'] .vfeed-sound-off {
-    @apply hidden;
-  }
-  .vfeed-sound[aria-pressed='false'] .vfeed-sound-on {
-    @apply block;
-  }
-
-  /* Informations du candidat, superposées en bas de la vidéo. Le dégradé
-     porte la lisibilité du texte, rien d'autre. */
-  .vfeed-overlay {
-    @apply pointer-events-none absolute inset-x-0 bottom-0 z-10 px-4 pb-4 pr-20 pt-16 text-white sm:pr-4;
-    background: linear-gradient(
-      to top,
-      rgba(0, 0, 0, 0.72) 0%,
-      rgba(0, 0, 0, 0.32) 45%,
-      rgba(0, 0, 0, 0) 100%
-    );
-  }
-  .vfeed-name {
-    @apply font-title text-[15px] font-bold leading-tight;
-  }
-  .vfeed-title {
-    @apply mt-0.5 text-[13px] leading-snug text-white/80;
-  }
-  .vfeed-desc {
-    @apply mt-1.5 text-[13px] leading-snug text-white/90;
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
-    overflow: hidden;
-  }
-  .vfeed-desc.is-expanded {
-    -webkit-line-clamp: unset;
-    overflow: visible;
-  }
-  .vfeed-more {
-    @apply pointer-events-auto mt-1 cursor-pointer border-0 bg-transparent p-0 text-[12px] text-white/70 underline;
-  }
-
-  /* Barre d'actions. Les couleurs passent par des variables parce qu'elles
-     changent de fond : posée à côté de la vidéo sur grand écran, posée
-     dessus sur mobile faute de place. */
-  .vfeed-rail {
-    --rail-fg: #33404f;
-    --rail-bg: #ffffff;
-    --rail-border: #e6e4e0;
-    --rail-label: #5b6472;
-    --rail-like: var(--color-secondary);
-    --rail-save: var(--color-primary);
-    --rail-ring: transparent;
-
-    @apply z-20 flex flex-col items-center gap-4;
-  }
-  @media (max-width: 639px) {
-    .vfeed-rail {
-      --rail-fg: #ffffff;
-      --rail-bg: rgba(255, 255, 255, 0.18);
-      --rail-border: transparent;
-      --rail-label: #ffffff;
-      --rail-save: var(--color-cta);
-      --rail-ring: rgba(255, 255, 255, 0.85);
-
-      @apply absolute bottom-4 right-3;
-    }
-    .vfeed-action-count {
-      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.55);
-    }
-  }
-  @media (min-width: 640px) {
-    /* même hauteur que le lecteur : les deux bas s'alignent au pixel. */
-    .vfeed-rail {
-      height: min(100%, 820px);
-      @apply justify-end pb-1;
-    }
-  }
-
-  .vfeed-avatar {
-    @apply flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-primary font-title text-base font-bold text-white no-underline;
-    border: 2px solid var(--rail-ring);
-  }
-  .vfeed-avatar:hover,
-  .vfeed-avatar:visited {
-    @apply text-white no-underline;
-  }
-  .vfeed-avatar img {
-    @apply h-full w-full object-cover;
-  }
-
-  .vfeed-action {
-    @apply flex cursor-pointer flex-col items-center gap-1 border-0 bg-transparent p-0;
-    color: var(--rail-fg);
-  }
-  .vfeed-action-icon {
-    @apply flex h-12 w-12 items-center justify-center rounded-full;
-    background: var(--rail-bg);
-    border: 1px solid var(--rail-border);
-  }
-  .vfeed-action:hover .vfeed-action-icon {
-    filter: brightness(0.96);
-  }
-  .vfeed-action-count {
-    @apply text-[12px] font-medium;
-    color: var(--rail-label);
-  }
-
-  /* Actif : l'icône se remplit, et prend une couleur de la charte. */
-  .vfeed-icon-on {
-    @apply hidden;
-  }
-  .vfeed-action[aria-pressed='true'] .vfeed-icon-off {
-    @apply hidden;
-  }
-  .vfeed-action[aria-pressed='true'] .vfeed-icon-on {
-    @apply block;
-  }
-  .vfeed-action--like[aria-pressed='true'] {
-    color: var(--rail-like);
-  }
-  .vfeed-action--save[aria-pressed='true'] {
-    color: var(--rail-save);
-  }
-
-  .vfeed-action--share {
-    @apply relative;
-  }
-  .vfeed-share-toast {
-    @apply pointer-events-none absolute right-full top-1/2 mr-2 -translate-y-1/2 whitespace-nowrap rounded-full bg-black/80 px-3 py-1 text-[12px] font-medium text-white;
-  }
-
-  .vfeed-action:focus-visible,
-  .vfeed-avatar:focus-visible,
-  .vfeed-sound:focus-visible,
-  .vfeed-more:focus-visible {
+  .cgrid-play:focus-visible,
+  .cgrid-identity:focus-visible,
+  .cgrid-page-link:focus-visible {
     outline: 2px solid var(--color-link);
     outline-offset: 2px;
   }
 
-  .vfeed-empty {
-    @apply flex h-full flex-col items-center justify-center gap-2 px-6 text-center text-[#b0aeaa];
-  }
-  .vfeed-empty-title {
-    @apply mt-1 font-title text-base font-bold text-primary;
-  }
-  .vfeed-empty-text {
-    @apply max-w-[34ch] text-sm text-[#7a7a7a];
-  }
-
   /* ------------------------------------------------------------------ */
-  /* Tableau de bord en deux colonnes : accueil a gauche, feed a droite   */
+  /* Tableau de bord : la grille prend la largeur                         */
   /* ------------------------------------------------------------------ */
 
-  /* La colonne du feed a une largeur fixe -- c'est un cadre 9:16, il n'a
-     rien a gagner a s'etirer. C'est donc l'accueil, a sa gauche, qui prend
-     la place restante. En dessous de `lg`, les deux se remettent l'un sous
-     l'autre : cote a cote, il ne resterait ni assez de large pour le texte,
-     ni assez pour la video. */
-  .dash-split {
-    @apply grid items-start gap-6;
-  }
-  .dash-col {
-    @apply min-w-0;
-  }
-  .dash-feed-col {
-    @apply mx-auto w-full;
-    max-width: 500px;
-  }
+  /* Le tableau de bord est etroit par defaut -- c'est du texte. Quand il
+     porte la grille de profils, il s'elargit : quatre vignettes cote a cote
+     valent mieux que deux colonnes de vide. */
   @media (min-width: 1024px) {
     .dashboard-page--wide {
       max-width: 1180px;
-    }
-    .dashboard-page--wide .dash-split {
-      grid-template-columns: minmax(0, 1fr) 500px;
-    }
-    /* le feed reste sous les yeux pendant que la colonne de gauche defile. */
-    .dash-feed-col {
-      @apply sticky;
-      top: 5.5rem;
-    }
-    /* borne a la hauteur visible sous la barre de navigation, sinon le bas
-       du feed passe sous le pli et ses boutons deviennent inatteignables. */
-    .dash-feed-col .vfeed {
-      height: min(720px, calc(100vh - 9rem));
     }
   }
 
@@ -910,7 +696,7 @@
   .msg-window,
   .p-main,
   .q-main,
-  .vfeed {
+  .cgrid {
     animation: rise-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) backwards;
   }
   .dash-hero {
@@ -919,7 +705,7 @@
   .dash-grid > * {
     animation: rise-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) 0.12s backwards;
   }
-  .dash-feed-col .vfeed {
+  .cgrid {
     animation-delay: 0.18s;
   }
   .hero-badge,
@@ -1000,25 +786,25 @@
     transform: translateY(-6px) rotate(-1deg);
   }
 
-  /* Barre d'actions du feed : chaque bouton rebondit sous le doigt, et
-     l'icone fait un point d'exclamation quand elle s'allume. */
-  .vfeed-action,
-  .vfeed-sound,
-  .vfeed-avatar {
+  /* Cartes de la grille : elles se designent au survol, et le bouton
+     "Lire" grossit sous le doigt -- le seul geste que la grille attend. */
+  .cgrid-card {
+    transition:
+      transform 180ms cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 180ms ease-out;
+  }
+  .cgrid-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 28px rgba(27, 58, 107, 0.1);
+  }
+  .cgrid-play svg {
     transition: transform 160ms cubic-bezier(0.22, 1, 0.36, 1);
   }
-  .vfeed-action:hover,
-  .vfeed-sound:hover {
+  .cgrid-play:hover svg {
     transform: scale(1.1);
   }
-  .vfeed-avatar:hover {
-    transform: scale(1.08) rotate(-4deg);
-  }
-  .vfeed-action:active {
-    transform: scale(0.92);
-  }
-  .vfeed-action[aria-pressed='true'] .vfeed-action-icon {
-    animation: pop-in 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  .cgrid-play:active svg {
+    transform: scale(0.94);
   }
 
   /* ------------------------------------------------------------------ */

@@ -1,0 +1,86 @@
+{% comment %}Grille de profils du tableau de bord (points 3.2 et 3.4).
+
+   Attend `grid`, une page de pagination Django (voir `views.candidate_grid`).
+   Chaque element de `grid.object_list` a la forme :
+
+       {
+         "id":         identifiant d'affichage, unique dans la page,
+         "video_url":  adresse de la video, SANS parametre de lecture auto,
+         "video_mode": "file" (balise <video>) ou "iframe" (lecteur distant),
+         "poster_url": vignette, "" quand la source n'en fournit pas,
+         "candidate":  {name, title, description, avatar_url, initial, profile_url},
+       }
+
+   Rien ne se charge ni ne demarre a l'ouverture de la page : une carte ne
+   porte que sa vignette et son bouton "Lire". Le lecteur n'est construit
+   qu'au clic, par `static/candidates_grid.js`.{% endcomment %}
+
+<section class="cgrid" aria-label="Vidéos des candidats" data-cgrid>
+  <ul class="cgrid-list">
+    {% for v in grid.object_list %}
+    <li class="cgrid-card" data-cgrid-card>
+      <div
+        class="cgrid-media"
+        data-cgrid-player
+        data-video-mode="{{ v.video_mode }}"
+        data-video-url="{{ v.video_url }}"
+        data-video-label="Vidéo de présentation de {{ v.candidate.name }}"
+      >
+        {% if v.poster_url %}
+        <img class="cgrid-poster" src="{{ v.poster_url }}" alt="" loading="lazy" />
+        {% endif %}
+
+        <button
+          type="button"
+          class="cgrid-play"
+          data-cgrid-play
+          aria-label="Lire la vidéo de présentation de {{ v.candidate.name }}"
+        >
+          <svg viewBox="0 0 24 24" fill="currentColor" width="30" height="30" aria-hidden="true">
+            <path d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 0 1 0 1.971l-11.54 6.347a1.125 1.125 0 0 1-1.667-.985V5.653Z" />
+          </svg>
+        </button>
+      </div>
+
+      <div class="cgrid-body">
+        <a href="{{ v.candidate.profile_url }}" class="cgrid-identity">
+          <span class="cgrid-avatar">
+            {% if v.candidate.avatar_url %}
+            <img src="{{ v.candidate.avatar_url }}" alt="" width="36" height="36" loading="lazy" />
+            {% else %}
+            <span aria-hidden="true">{{ v.candidate.initial }}</span>
+            {% endif %}
+          </span>
+          <span class="cgrid-names">
+            <span class="cgrid-name">{{ v.candidate.name }}</span>
+            {% if v.candidate.title %}<span class="cgrid-title">{{ v.candidate.title }}</span>{% endif %}
+          </span>
+        </a>
+        {% if v.candidate.description %}
+        <p class="cgrid-desc">{{ v.candidate.description }}</p>
+        {% endif %}
+      </div>
+    </li>
+    {% endfor %}
+  </ul>
+
+  {% if grid.paginator.num_pages > 1 %}
+  <nav class="cgrid-pagination" aria-label="Pages de profils">
+    {% if grid.has_previous %}
+    <a class="cgrid-page-link" href="?page={{ grid.previous_page_number }}" rel="prev">« Précédent</a>
+    {% else %}
+    <span class="cgrid-page-link is-off" aria-hidden="true">« Précédent</span>
+    {% endif %}
+
+    <span class="cgrid-page-count" aria-current="page">
+      Page {{ grid.number }} sur {{ grid.paginator.num_pages }}
+    </span>
+
+    {% if grid.has_next %}
+    <a class="cgrid-page-link" href="?page={{ grid.next_page_number }}" rel="next">Suivant »</a>
+    {% else %}
+    <span class="cgrid-page-link is-off" aria-hidden="true">Suivant »</span>
+    {% endif %}
+  </nav>
+  {% endif %}
+</section>

@@ -117,10 +117,13 @@ voir.
 - **Vidéos** (`ProfileVideo`, `ProfileVideoSkill`) : le modèle, les statuts
   (`DRAFT` → `PUBLISHED` → …), la relation aux compétences et les règles de
   visibilité existent et sont testés. Pas d'upload ni de lecture réelle.
-- **Feed vertical** (`feed.py`) : le chaînage
+- **Chaînage recherche → vidéos** (`feed.py`) : le chaînage
   *recherche → profils trouvés → leurs vidéos* fonctionne déjà en interne
-  (`video_candidates`, `videos_for_skills`), mais **aucune route de feed
-  n'est exposée** — pas de faux carrousel.
+  (`video_candidates`, `videos_for_skills`), mais **aucune route n'est
+  exposée** ici. Le feed vertical qui devait s'y brancher a été remplacé par
+  une grille de profils paginée (20 par page, lecture sur clic), servie par
+  `mainapp` sur `/` ; les anciennes adresses du feed (`/feed/`, `/api/feed/`,
+  `/api/videos/feed/`) y redirigent au lieu de renvoyer une 404.
 - **Matching candidat/offre** (`matching.py`) : traduit un profil en
   caractéristiques comparables, et une offre (sous forme de dictionnaire, il
   n'existe pas encore de modèle "Offre") en requête de recherche. Le
