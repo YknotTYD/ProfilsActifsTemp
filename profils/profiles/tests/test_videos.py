@@ -292,11 +292,24 @@ class FeedPreparationTests(TestCase):
         query = ProfileQuery.from_params({"skill": "rust"})
         self.assertIsInstance(video_candidates(query), QuerySet)
 
-    def test_no_feed_route_is_exposed(self):
-        """Section 18 : ne pas livrer de faux feed."""
+    def test_the_old_feed_routes_lead_to_the_grid(self):
+        """Le feed vertical est retire : ses adresses redirigent, sans erreur.
+
+        Elles ont circule (mails, liens partages) avant sa suppression --
+        elles doivent donc rendre la grille de profils du tableau de bord, pas
+        une 404. Avec ou sans slash final, et en une seule redirection.
+        """
         client = Client()
-        for url in ("/feed/", "/api/feed/", "/api/videos/feed/"):
-            self.assertEqual(client.get(url).status_code, 404, url)
+        for url in ("/feed/", "/feed", "/api/feed/", "/api/feed",
+                    "/api/videos/feed/", "/api/videos/feed"):
+            response = client.get(url)
+            self.assertEqual(response.status_code, 301, url)
+            self.assertEqual(response["Location"], "/", url)
+
+    def test_an_old_feed_link_keeps_what_followed_it(self):
+        """Un vieux signet `?page=2` arrive sur la page 2 de la grille."""
+        response = Client().get("/feed/?page=2")
+        self.assertEqual(response["Location"], "/?page=2")
 
 class MatchingPreparationTests(TestCase):
     """Section 26 : les donnees d'un rapprochement offre / candidat sont pretes."""

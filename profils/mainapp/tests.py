@@ -6,7 +6,8 @@ from django.test import Client, TestCase
 from profils.notifications import types as notification_types
 from profils.notifications.models import Notification
 
-from .models import Role, VideoLink
+from . import constants
+from .models import Role, VideoFile, VideoLink
 
 class NavbarConsistencyTests(TestCase):
     """La barre de navigation est la meme sur toutes les pages (context
@@ -73,3 +74,79 @@ class ReactionNotificationTests(TestCase):
         self.client.force_login(self.owner)
         self._react("like")
         self.assertFalse(Notification.objects.filter(recipient = self.owner).exists())
+
+class CandidateGridTests(TestCase):
+    """Points 3.2 et 3.4 : une grille paginee, une lecture sur clic.
+
+    Le feed vertical plein ecran est retire. Ce qui le remplace tient en deux
+    promesses verifiables depuis le HTML rendu : vingt profils par page, et
+    aucune video qui demarre toute seule.
+    """
+
+    PAGE_SIZE = constants.CANDIDATE_GRID_PAGE_SIZE
+
+    def setUp(self):
+        self.recruiter = User.objects.create_user("recruteur", None, None)
+        Role.objects.create(user = self.recruiter, role = "Recruiter")
+        self.client = Client()
+        self.client.force_login(self.recruiter)
+
+    def _make_videos(self, count):
+        owner = User.objects.create_user("candidat", None, None)
+        for i in range(count):
+            VideoLink.objects.create(user = owner, url = f"https://youtu.be/video{i:03d}")
+
+    def _cards(self, response):
+        return response.content.decode().count("data-cgrid-player")
+
+    def test_a_page_holds_at_most_twenty_profiles(self):
+        self._make_videos(self.PAGE_SIZE + 5)
+        self.assertEqual(self._cards(self.client.get("/")), self.PAGE_SIZE)
+
+    def test_the_next_page_holds_the_rest(self):
+        self._make_videos(self.PAGE_SIZE + 5)
+        self.assertEqual(self._cards(self.client.get("/?page=2")), 5)
+
+    def test_a_single_page_shows_no_pagination(self):
+        self._make_videos(3)
+        body = self.client.get("/").content.decode()
+        self.assertEqual(self._cards(self.client.get("/")), 3)
+        self.assertNotIn("cgrid-pagination", body)
+
+    def test_a_page_number_out_of_range_falls_back_instead_of_failing(self):
+        """Un vieux lien `?page=99` doit rendre une page, jamais une erreur."""
+        self._make_videos(self.PAGE_SIZE + 5)
+        for page in ("99", "0", "abc", ""):
+            response = self.client.get("/", {"page": page})
+            self.assertEqual(response.status_code, 200, page)
+            self.assertGreater(self._cards(response), 0, page)
+
+    def test_no_video_starts_on_its_own(self):
+        """Lecture a la demande : la page rendue ne porte aucun demarrage.
+
+        Ni attribut `autoplay`, ni parametre d'URL d'integration : le lecteur
+        n'existe qu'apres le clic, construit par `candidates_grid.js`.
+        """
+        self._make_videos(3)
+        VideoFile.objects.create(
+            user = self.recruiter, file = "videos/presentation.mp4",
+        )
+
+        body = self.client.get("/").content.decode()
+
+        self.assertIn("data-cgrid-player", body)
+        for forbidden in ("autoplay", "<video", "<iframe", "loop", "muted"):
+            self.assertNotIn(forbidden, body, forbidden)
+
+    def test_a_job_seeker_gets_no_grid(self):
+        self._make_videos(3)
+        seeker = User.objects.create_user("chercheur", None, None)
+        Role.objects.create(user = seeker, role = "JobSeeker")
+        client = Client(); client.force_login(seeker)
+
+        self.assertNotIn("data-cgrid-player", client.get("/").content.decode())
+
+    def test_the_empty_state_replaces_the_grid(self):
+        body = self.client.get("/").content.decode()
+        self.assertNotIn("cgrid-list", body)
+        self.assertIn("Aucune vidéo pour le moment", body)

@@ -16,15 +16,29 @@ Including another URLconf
 """
 
 from django.contrib import admin
-from django.urls    import path, include
+from django.urls    import path, re_path, include
 from .mainapp       import views
 from .mainapp       import api
 from django.conf import settings
 from django.conf.urls.static import static
+from django.views.generic import RedirectView
+
+# Le feed vertical a laisse des adresses derriere lui : elles ont circule par
+# mail et par lien partage, et doivent mener a la grille plutot qu'a une 404.
+# Redirection permanente (301) : ces adresses ne reviendront pas, autant que
+# les navigateurs et les moteurs de recherche l'apprennent une bonne fois.
+# `/?` accepte l'adresse avec ou sans slash final, en une seule etape ;
+# `query_string` conserve ce qui suivait (`?page=2` d'un vieux signet).
+_old_feed = RedirectView.as_view(url = "/", permanent = True, query_string = True)
 
 urlpatterns = [
     path('admin/',            admin.site.urls),
     path("",                  views.main),
+
+    re_path(r"^feed/?$",             _old_feed),
+    re_path(r"^api/feed/?$",         _old_feed),
+    re_path(r"^api/videos/feed/?$",  _old_feed),
+
     path("quiz/",             views.quiz),
     path("cgu/",              views.cgu),
     path("register/",         views.register),
