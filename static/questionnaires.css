@@ -1,7 +1,7 @@
 /* questionnaires.css
  *
  * Identite alignee sur le reste du site ProfilsActifs (voir static/src/input.css) :
- * meme bleu, meme police Marianne (auto-hebergee, deja chargee par style.css).
+ * meme bleu, meme police Poppins (auto-hebergee, deja chargee par style.css).
  */
 
 :root {
@@ -38,8 +38,8 @@
     --warn:        #9A6700;
     --warn-pale:   #FFF7E3;
 
-    --font-title: "Marianne", "Helvetica Neue", Arial, sans-serif;
-    --font-body:  "Marianne", "Helvetica Neue", Arial, sans-serif;
+    --font-title: "Poppins", "Helvetica Neue", Arial, sans-serif;
+    --font-body:  "Poppins", "Helvetica Neue", Arial, sans-serif;
     --font-mono:  ui-monospace, "SFMono-Regular", "Source Code Pro", monospace;
 
     --radius: 14px;
