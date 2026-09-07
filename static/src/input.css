@@ -558,6 +558,9 @@
   .site-footer-bottom {
     @apply border-t border-[#ececec] py-5 text-center text-xs text-[#9b9b9b];
   }
+  .site-footer-disclaimer {
+    @apply border-t border-[#ececec] py-3 text-center text-xs font-bold text-[#9a6700] bg-[#fff7e3];
+  }
 
   /* Page CGU */
   .legal-page {

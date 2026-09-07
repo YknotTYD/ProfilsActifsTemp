@@ -1,0 +1,29 @@
+{% load static %}{% load versioned_static %}
+
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Accès refusé — ProfilsActifs</title>
+    <link rel="stylesheet" href="{% vstatic 'style.css' %}" />
+  </head>
+  <body>
+    {% include "partials/_navbar.html" %}
+
+    <div class="home-hero">
+      <span class="hero-badge">Erreur 403</span>
+      <h1 class="hero-title">Vous n'avez pas accès à cette page.</h1>
+      <p class="hero-subtitle">
+        Cette action nécessite des droits que votre compte ne possède pas, ou
+        vous n'êtes pas connecté.
+      </p>
+
+      <div class="hero-cta-row">
+        <a href="/" class="btn-primary">RETOUR À L'ACCUEIL</a>
+      </div>
+    </div>
+
+    {% include "partials/_footer.html" %}
+  </body>
+</html>

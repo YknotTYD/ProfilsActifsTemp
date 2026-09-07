@@ -1,0 +1,29 @@
+{% load static %}{% load versioned_static %}
+
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Requête invalide — ProfilsActifs</title>
+    <link rel="stylesheet" href="{% vstatic 'style.css' %}" />
+  </head>
+  <body>
+    {% include "partials/_navbar.html" %}
+
+    <div class="home-hero">
+      <span class="hero-badge">Erreur 400</span>
+      <h1 class="hero-title">Votre requête n'a pas pu être traitée.</h1>
+      <p class="hero-subtitle">
+        La demande envoyée est incorrecte ou incomplète. Retournez à l'accueil
+        et réessayez.
+      </p>
+
+      <div class="hero-cta-row">
+        <a href="/" class="btn-primary">RETOUR À L'ACCUEIL</a>
+      </div>
+    </div>
+
+    {% include "partials/_footer.html" %}
+  </body>
+</html>
