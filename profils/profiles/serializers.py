@@ -154,7 +154,6 @@ def video(row, *, include_moderation: bool = False) -> dict:
         payload.update({
             "stats": {
                 "views":  row.view_count,
-                "likes":  row.like_count,
                 "shares": row.share_count,
             },
             "rejection_reason":     row.rejection_reason,

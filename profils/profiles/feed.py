@@ -161,7 +161,6 @@ def dashboard_feed_items(viewer) -> list[dict]:
             "initials":      profile.initials,
             "liked":         reaction == ProfileVideoReaction.LIKE,
             "disliked":      reaction == ProfileVideoReaction.DISLIKE,
-            "likes":         video.like_count,
             "views":         video.view_count,
         })
     return items

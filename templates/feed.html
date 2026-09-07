@@ -66,25 +66,6 @@
 
           <button
             type="button"
-            class="vfeed-action vfeed-action--like"
-            data-vfeed-like
-            data-count="{{ v.likes_count }}"
-            aria-pressed="{{ v.liked|yesno:'true,false' }}"
-            aria-label="J'aime"
-          >
-            <span class="vfeed-action-icon">
-              <svg class="vfeed-icon-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="24" height="24" aria-hidden="true">
-                <path d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
-              </svg>
-              <svg class="vfeed-icon-on" viewBox="0 0 24 24" fill="currentColor" width="24" height="24" aria-hidden="true">
-                <path d="M11.645 20.91l-.007-.003-.022-.012a15.247 15.247 0 0 1-.383-.218 25.18 25.18 0 0 1-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0 1 12 5.052 5.5 5.5 0 0 1 16.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 0 1-4.244 3.17 15.247 15.247 0 0 1-.383.219l-.022.012-.007.004-.003.001a.752.752 0 0 1-.704 0l-.003-.001Z" />
-              </svg>
-            </span>
-            <span class="vfeed-action-count" data-vfeed-count>{{ v.likes_count|compact_count }}</span>
-          </button>
-
-          <button
-            type="button"
             class="vfeed-action vfeed-action--save"
             data-vfeed-save
             data-count="{{ v.saves_count }}"
@@ -144,7 +125,6 @@
 
   const items = Array.from(scroller.querySelectorAll('[data-vfeed-item]'));
   const videos = items.map((item) => item.querySelector('.vfeed-video'));
-  const csrftoken = document.querySelector('meta[name="csrf-token"]')?.content;
 
   // Le son est une preference globale, comme sur TikTok : couper une video les
   // coupe toutes. Les navigateurs refusent de demarrer une lecture sonore sans
@@ -238,22 +218,6 @@
 
     return !pressed;
   }
-
-  scroller.querySelectorAll('[data-vfeed-like]').forEach((button) => {
-    button.addEventListener('click', () => {
-      toggleCounter(button);
-
-      // L'affichage ne depend pas de la reponse : le retour visuel est
-      // immediat, l'enregistrement suit. `/api/react/` bascule deja le like
-      // a chaque appel, c'est donc le meme aller-retour dans les deux sens.
-      const videoId = button.closest('[data-vfeed-item]').dataset.videoId;
-      fetch('/api/react/', {
-        method: 'POST',
-        headers: { 'X-CSRFToken': csrftoken, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ video_id: videoId, reaction: 'like' }),
-      }).catch(() => {});
-    });
-  });
 
   // Enregistrer : etat visuel seul, aucun modele ne le stocke encore.
   scroller.querySelectorAll('[data-vfeed-save]').forEach((button) => {

@@ -92,7 +92,10 @@ def set_reaction(video: ProfileVideo, user, reaction: str) -> dict:
         existing.save(update_fields = ["reaction"])
         is_new = True
 
-    likes = _recount_likes(video)
+    # Le compteur reste tenu a jour en base (ProfileVideo.like_count) : seule
+    # sa presence dans la reponse est coupee, aucun total de "j'aime" ne doit
+    # etre restitue au client.
+    _recount_likes(video)
 
     if is_new and video.profile.user_id != user.id:
         notifications.notify(
@@ -102,6 +105,5 @@ def set_reaction(video: ProfileVideo, user, reaction: str) -> dict:
 
     return {
         "reaction": None if removed else reaction,
-        "likes":    likes,
         "dislikes": video.reactions.filter(reaction = _DISLIKE).count(),
     }

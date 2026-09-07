@@ -3,8 +3,7 @@ from django.http.request        import HttpRequest
 from django.http.response       import HttpResponse, JsonResponse, Http404
 from django.shortcuts           import render, redirect
 from django.contrib.auth        import logout as logout_
-from django.db.models           import Count, Q
-from .models                    import Role, VideoLink, VideoFile, Reaction
+from .models                    import Role, VideoLink, VideoFile
 from django.utils               import timezone
 from . import constants
 from django.db import connections
@@ -44,22 +43,6 @@ def _candidate(user) -> dict:
         "profile_url": f"/profile/{user.username}/",
     }
 
-def _liked_video_ids(user, videos) -> set:
-    """Videos deja aimees par le visiteur, en une seule requete.
-
-    Une requete par video ferait autant d'allers-retours que d'elements du
-    feed, pour une information que le feed lit sur chacun d'eux.
-    """
-
-    if not user.is_authenticated or not videos:
-        return set()
-
-    return set(
-        Reaction.objects
-            .filter(user = user, video__in = videos, reaction = "like")
-            .values_list("video_id", flat = True)
-    )
-
 def get_video_filepaths(request: HttpRequest) -> list[dict]:
     """Videos televersees par fichier, mises en forme pour `feed.html`.
 
@@ -80,11 +63,9 @@ def get_video_filepaths(request: HttpRequest) -> list[dict]:
             "video_mode":     "file",
             "poster_url":     "",
             "candidate":      _candidate(video.user),
-            "likes_count":    0,
             "comments_count": 0,
             "saves_count":    0,
             "shares_count":   0,
-            "liked":          False,
         }
         for video in files
     ]
@@ -104,11 +85,8 @@ def get_videos(request: HttpRequest) -> list[dict]:
     videos = list(
         VideoLink.objects
             .select_related("user", "user__professional_profile")
-            .annotate(like_total = Count("reaction", filter = Q(reaction__reaction = "like")))
             .order_by("-id")
     )
-
-    liked = _liked_video_ids(request.user, videos)
 
     items = []
     for vid in videos:
@@ -119,11 +97,9 @@ def get_videos(request: HttpRequest) -> list[dict]:
             "video_mode":     mode,
             "poster_url":     "",
             "candidate":      _candidate(vid.user),
-            "likes_count":    vid.like_total,
             "comments_count": 0,
             "saves_count":    0,
             "shares_count":   0,
-            "liked":          vid.id in liked,
         })
 
     return items + get_video_filepaths(request)

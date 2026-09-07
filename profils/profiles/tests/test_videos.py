@@ -597,7 +597,12 @@ class FeedEngagementTests(TestCase):
         self._react("like")
         payload = json.loads(self._react("dislike").content)
         self.assertEqual(payload["reaction"], "dislike")
-        self.assertEqual(payload["likes"], 0)
+        self.video.refresh_from_db()
+        self.assertEqual(self.video.like_count, 0)
+
+    def test_the_like_count_is_never_returned_by_the_api(self):
+        payload = json.loads(self._react("like").content)
+        self.assertNotIn("likes", payload)
 
     def test_a_new_reaction_notifies_the_author(self):
         from profils.notifications.models import Notification
