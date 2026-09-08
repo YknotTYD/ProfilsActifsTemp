@@ -10,3 +10,5 @@ collectstatic/**
 media/**
 !media/**/
 !media/videos/.gitkeep
+# Relevés produits par `manage.py prove_pagination`
+pagination-proof/
