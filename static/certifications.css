@@ -1,0 +1,235 @@
+/* certifications.css
+ *
+ * Etagere de badges de certification, partagee par deux pages qui n'ont pas la
+ * meme feuille de style : la page de resultats (`questionnaires.css`, prefixe
+ * `q-`) et le profil public (`profiles.css`, prefixe `p-`). D'ou un fichier a
+ * part, avec son propre prefixe `cert-` : les deux pages l'incluent, aucune ne
+ * duplique la mise en forme.
+ *
+ * Un badge atteste des competences evaluees. Il ne confere aucun droit : le
+ * vocabulaire des libelles est verifie par la commande
+ * `normaliser_certification`, la mise en forme n'a pas a le rappeler.
+ *
+ * Palette reprise de `static/src/input.css`, comme les deux autres feuilles.
+ */
+
+.cert-shelf {
+    /* identite - reprend static/src/input.css */
+    --cert-ink:    #262626;
+    --cert-muted:  #5A6577;
+    --cert-line:   #DFE4EC;
+
+    --cert-size:   76px;   /* cote de l'illustration du rang */
+}
+
+/* --------------------------------------------------------------------- */
+/* Animations                                                             */
+/* --------------------------------------------------------------------- */
+
+@keyframes cert-land {
+    0%   { opacity: 0; transform: scale(.4) rotate(-12deg); }
+    65%  { opacity: 1; transform: scale(1.12) rotate(5deg); }
+    100% { opacity: 1; transform: scale(1) rotate(0); }
+}
+
+/* --------------------------------------------------------------------- */
+/* Etagere                                                                */
+/* --------------------------------------------------------------------- */
+
+.cert-shelf {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 1.25rem .75rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.cert {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: .55rem;
+    text-align: center;
+    padding: .25rem;
+}
+
+/* --------------------------------------------------------------------- */
+/* Illustration du rang                                                   */
+/*                                                                        */
+/* Les quatre rangs sont des SVG dessines hors de ce fichier              */
+/* (`static/badge/`, exportes depuis `public/badge/`). Le relief, la       */
+/* brillance et la forme -- ecusson, losange, pentagone, hexagone -- sont  */
+/* dans l'illustration : la feuille de style ne fait que la dimensionner   */
+/* et l'animer.                                                           */
+/* --------------------------------------------------------------------- */
+
+.cert-medal {
+    width: var(--cert-size);
+    height: var(--cert-size);
+    display: grid;
+    place-items: center;
+    /* l'ombre suit la silhouette du SVG, pas un carre */
+    filter: drop-shadow(0 4px 6px rgba(27, 58, 107, .28));
+    transition: transform .18s cubic-bezier(.34, 1.56, .64, 1);
+}
+.cert-medal img {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+.cert-earned .cert-medal { animation: cert-land .55s cubic-bezier(.34, 1.56, .64, 1) backwards; }
+.cert-earned:hover .cert-medal { transform: translateY(-3px) scale(1.06) rotate(-3deg); }
+
+/* les badges se posent l'un apres l'autre, pas tous d'un bloc */
+.cert-shelf .cert:nth-child(2) .cert-medal { animation-delay: .07s; }
+.cert-shelf .cert:nth-child(3) .cert-medal { animation-delay: .14s; }
+.cert-shelf .cert:nth-child(4) .cert-medal { animation-delay: .21s; }
+.cert-shelf .cert:nth-child(n+5) .cert-medal { animation-delay: .28s; }
+
+/* --------------------------------------------------------------------- */
+/* Badge restant a decrocher                                              */
+/*                                                                        */
+/* La silhouette du rang reste lisible -- on voit quel badge se joue -- mais*/
+/* elle est eteinte et un cadenas se pose dessus.                          */
+/* --------------------------------------------------------------------- */
+
+.cert-locked { opacity: .8; }
+.cert-locked .cert-medal {
+    position: relative;
+    filter: grayscale(1) opacity(.45) drop-shadow(0 2px 3px rgba(27, 58, 107, .12));
+    animation: none;
+}
+.cert-locked .cert-medal::after {
+    content: "\1F512";
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    font-size: calc(var(--cert-size) * .34);
+    filter: grayscale(1);
+}
+
+/* --------------------------------------------------------------------- */
+/* Legende                                                                */
+/* --------------------------------------------------------------------- */
+
+.cert-name {
+    font-weight: 800;
+    font-size: .85rem;
+    line-height: 1.25;
+    color: var(--cert-ink);
+    margin: 0;
+    text-wrap: balance;
+}
+.cert-meta {
+    font-size: .72rem;
+    color: var(--cert-muted);
+    margin: 0;
+}
+.cert-desc {
+    font-size: .74rem;
+    line-height: 1.35;
+    color: var(--cert-muted);
+    margin: 0;
+    text-wrap: pretty;
+}
+
+/* --------------------------------------------------------------------- */
+/* Variante en lignes - medaillon a gauche, legende a droite               */
+/*                                                                        */
+/* La grille de tuiles suppose de la largeur. Dans une colonne laterale de */
+/* profil elle n'affiche qu'un badge par ligne en gachant la place, et la  */
+/* description tombe en colonne etroite. Cette variante remet la legende   */
+/* a cote du medaillon : meme composant, meme balisage, autre mise en page.*/
+/* --------------------------------------------------------------------- */
+
+.cert-shelf--rows {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    --cert-size: 62px;
+}
+.cert-shelf--rows .cert {
+    flex-direction: row;
+    align-items: center;
+    gap: .85rem;
+    text-align: left;
+    padding: 0;
+}
+.cert-shelf--rows .cert-medal { flex: 0 0 auto; }
+.cert-shelf--rows .cert-body  { min-width: 0; }
+.cert-shelf--rows .cert-name  { text-wrap: pretty; }
+
+.cert-empty {
+    color: var(--cert-muted);
+    font-size: .9rem;
+    margin: 0;
+}
+
+/* --------------------------------------------------------------------- */
+/* Annonce de badge decroche (page de resultats)                          */
+/* --------------------------------------------------------------------- */
+
+.cert-award {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 1.25rem 2rem;
+    padding: 1.35rem 1.5rem;
+    border-top: 1px solid #F0DFAE;
+    background:
+        radial-gradient(120% 140% at 50% -30%, rgba(246, 209, 121, .38), transparent 62%),
+        linear-gradient(180deg, #FFFBEE, #FFF6DF);
+}
+.cert-award .cert-shelf {
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    justify-content: center;
+    gap: 1.25rem;
+}
+/* dans l'annonce, la description ferait doublon avec le texte d'a cote :
+   le jeton et son intitule suffisent */
+.cert-award .cert      { --cert-size: 68px; max-width: 150px; }
+.cert-award .cert-desc { display: none; }
+/* une date coupee en deux ("2026-09-" / "07") se lit mal sur une tuile
+   etroite : elle tient sur une ligne ou elle n'est pas affichee */
+.cert-award .cert-meta { white-space: nowrap; }
+
+.cert-award-intro {
+    flex: 0 1 34ch;
+    min-width: 16ch;
+}
+.cert-award-intro h3 {
+    font-size: 1rem;
+    font-weight: 800;
+    margin: 0 0 .2rem;
+    color: var(--cert-ink);
+}
+.cert-award-intro p {
+    font-size: .8rem;
+    line-height: 1.4;
+    color: var(--cert-muted);
+    margin: 0;
+    text-wrap: pretty;
+}
+
+@media (max-width: 40rem) {
+    .cert-award { flex-direction: column; align-items: flex-start; }
+    .cert-award .cert-shelf { align-self: center; }
+}
+
+/* --------------------------------------------------------------------- */
+/* Confort de lecture                                                     */
+/* --------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+    .cert-medal { animation: none !important; transition: none !important; }
+    .cert-earned:hover .cert-medal { transform: none; }
+}
+
+@media print {
+    .cert-medal { filter: none; }
+    .cert-locked { display: none; }
+}

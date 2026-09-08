@@ -1,0 +1,35 @@
+{% load versioned_static %}{% comment %}
+Etagere de badges de certification.
+
+Attend `badges` : la liste produite par `questionnaires.badges.badge_shelf` ou
+`card`. Chaque entree porte deja `earned`, `rank` et `name` -- le gabarit ne
+decide de rien, il rend ce qu'on lui donne.
+
+`layout` vaut "rows" pour la mise en page en lignes (illustration a gauche,
+legende a droite), adaptee a une colonne etroite ; sinon, grille de tuiles.
+
+Un badge verrouille (`earned` a False) n'est present dans la liste que si
+l'appelant a demande `include_locked` : c'est la vue qui juge a qui montrer ce
+qui reste a decrocher, pas ce fichier.
+{% endcomment %}
+<ul class="cert-shelf{% if layout == "rows" %} cert-shelf--rows{% endif %}">
+    {% for badge in badges %}
+    <li class="cert {% if badge.earned %}cert-earned{% else %}cert-locked{% endif %}" data-rank="{{ badge.rank }}">
+        <div class="cert-medal">
+            {# l'illustration porte le rang ; le texte de remplacement porte le sens #}
+            <img src="{% vstatic 'badge/rank-'|add:badge.rank|add:'-light.svg' %}"
+                 alt="{% if badge.earned %}Badge {{ badge.rank }} obtenu{% else %}Badge {{ badge.rank }} a decrocher{% endif %}"
+                 width="20" height="21" loading="lazy">
+        </div>
+        <div class="cert-body">
+            <p class="cert-name">{{ badge.name }}</p>
+            {% if badge.earned %}
+                <p class="cert-meta">Obtenu le {{ badge.awarded_at|slice:":10" }}</p>
+            {% else %}
+                <p class="cert-meta">A decrocher</p>
+            {% endif %}
+            {% if badge.description %}<p class="cert-desc">{{ badge.description }}</p>{% endif %}
+        </div>
+    </li>
+    {% endfor %}
+</ul>

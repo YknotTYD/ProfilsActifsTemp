@@ -11,6 +11,7 @@ dans une reponse d'API destinee a un participant.
 
 from . import constants as c
 from .access     import result_visibility
+from .badges     import card as badge_card
 from .conditions import compute_visible
 from .permissions import is_questionnaire_admin
 
@@ -305,8 +306,8 @@ def result_payload(result, viewer) -> dict:
         payload |= {"passed": result.passed, "level": result.level}
     if allowed.get("show_badge"):
         payload["badges"] = [
-            {"code": b.badge.code, "name": b.badge.name}
-            for b in result.awarded_badges.select_related("badge")
+            badge_card(held.badge, held)
+            for held in result.awarded_badges.select_related("badge")
         ]
 
     if any(allowed.get(key) for key in
