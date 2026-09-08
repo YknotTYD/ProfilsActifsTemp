@@ -104,6 +104,9 @@ GET /api/profiles/search/?skill=java&skill=docker&mode=AND
 
 ### Ordre par défaut et garanties de pagination
 
+Le détail du classement et des filtres est dans une note dédiée :
+`classement-et-filtres.md`.
+
 L'ordre par défaut du catalogue est **explicite et stable** : date de dernière
 mise à jour décroissante, puis identifiant du profil en clé de départage
 (`ProfessionalProfile.Meta.ordering`). Deux colonnes dans le `ORDER BY`, jamais
