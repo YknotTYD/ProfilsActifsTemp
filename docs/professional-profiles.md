@@ -102,6 +102,42 @@ GET /api/profiles/search/?skill=java&skill=docker&mode=AND
   toucher au moteur.
 - **Pagination** réelle, avec une limite de taille de page.
 
+### Ordre par défaut et garanties de pagination
+
+L'ordre par défaut du catalogue est **explicite et stable** : date de dernière
+mise à jour décroissante, puis identifiant du profil en clé de départage
+(`ProfessionalProfile.Meta.ordering`). Deux colonnes dans le `ORDER BY`, jamais
+une seule : `updated_at` seul laisse l'ordre des ex æquo au bon vouloir du
+moteur de base de données, et deux appels successifs à la même page peuvent
+alors renvoyer des profils différents, en oublier certains et en répéter
+d'autres. Les quatre tris proposés au recruteur (`search._SORTS`) se terminent
+tous par `pk` pour la même raison.
+
+Les tris offerts reposent sur des critères professionnels uniquement :
+pertinence, expérience, date de mise à jour, nom. **Aucun critère de
+popularité, même dérivé, même indirect, n'entre dans le classement** : les
+composantes du score sont énumérées dans `ranking.relevance_annotations`, et
+les compteurs de vues et de « j'aime » n'en font pas partie.
+
+**Ce que nous garantissons.** Sur un jeu de données figé, l'ordre est
+déterministe et reproductible : deux parcours complets du catalogue renvoient
+la même liste d'identifiants, sans doublon ni manquant, et d'un total égal au
+nombre de profils en base.
+
+**Ce que nous ne garantissons pas.** L'isolation d'un parcours pendant que les
+données sont écrites. Un profil modifié pendant qu'un recruteur pagine remonte
+en tête de liste ; un autre profil est mécaniquement repoussé sur la page que
+le recruteur vient de dépasser, et ne lui sera jamais montré. C'est une
+conséquence directe de la pagination par décalage (`LIMIT`/`OFFSET`) combinée à
+un tri par date de mise à jour.
+
+**Le correctif que nous n'avons pas implémenté.** Une pagination par curseur
+sur le couple `(updated_at, id)`, qui reprend le parcours après la dernière
+ligne vue au lieu de compter des lignes depuis le début, ou un jeton
+d'instantané pris à l'ouverture du parcours. Les deux suppriment le problème ;
+aucun n'a été retenu à ce stade, le catalogue étant consulté sur quelques pages
+et non parcouru intégralement par un recruteur.
+
 ## 6. Sécurité : ce qui est vérifié, et où
 
 Le frontend n'est jamais considéré comme fiable. Chaque écriture passe par
@@ -112,24 +148,7 @@ profil avant modification). Un profil privé répond `404`, pas `403` — pour
 ne pas confirmer qu'un compte existe à quelqu'un qui n'a pas le droit de le
 voir.
 
-## 7. Ce qui est préparé pour plus tard, sans être construit maintenant
-
-- **Vidéos** (`ProfileVideo`, `ProfileVideoSkill`) : le modèle, les statuts
-  (`DRAFT` → `PUBLISHED` → …), la relation aux compétences et les règles de
-  visibilité existent et sont testés. Pas d'upload ni de lecture réelle.
-- **Chaînage recherche → vidéos** (`feed.py`) : le chaînage
-  *recherche → profils trouvés → leurs vidéos* fonctionne déjà en interne
-  (`video_candidates`, `videos_for_skills`), mais **aucune route n'est
-  exposée** ici. Le feed vertical qui devait s'y brancher a été remplacé par
-  une grille de profils paginée (20 par page, lecture sur clic), servie par
-  `mainapp` sur `/` ; les anciennes adresses du feed (`/feed/`, `/api/feed/`,
-  `/api/videos/feed/`) y redirigent au lieu de renvoyer une 404.
-- **Matching candidat/offre** (`matching.py`) : traduit un profil en
-  caractéristiques comparables, et une offre (sous forme de dictionnaire, il
-  n'existe pas encore de modèle "Offre") en requête de recherche. Le
-  rapprochement complet candidat ↔ offre n'est pas implémenté.
-
-## 8. Tests
+## 7. Tests
 
 193 tests (`profils/profiles/tests/`), qui couvrent la canonicalisation des
 compétences et l'absence de doublons, la création/modification/suppression
