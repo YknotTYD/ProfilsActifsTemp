@@ -49,6 +49,34 @@ Pour les regenerer localement : `python manage.py seed_demo` (le mot de passe
 peut etre change via la variable d'environnement `DEMO_PASSWORD`).
 
 
+## Jeu de donnees pour les tests de charge
+
+```bash
+  python manage.py seed_volume                        # 500 profils, 300 avec video
+  python manage.py seed_volume --profiles 50 --with-video 30
+  python manage.py seed_volume --keep                 # ajoute sans effacer le lot
+```
+
+La commande est relancable sur une base vide : elle cree elle-meme le compte de
+moderation dont elle a besoin. Elle n'efface que son propre lot, dont tous les
+comptes portent le prefixe `charge-`.
+
+Les videos passent par l'interface de soumission et parcourent le cycle de
+moderation complet (soumission, validation, publication), et non par une
+insertion directe en base. Le tirage est reproductible via `--seed`.
+
+Comptez environ une minute trente pour 500 profils et 300 videos.
+
+Verifier ensuite que la pagination du catalogue reste deterministe :
+
+```bash
+  python manage.py prove_pagination
+```
+
+La commande parcourt le catalogue deux fois, ecrit les deux releves
+d'identifiants et leur comparaison dans `pagination-proof/`, et sort en code
+non nul si l'ordre a bouge.
+
 ## Tech Stack
 
 **Front**: React
