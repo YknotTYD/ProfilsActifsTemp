@@ -3,8 +3,9 @@
 Remplit chaque ecran accessible depuis le frontend avec du contenu credible :
 comptes (candidats, recruteurs, un compte administrateur), profils
 professionnels complets, deux questionnaires reels avec de vraies questions,
-et des tentatives terminees pour que les resultats, les statistiques et les
-listes d'admin ne soient jamais vides.
+des badges de certification, et des tentatives terminees pour que les resultats,
+les statistiques, les etageres de badges et les listes d'admin ne soient jamais
+vides.
 
 Rejouable : au demarrage, la commande supprime les comptes et questionnaires
 qu'elle a elle-meme crees lors d'un run precedent (identifies par une liste de
@@ -26,7 +27,7 @@ from profils.profiles import services as profile_services
 from profils.questionnaires import constants as qc
 from profils.questionnaires import services as attempt_services
 from profils.questionnaires.editing import create_question, update_question
-from profils.questionnaires.models import Questionnaire
+from profils.questionnaires.models import Badge, Questionnaire
 from profils.questionnaires.versioning import create_version, publish_version
 
 DEMO_PASSWORD = "Demo1234!"
@@ -37,6 +38,53 @@ DEMO_CLIPS = {
     "tears_of_steel":   "https://www.youtube.com/embed/R6MlUcmOul8",
     "elephants_dream":  "https://www.youtube.com/embed/TLkA0RELQ1g",
 }
+
+# Badges de certification.
+#
+# Un badge atteste des competences evaluees : il ne confere aucun droit et
+# n'autorise personne a exercer quoi que ce soit (cf. la commande
+# `normaliser_certification`, qui traque les formulations contraires). Les
+# libelles ci-dessous sont ecrits en consequence.
+#
+# `questionnaire` vaut "q1" ou "q2" : les identifiants reels n'existent qu'une
+# fois les questionnaires crees, la resolution se fait donc au moment du seed.
+#
+# `icon` porte le rang -- bronze, silver, gold ou platinum -- qui choisit
+# l'illustration (`static/badge/rank-<rang>-light.svg`). Voir `badges.rank_of`.
+BADGES = [
+    {
+        "code": "certification-backend",
+        "name": "Certification Backend",
+        "icon": "bronze",
+        "description": "Atteste des connaissances backend evaluees : HTTP, "
+                       "bases de donnees relationnelles et conception d'API.",
+        "criteria": {"type": "questionnaire_passed", "questionnaire": "q1"},
+    },
+    {
+        "code": "certification-backend-excellence",
+        "name": "Backend — mention excellence",
+        "icon": "gold",
+        "description": "Recompense un score d'au moins 80 % au test technique "
+                       "backend.",
+        "criteria": {"type": "min_percentage", "questionnaire": "q1", "percentage": 80},
+    },
+    {
+        "code": "certification-communication",
+        "name": "Certification Communication & organisation",
+        "icon": "bronze",
+        "description": "Atteste de la maniere de travailler evaluee : "
+                       "communication, gestion des imprevus et autonomie.",
+        "criteria": {"type": "questionnaire_passed", "questionnaire": "q2"},
+    },
+    {
+        "code": "certification-parcours-complet",
+        "name": "Parcours complet",
+        "icon": "platinum",
+        "description": "Valorise les candidats ayant reussi l'ensemble du "
+                       "parcours d'evaluation.",
+        "criteria": {"type": "questionnaires_passed", "questionnaires": ["q1", "q2"]},
+    },
+]
 
 RECRUITERS = [
     {"username": "julie.marchand",  "first_name": "Julie",  "last_name": "Marchand",  "birth_date": "1990-03-11"},
@@ -508,6 +556,10 @@ class Command(BaseCommand):
             self._create_recruiters()
             candidates = self._create_candidates()
             q1, q2 = self._create_questionnaires(admin)
+            # Les badges doivent exister avant les tentatives : l'attribution
+            # se declenche a la fin de chaque tentative reelle, et ne
+            # rattrape jamais une tentative deja terminee.
+            self._create_badges(q1, q2)
             self._seed_profiles(candidates)
             self._seed_attempts(candidates, q1, q2)
             self._seed_mainapp_feed(candidates)
@@ -524,6 +576,7 @@ class Command(BaseCommand):
         Questionnaire.objects.filter(
             title__in = ["Test technique — Backend", "Évaluation — Communication & organisation"]
         ).delete()
+        Badge.objects.filter(code__in = [b["code"] for b in BADGES]).delete()
         if deleted:
             self.stdout.write(f"Anciennes donnees de demonstration supprimees ({deleted} lignes).")
 
@@ -622,6 +675,33 @@ class Command(BaseCommand):
         q1 = self._build_backend_test(admin)
         q2 = self._build_soft_skills(admin)
         return q1, q2
+
+    def _create_badges(self, q1: dict, q2: dict):
+        """Cree les badges de certification et ouvre leur affichage.
+
+        Un badge ne sert a rien s'il reste invisible : `show_badge` est active
+        sur les deux questionnaires pour que la page de resultats annonce le
+        badge decroche a la fin d'une tentative.
+        """
+        ids = {"q1": q1["questionnaire"].id, "q2": q2["questionnaire"].id}
+
+        for data in BADGES:
+            criteria = dict(data["criteria"])
+            if "questionnaire" in criteria:
+                criteria["questionnaire"] = ids[criteria["questionnaire"]]
+            if "questionnaires" in criteria:
+                criteria["questionnaires"] = [ids[key] for key in criteria["questionnaires"]]
+            Badge.objects.create(
+                code = data["code"], name = data["name"],
+                description = data["description"], icon = data["icon"],
+                criteria = criteria, active = True,
+            )
+
+        for questionnaire in (q1["questionnaire"], q2["questionnaire"]):
+            questionnaire.result_visibility = {
+                **questionnaire.visibility_settings, "show_badge": True,
+            }
+            questionnaire.save(update_fields = ["result_visibility", "updated_at"])
 
     def _publish(self, title: str, description: str, admin: User, build_questions):
         questionnaire = Questionnaire.objects.create(title = title, description = description, created_by = admin)
@@ -850,7 +930,8 @@ class Command(BaseCommand):
     def _summary(self, candidates: list):
         self.stdout.write(self.style.SUCCESS(
             f"\nDonnees de demonstration en place : {len(candidates)} candidats, "
-            f"{len(RECRUITERS)} recruteurs, 1 compte administrateur.\n"
+            f"{len(RECRUITERS)} recruteurs, 1 compte administrateur, "
+            f"{len(BADGES)} badges de certification.\n"
             f"Mot de passe pour tous les comptes : {DEMO_PASSWORD}\n"
             f"Exemples : {CANDIDATES[0]['username']}  ·  {RECRUITERS[0]['username']}  ·  "
             f"{ADMIN_ACCOUNT['username']}"

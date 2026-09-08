@@ -12,10 +12,12 @@ donnee envoyee au navigateur est une donnee divulguee, quel que soit ce que le
 frontend en fait ensuite.
 """
 
+from profils.questionnaires.badges import badge_shelf
+
 from . import constants as c
 from . import ranking
 from .permissions import can_see_private
-from .visibility import audience_of, visible_sections
+from .visibility  import audience_of, visible_sections
 
 def _iso(value):
     return value.isoformat() if value else None
@@ -241,6 +243,11 @@ def public_profile(profile, viewer) -> dict:
             certification(row) for row in
             profile.certifications.prefetch_related("skill_links__skill")
         ]
+        # Les badges de certification suivent la meme visibilite que les
+        # certifications declarees : ce sont deux facons d'attester d'une
+        # competence, et masquer l'une sans l'autre n'aurait pas de sens. Les
+        # badges restant a decrocher ne sont montres qu'a leur proprietaire.
+        payload["badges"] = badge_shelf(profile.user, include_locked = is_owner)
     if allowed[c.SECTION_LANGUAGES]:
         payload["languages"] = [
             language(row) for row in profile.languages.select_related("language")

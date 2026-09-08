@@ -246,6 +246,13 @@
     </section>
     {% endif %}
 
+    {% if p.sections.certifications and p.badges %}
+    <section class="p-panel">
+        <h2>Badges de certification <span class="p-count">{{ p.badges|length }}</span></h2>
+        {% include "partials/_cert_shelf.html" with badges=p.badges layout="rows" %}
+    </section>
+    {% endif %}
+
     {% if p.sections.certifications %}
     <section class="p-panel">
         <h2>Certifications <span class="p-count">{{ p.certifications|length }}</span></h2>

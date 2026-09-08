@@ -36,6 +36,20 @@
         {% endif %}
     </div>
 
+    {% if r.badges %}
+    <div class="cert-award">
+        <div class="cert-award-intro">
+            <h3>{{ r.badges|length }} badge{{ r.badges|pluralize }} de certification obtenu{{ r.badges|pluralize }}</h3>
+            <p>
+                {{ r.badges|pluralize:"Il atteste,Ils attestent" }} des competences evaluees
+                par cette epreuve et {{ r.badges|pluralize:"figure,figurent" }} desormais sur
+                votre profil.
+            </p>
+        </div>
+        {% include "partials/_cert_shelf.html" with badges=r.badges %}
+    </div>
+    {% endif %}
+
     {% if r.answers %}
     <div style="padding:1.25rem">
         <div class="q-tablewrap">
