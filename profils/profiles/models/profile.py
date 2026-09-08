@@ -73,7 +73,11 @@ class ProfessionalProfile(models.Model):
     updated_at = models.DateTimeField(auto_now = True)
 
     class Meta:
-        ordering    = ("-updated_at",)
+        # Deux colonnes, jamais une seule : `updated_at` seul laisse l'ordre des
+        # ex-aequo au moteur de base de donnees, et deux appels successifs a la
+        # meme page peuvent alors renvoyer des profils differents, en oublier
+        # certains et en repeter d'autres. `pk` departage.
+        ordering    = ("-updated_at", "pk")
         permissions = (
             ("manage_skill_catalog",  "Peut gerer le referentiel de competences"),
             ("view_private_profile",  "Peut consulter un profil prive"),

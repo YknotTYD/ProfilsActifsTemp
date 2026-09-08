@@ -3,10 +3,13 @@
 from datetime import date
 
 from django.contrib.auth.models import AnonymousUser
+from django.core.paginator import Paginator
 from django.test import TestCase
+from django.utils import timezone
 
 from profils.profiles import constants as c
 from profils.profiles import services
+from profils.profiles.models import ProfessionalProfile
 from profils.profiles.ranking import score_breakdown
 from profils.profiles.search import ProfileQuery, search
 from profils.questionnaires.http import BadRequest
@@ -458,3 +461,45 @@ class QueryEfficiencyTests(TestCase):
         small_page_count = role_query_count(3)
         big_page_count   = role_query_count(15)
         self.assertEqual(small_page_count, big_page_count)
+
+class DefaultOrderingTests(TestCase):
+    """L'ordre par defaut du catalogue est deterministe (issue #37).
+
+    Les profils sont ici volontairement tous a la meme date de mise a jour :
+    c'est le cas que produit un import en masse, et c'est celui qui revele un
+    `ORDER BY` a une seule colonne. Sans cle de departage, deux parcours de la
+    meme liste peuvent renvoyer des profils differents, en oublier certains et
+    en repeter d'autres.
+    """
+
+    def setUp(self):
+        for index in range(25):
+            make_profile(f"profil-{index:02d}")
+
+        # `updated_at` est en `auto_now` : il faut passer par un `UPDATE` pour
+        # forcer l'egalite que le test veut reproduire.
+        ProfessionalProfile.objects.update(updated_at = timezone.now())
+
+    def paginated_ids(self, page_size = 10) -> list[int]:
+        """Identifiants releves en parcourant toutes les pages, dans l'ordre."""
+        paginator = Paginator(ProfessionalProfile.objects.all(), page_size)
+        return [
+            profile.pk
+            for number in paginator.page_range
+            for profile in paginator.page(number).object_list
+        ]
+
+    def test_two_identical_passes_return_the_same_order(self):
+        self.assertEqual(self.paginated_ids(), self.paginated_ids())
+
+    def test_no_profile_is_duplicated_or_missing_across_pages(self):
+        ids = self.paginated_ids()
+        self.assertEqual(len(ids), len(set(ids)))
+        self.assertEqual(
+            set(ids), set(ProfessionalProfile.objects.values_list("pk", flat = True))
+        )
+        self.assertEqual(len(ids), ProfessionalProfile.objects.count())
+
+    def test_the_tie_breaker_orders_equal_dates_by_identifier(self):
+        ids = self.paginated_ids()
+        self.assertEqual(ids, sorted(ids))
