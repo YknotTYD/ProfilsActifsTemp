@@ -102,17 +102,27 @@ def _level_for(percentage: Decimal, version_scoring: dict) -> str:
             best, best_min = level.get("name", ""), minimum
     return best
 
-def score_attempt(attempt) -> dict:
+def score_attempt(attempt, *, only_stable_keys = None) -> dict:
     """Calcule le score complet d'une tentative.
 
     Seules les questions visibles comptent : une question masquee par une
     condition, meme repondue avant qu'elle ne le devienne, est exclue du score
     tout en restant conservee dans les details a des fins d'audit.
+
+    `only_stable_keys` restreint le calcul aux questions dont la cle stable est
+    donnee. C'est ce qui permet de rejouer une ancienne passation sur le seul
+    perimetre des questions encore en vigueur, sans toucher aux reponses
+    enregistrees : celles qui portaient sur des questions depuis retirees
+    restent en base et figurent dans les details, marquees `retired`, mais ne
+    pesent plus dans le score. Voir la commande `retraiter_passations`.
     """
     version   = attempt.version
     questions = list(
         version.questions.prefetch_related("options").order_by("order", "id")
     )
+    if only_stable_keys is not None:
+        retained  = set(only_stable_keys)
+        questions = [q for q in questions if q.stable_key in retained]
     answers = {
         answer.question.stable_key: answer
         for answer in attempt.answers.select_related("question")
@@ -153,6 +163,27 @@ def score_attempt(attempt) -> dict:
             "max_score":   "0",
             "is_correct":  None,
         })
+
+    # Questions ecartees par le perimetre : elles ne pesent rien, mais elles
+    # restent tracees. C'est ce qui permet de dire, passation par passation,
+    # sur quoi la personne avait repondu et ce qui a cesse de compter.
+    if only_stable_keys is not None:
+        scored_keys = {q.stable_key for q in questions}
+        for question in version.questions.order_by("order", "id"):
+            if question.stable_key in scored_keys:
+                continue
+            answer = answers.get(question.stable_key)
+            entries.append({
+                "question_id": question.id,
+                "stable_key":  question.stable_key,
+                "type":        question.type,
+                "graded":      False,
+                "skipped":     "retired_question",
+                "answer_id":   answer.id if answer else None,
+                "score":       "0",
+                "max_score":   "0",
+                "is_correct":  None,
+            })
 
     version_scoring = version.scoring
     if version_scoring.get("floor_negative", True) and total < ZERO:

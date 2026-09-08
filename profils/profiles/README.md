@@ -67,7 +67,9 @@ utilisable.
 
 - Upload et lecture vidéo réels — le projet n'a aucun stockage de fichiers
   (comme `mainapp.Video`, les URLs sont stockées telles quelles).
-- Feed vertical façon TikTok.
+- Feed vertical plein écran en lecture automatique — retiré au profit
+  d'une grille de profils paginée (points 3.2 et 3.4 du cahier des
+  charges v1.0).
 - Matching candidat/offre complet (il n'existe pas encore de modèle d'offre).
 
 ---

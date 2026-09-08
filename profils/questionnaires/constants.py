@@ -211,6 +211,8 @@ AUDIT_OPTION_CHANGE   = "OPTION_CHANGE"
 AUDIT_SCORING_CHANGE  = "SCORING_CHANGE"
 AUDIT_TEST_MODE       = "TEST_MODE"
 AUDIT_BADGE_AWARD     = "BADGE_AWARD"
+AUDIT_BADGE_REVOKE    = "BADGE_REVOKE"
+AUDIT_RESCORE         = "RESCORE"
 
 AUDIT_ACTIONS = tuple(
     (a, a) for a in (
@@ -218,9 +220,27 @@ AUDIT_ACTIONS = tuple(
         AUDIT_INVALIDATE, AUDIT_ARCHIVE, AUDIT_DISABLE, AUDIT_RESTORE,
         AUDIT_DUPLICATE, AUDIT_VERSION_CREATE, AUDIT_ACCESS_CHANGE,
         AUDIT_QUESTION_CHANGE, AUDIT_OPTION_CHANGE, AUDIT_SCORING_CHANGE,
-        AUDIT_TEST_MODE, AUDIT_BADGE_AWARD,
+        AUDIT_TEST_MODE, AUDIT_BADGE_AWARD, AUDIT_BADGE_REVOKE,
+        AUDIT_RESCORE,
     )
 )
+
+# --------------------------------------------------------------------------
+# Certification
+# --------------------------------------------------------------------------
+#
+# Une epreuve de certification tient en 20 questions. Le plafond est une regle
+# produit, pas un detail de reglage : au-dela, le taux d'abandon devient le
+# vrai filtre, et ce n'est pas ce qu'on evalue. Il est verifie au moment de la
+# publication -- un brouillon peut en contenir davantage pendant qu'on le
+# taille, une version en ligne ne le peut pas.
+CERTIFICATION_QUESTION_LIMIT = 20
+
+# Cle sous laquelle une passation retraitee garde la trace de son
+# retraitement, dans `QuestionnaireAttempt.metadata` et dans
+# `QuestionnaireResult.details`. Voir la commande `retraiter_passations` et
+# `docs/certification-20-questions.md`.
+RESCORE_KEY = "retraitement"
 
 BADGE_SOURCE_RESULT = "QUESTIONNAIRE_RESULT"
 BADGE_SOURCE_MANUAL = "MANUAL"

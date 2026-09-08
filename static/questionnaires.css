@@ -562,6 +562,18 @@ select { cursor: pointer; }
     display: inline-block; animation: q-bounce-in .5s .15s cubic-bezier(.34,1.56,.64,1) backwards;
 }
 .q-result-head .sub { color: #C7D3E4; font-size: .9rem; margin-top: .4rem; }
+
+/* Mention de recalcul : elle accompagne le score, elle ne le decore pas. Assez
+   lisible pour etre lue, assez discrete pour ne pas passer pour une alerte. */
+.q-result-head .q-rescored {
+    color: #C7D3E4;
+    font-size: .85rem;
+    line-height: 1.45;
+    max-width: 58ch;
+    margin: .7rem auto 0;
+    padding-top: .6rem;
+    border-top: 1px solid rgba(199, 211, 228, .3);
+}
 .q-result-head .q-badge { margin-top: .8rem; font-size: .82rem; }
 
 @media (max-width: 48rem) {

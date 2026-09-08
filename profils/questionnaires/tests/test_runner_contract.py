@@ -65,7 +65,14 @@ class WidgetContractTests(TestCase):
         self.assertEqual(payload["widget"], "number")
 
 class EveryTypeIsAnswerableTests(TestCase):
-    """Un questionnaire contenant tous les types doit pouvoir etre termine."""
+    """Tous les types confondus doivent pouvoir etre repondus et termines.
+
+    Une version publiee porte au plus vingt questions
+    (`constants.CERTIFICATION_QUESTION_LIMIT`), et le moteur en connait
+    davantage : les types sont donc repartis sur autant de questionnaires que
+    necessaire. L'invariant protege ne change pas -- aucun type ne doit
+    empecher un participant de terminer.
+    """
 
     ANSWERS = {
         c.TYPE_INTEGER: 20, c.TYPE_DECIMAL: "20.5", c.TYPE_PERCENTAGE: 50,
@@ -80,58 +87,73 @@ class EveryTypeIsAnswerableTests(TestCase):
         c.TYPE_ADDRESS: {"country": "FR", "postal_code": "75011"},
     }
 
+    def _payload(self, handler) -> dict:
+        payload = {"type": handler.id, "text": f"Question {handler.id}", "required": True}
+        if handler.uses_options and not getattr(handler, "fixed_options", ()) \
+                and handler.id != c.TYPE_SCALE:
+            payload["options"] = [{"text": "A", "is_correct": True}, {"text": "B"}]
+        if handler.id == c.TYPE_SCALE:
+            payload["config"] = {"min": 1, "max": 5, "step": 1}
+        if handler.id == c.TYPE_CITY:
+            payload["config"] = {"cities": [{"code": "PARIS", "name": "Paris"}]}
+        if handler.id == c.TYPE_ADDRESS:
+            payload["config"] = {"countries": ["FR"], "required_fields": ["country"]}
+        return payload
+
     def setUp(self):
         self.admin = make_admin()
         self.user  = make_user("participant")
-        self.q     = make_questionnaire(self.admin, title = "Tous les types")
-        self.version = draft_of(self.q)
 
-        for handler in all_types():
-            payload = {"type": handler.id, "text": f"Question {handler.id}", "required": True}
-            if handler.uses_options and not getattr(handler, "fixed_options", ()) \
-                    and handler.id != c.TYPE_SCALE:
-                payload["options"] = [{"text": "A", "is_correct": True}, {"text": "B"}]
-            if handler.id == c.TYPE_SCALE:
-                payload["config"] = {"min": 1, "max": 5, "step": 1}
-            if handler.id == c.TYPE_CITY:
-                payload["config"] = {"cities": [{"code": "PARIS", "name": "Paris"}]}
-            if handler.id == c.TYPE_ADDRESS:
-                payload["config"] = {"countries": ["FR"], "required_fields": ["country"]}
-            create_question(self.version, payload, actor = self.admin)
+        handlers = list(all_types())
+        size     = c.CERTIFICATION_QUESTION_LIMIT
+        chunks   = [handlers[i:i + size] for i in range(0, len(handlers), size)]
 
-        publish(self.q, self.admin)
-        self.q.refresh_from_db()
+        self.pairs = []
+        for index, chunk in enumerate(chunks, start = 1):
+            questionnaire = make_questionnaire(self.admin, title = f"Tous les types {index}")
+            version       = draft_of(questionnaire)
+            for handler in chunk:
+                create_question(version, self._payload(handler), actor = self.admin)
+            publish(questionnaire, self.admin)
+            questionnaire.refresh_from_db()
+            self.pairs.append((questionnaire, version))
+
+        self.assertEqual(
+            sum(version.questions.count() for _, version in self.pairs), len(handlers)
+        )
 
     def test_a_participant_can_answer_every_question_and_finish(self):
-        attempt = start_attempt(self.q, self.user)
+        for questionnaire, version in self.pairs:
+            attempt = start_attempt(questionnaire, self.user)
 
-        for question in self.version.questions.prefetch_related("options"):
-            if question.handler.uses_options:
-                value = {"option_ids": [question.options.first().id]}
-            else:
-                self.assertIn(question.type, self.ANSWERS,
-                              f"aucune reponse de reference pour {question.type}")
-                value = self.ANSWERS[question.type]
-            save_answer(attempt, question.id, value)
+            for question in version.questions.prefetch_related("options"):
+                if question.handler.uses_options:
+                    value = {"option_ids": [question.options.first().id]}
+                else:
+                    self.assertIn(question.type, self.ANSWERS,
+                                  f"aucune reponse de reference pour {question.type}")
+                    value = self.ANSWERS[question.type]
+                save_answer(attempt, question.id, value)
 
-        attempt.refresh_from_db()
-        self.assertEqual(attempt.answered_count, attempt.visible_count)
+            attempt.refresh_from_db()
+            self.assertEqual(attempt.answered_count, attempt.visible_count)
 
-        result = finish_attempt(attempt)
-        self.assertIsNotNone(result)
-        self.assertEqual(result.attempt_id, attempt.id)
+            result = finish_attempt(attempt)
+            self.assertIsNotNone(result)
+            self.assertEqual(result.attempt_id, attempt.id)
 
     def test_the_runner_payload_offers_a_control_for_every_question(self):
-        attempt = start_attempt(self.q, self.user)
-        state   = runner_state(attempt)
+        for questionnaire, version in self.pairs:
+            attempt = start_attempt(questionnaire, self.user)
+            state   = runner_state(attempt)
 
-        self.assertEqual(len(state["questions"]), self.version.questions.count())
-        for question in state["questions"]:
-            self.assertIn(question["widget"], KNOWN_WIDGETS, question["type"])
-            if question["widget"] in ("choice", "dropdown"):
-                self.assertTrue(question["options"], question["type"])
-            if question["widget"] == "vocabulary":
-                self.assertTrue(question["vocabulary"], question["type"])
+            self.assertEqual(len(state["questions"]), version.questions.count())
+            for question in state["questions"]:
+                self.assertIn(question["widget"], KNOWN_WIDGETS, question["type"])
+                if question["widget"] in ("choice", "dropdown"):
+                    self.assertTrue(question["options"], question["type"])
+                if question["widget"] == "vocabulary":
+                    self.assertTrue(question["vocabulary"], question["type"])
 
 class FinishFeedbackTests(TestCase):
     """Terminer doit dire precisement ce qui bloque."""

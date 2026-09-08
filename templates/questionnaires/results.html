@@ -29,6 +29,17 @@
             {% if r.score %} · {{ r.score }} sur {{ r.max_score }} point{{ r.max_score|pluralize }}{% endif %}
             · version {{ r.version }}
         </div>
+        {% if r.retraitement %}
+        <p class="q-rescored">
+            Note recalculée le {{ r.retraitement.date|slice:":10" }} sur les
+            {{ r.retraitement.questions_retenues }} questions de l'épreuve
+            actuelle. {{ r.retraitement.questions_retirees }} question{{ r.retraitement.questions_retirees|pluralize }}
+            posée{{ r.retraitement.questions_retirees|pluralize }} lors de votre passage
+            {{ r.retraitement.questions_retirees|pluralize:"ne fait,ne font" }} plus partie
+            de l'épreuve et {{ r.retraitement.questions_retirees|pluralize:"n'est,ne sont" }}
+            plus comptabilisée{{ r.retraitement.questions_retirees|pluralize }}.
+        </p>
+        {% endif %}
         {% if r.visibility.show_pass_fail %}
             <span class="q-badge {% if r.passed %}q-ok{% else %}q-ko{% endif %}">
                 {% if r.passed %}Reussi{% else %}Echoue{% endif %}{% if r.level %} - {{ r.level }}{% endif %}

@@ -298,6 +298,17 @@ def result_payload(result, viewer) -> dict:
         "visibility":     allowed,
     }
 
+    # Une note recalculee ne s'affiche jamais sans le dire : la mention suit le
+    # score partout ou il apparait (cf. `retraiter_passations`).
+    trace = (result.details or {}).get(c.RESCORE_KEY)
+    if trace and allowed.get("show_score"):
+        payload["retraitement"] = {
+            "date":               trace.get("date"),
+            "questions_retenues": trace.get("questions_retenues"),
+            "questions_retirees": trace.get("questions_retirees"),
+            "version_reference":  trace.get("version_reference"),
+        }
+
     if allowed.get("show_score"):
         payload |= {"score": str(result.score), "max_score": str(result.max_score)}
     if allowed.get("show_percentage"):

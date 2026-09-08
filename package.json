@@ -1,7 +1,7 @@
 {
-  "name": "profilsactifstemp",
+  "name": "profilsactifs",
   "version": "1.0.0",
-  "description": "Site de recherche de mise en relation entre demandeur et recruteur sous forme de réseau social",
+  "description": "ProfilsActifs — outil de valorisation des compétences mettant en relation candidats et recruteurs",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -11,16 +11,16 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/YknotTYD/ProfilsActifsTemp.git"
+    "url": "git+https://github.com/YknotTYD/ProfilsActifs.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
   "bugs": {
-    "url": "https://github.com/YknotTYD/ProfilsActifsTemp/issues"
+    "url": "https://github.com/YknotTYD/ProfilsActifs/issues"
   },
-  "homepage": "https://github.com/YknotTYD/ProfilsActifsTemp#readme",
+  "homepage": "https://github.com/YknotTYD/ProfilsActifs#readme",
   "devDependencies": {
     "@tailwindcss/cli": "^4.3.3",
     "concurrently": "^9.1.0",

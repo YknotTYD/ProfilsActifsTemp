@@ -4,6 +4,8 @@ Regles appliquees ici, et nulle part ailleurs :
 
   * une version n'est modifiable qu'en statut DRAFT et tant qu'aucune tentative
     ne s'y rattache ;
+  * une version publiee porte au plus 20 questions
+    (`constants.CERTIFICATION_QUESTION_LIMIT`) ;
   * passer une version en TEST ou en PUBLISHED la fige definitivement ;
   * modifier un questionnaire fige revient a creer une nouvelle version, copie
     conforme de la precedente, avec les memes cles stables ;
@@ -108,8 +110,18 @@ def publish_version(version, *, actor = None, carry_over = None):
     """
     if version.status == c.STATUS_INVALIDATED:
         raise ValidationError("une version invalidee ne peut pas etre publiee")
-    if not version.questions.exists():
+
+    # Le plafond ne mord qu'ici, a la publication. Un brouillon peut porter
+    # cent questions pendant qu'on le taille ; ce qui part en ligne n'en porte
+    # que vingt (cf. `constants.CERTIFICATION_QUESTION_LIMIT`).
+    count = version.questions.count()
+    if not count:
         raise ValidationError("impossible de publier une version sans question")
+    if count > c.CERTIFICATION_QUESTION_LIMIT:
+        raise ValidationError(
+            f"une version publiee porte au plus {c.CERTIFICATION_QUESTION_LIMIT} "
+            f"questions ; celle-ci en compte {count}"
+        )
 
     questionnaire = version.questionnaire
     previous      = questionnaire.current_version

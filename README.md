@@ -1,7 +1,11 @@
 
 # ProfilsActifs
 
-Site de recherche de mise en relation entre demandeur et recruteur sous forme de réseau social pour la piscine Survivor de Tech 3
+Outil de valorisation des compétences mettant en relation candidats et
+recruteurs — piscine Survivor de Tech 3.
+
+ProfilsActifs n'est pas un réseau social : aucune donnée du service n'est
+utilisée pour déterminer des droits ou le montant d'allocations.
 
 
 ## Installation

@@ -467,9 +467,9 @@ changement de front (l'éditeur et le moteur de rendu lisent le catalogue).
 | Fichier | Rôle |
 |---|---|
 | `services.py` | cycle de vie des tentatives : start / save / resume / finish. Rien n'est accordé sur la foi du client. |
-| `scoring.py` | moteur de scoring, séparé de l'affichage et des modèles. Poids, score correct/incorrect, partiel (`proportional`, `all_or_nothing`, `threshold`), seuil de réussite, paliers. |
+| `scoring.py` | moteur de scoring, séparé de l'affichage et des modèles. Poids, score correct/incorrect, partiel (`proportional`, `all_or_nothing`, `threshold`), seuil de réussite, paliers. `score_attempt(..., only_stable_keys=…)` rejoue une passation sur un périmètre restreint, sans toucher aux réponses enregistrées. |
 | `conditions.py` | arbre JSON `AND`/`OR` avec 10 opérateurs, référencé par clés stables. **Évalué exclusivement côté serveur** : le front ne reçoit que les questions visibles. Une question devenue invisible garde sa réponse mais sort du score. |
-| `versioning.py` | créer / publier / comparer / restaurer. Restaurer une ancienne version en crée une nouvelle à partir d'elle ; l'ancienne n'est jamais réécrite. |
+| `versioning.py` | créer / publier / comparer / restaurer. Restaurer une ancienne version en crée une nouvelle à partir d'elle ; l'ancienne n'est jamais réécrite. Une version publiée porte **au plus 20 questions** (`CERTIFICATION_QUESTION_LIMIT`) — le plafond est vérifié à la publication, et nulle part ailleurs. |
 | `access.py` | visibilité / accessibilité / visibilité des résultats — trois questions distinctes, réglées séparément. Règles en forme normale disjonctive (`AND` dans un groupe, `OR` entre groupes), types `EVERYONE` / `USER` / `ROLE` / `BADGE`, avec `negate`. |
 | `permissions.py` | 10 permissions personnalisées déclarées sur `Questionnaire.Meta` (plus les 4 CRUD de Django, soit 14 constantes `PERM_*`), et le pont vers `mainapp.Role` (`user_roles`) réutilisé par `profiles`. |
 | `editing.py` | CRUD questions/options, avec vérification que la version est modifiable + validation par le handler de type + journalisation. |
@@ -505,6 +505,29 @@ type « permis de travailler » sont proscrites. La commande compte les
 passations et les badges avant et après, et **échoue bruyamment** si les
 compteurs diffèrent : elle ne change que des mots. Le mode par défaut est une
 simulation ; il faut `--apply` pour écrire. Rejouable sans effet.
+
+### 6.6 Commande `retraiter_passations`
+
+`python manage.py retraiter_passations [--apply] [--questionnaire ID] [--json rapport.json]`
+
+Recalcule les passations enregistrées **avant** la réduction de l'épreuve à 20
+questions, sur le seul périmètre de la version publiée, puis réévalue les
+badges sur ces scores recalculés. Aucune réponse n'est supprimée : les réponses
+aux questions retirées restent en base et figurent dans le détail du résultat,
+marquées `retired_question` ; elles cessent seulement de compter.
+
+La commande rend les compteurs avant/après (passations, passations réussies,
+résultats, badges) puis le détail — réussite acquise, réussite perdue, badges
+retirés, badges attribués. Simulation par défaut, rejouable : un second passage
+ne recalcule plus rien.
+
+Une note recalculée n'est jamais affichée sans la mention correspondante : la
+trace vit dans `QuestionnaireAttempt.metadata["retraitement"]` et
+`QuestionnaireResult.details["retraitement"]`, et sort de l'API sous
+`retraitement`.
+
+Le choix des 20 questions, son critère et la décision sur les passations
+existantes sont écrits dans `docs/certification-20-questions.md`.
 
 ---
 

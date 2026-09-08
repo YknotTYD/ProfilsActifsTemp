@@ -218,9 +218,12 @@ components:
 
     VideoStats:
       type: object
+      description: >-
+        Compteurs de diffusion. Aucun compteur d'engagement public n'est
+        expose : les reactions restent en base mais ne sortent ni ici, ni
+        dans les pages, ni dans les exports.
       properties:
         views: { type: integer }
-        likes: { type: integer }
         shares: { type: integer }
 
     Video:
