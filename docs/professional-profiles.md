@@ -124,6 +124,20 @@ déterministe et reproductible : deux parcours complets du catalogue renvoient
 la même liste d'identifiants, sans doublon ni manquant, et d'un total égal au
 nombre de profils en base.
 
+La preuve se rejoue en trois minutes :
+
+```bash
+python manage.py prove_pagination            # visiteur anonyme, tri par pertinence
+python manage.py prove_pagination --user julie.marchand --sort recent
+```
+
+La commande parcourt le catalogue page par page, deux fois, écrit les deux
+relevés d'identifiants et le résultat de leur comparaison dans
+`pagination-proof/`, et sort en code non nul si l'ordre a bougé, si un profil
+apparaît deux fois ou si un profil visible n'a été renvoyé par aucune page.
+Elle passe par `search.search`, donc par le chemin de code que le catalogue
+emprunte réellement.
+
 **Ce que nous ne garantissons pas.** L'isolation d'un parcours pendant que les
 données sont écrites. Un profil modifié pendant qu'un recruteur pagine remonte
 en tête de liste ; un autre profil est mécaniquement repoussé sur la page que
