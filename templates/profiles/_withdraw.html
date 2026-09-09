@@ -1,0 +1,40 @@
+<section class="p-panel">
+    <h2>Visibilité dans le catalogue</h2>
+    <p id="withdrawal-status" class="p-muted"></p>
+    <button id="withdrawal-toggle" type="button" class="p-btn p-danger"></button>
+</section>
+
+<script>
+(() => {
+    const csrftoken = document.querySelector('meta[name="csrf-token"]').content;
+    const statusEl = document.getElementById('withdrawal-status');
+    const btn = document.getElementById('withdrawal-toggle');
+
+    async function refresh() {
+        const res = await fetch('/api/profiles/me/withdrawal/');
+        const data = await res.json();
+        render(data.is_withdrawn);
+    }
+
+    function render(withdrawn) {
+        statusEl.textContent = withdrawn
+            ? "Votre profil n'apparaît plus dans le catalogue ni dans les résultats de recherche."
+            : "Votre profil est visible dans le catalogue.";
+        btn.textContent = withdrawn ? "Réactiver mon profil" : "Retirer mon profil du catalogue";
+        btn.className = withdrawn ? "p-btn p-primary" : "p-btn p-danger";
+    }
+
+    btn.addEventListener('click', async () => {
+        const action = btn.textContent.startsWith("Réactiver") ? "restore" : "withdraw";
+        const res = await fetch('/api/profiles/me/withdrawal/', {
+            method: 'POST',
+            headers: { 'X-CSRFToken': csrftoken, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action }),
+        });
+        const data = await res.json();
+        render(data.is_withdrawn);
+    });
+
+    refresh();
+})();
+</script>

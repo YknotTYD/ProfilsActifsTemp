@@ -72,6 +72,8 @@ class ProfessionalProfile(models.Model):
     created_at = models.DateTimeField(auto_now_add = True)
     updated_at = models.DateTimeField(auto_now = True)
 
+    withdrawn_at = models.DateTimeField(null = True, blank = True)
+
     class Meta:
         # Deux colonnes, jamais une seule : `updated_at` seul laisse l'ordre des
         # ex-aequo au moteur de base de donnees, et deux appels successifs a la
@@ -153,6 +155,10 @@ class ProfessionalProfile(models.Model):
     @property
     def searchable(self) -> bool:
         return self.search_settings().searchable
+
+    @property
+    def is_withdrawn(self) -> bool:
+        return self.withdrawn_at is not None
 
     def recompute_experience(self, *, save: bool = True) -> int:
         """Recalcule la duree totale d'experience a partir des experiences.

@@ -27,10 +27,13 @@ def _login_required(request):
     return None if request.user.is_authenticated else redirect("/login/")
 
 def profile_page(request, username):
+
     """Page publique d'un profil : `/profile/<username>/`."""
+
     profile = services.profile_by_username(username)
-    if profile is None or not can_view_profile(request.user, profile):
-        raise Http404
+
+    if profile is None or not can_view_profile(request.user, profile): # TODO: or profile.is_withdrawn
+        return render(request, "404.html", status = 404)
 
     viewer  = _viewer(request, profile)
     payload = serializers.public_profile(profile, viewer)

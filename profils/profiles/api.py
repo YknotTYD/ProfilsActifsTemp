@@ -490,3 +490,19 @@ def me_video_file_upload(request):
         description=request.POST.get("description", ""),
     )
     return ok(serializers.video(video, include_moderation=True), status=201)
+
+@api(("GET", "POST"))
+def me_withdrawal(request):
+    """Retrait/reactivation du catalogue, a la main du candidat (RGPD art. 21)."""
+    profile = _me(request)
+
+    if request.method == "POST":
+        action = body(request).get("action")
+        if action == "withdraw":
+            services.withdraw_profile(profile)
+        elif action == "restore":
+            services.restore_profile(profile)
+        else:
+            raise BadRequest("action invalide", "invalid_field")
+
+    return ok({"is_withdrawn": profile.is_withdrawn})
