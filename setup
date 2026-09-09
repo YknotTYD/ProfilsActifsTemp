@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-NAME='profilsactifs'
+NAME='competences_plus'
 
 if [ "$1" = "install" ]; then
     apt-get update
