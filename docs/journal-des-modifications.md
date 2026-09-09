@@ -13,7 +13,7 @@
 | **I‑3** | Retour à une grille de profils paginée, 20 par page, lecture sur clic |
 | **I‑4** | « Permis de travailler » → badge de certification |
 | **I‑5** | Questionnaire ramené à 20 questions, progression sauvegardée, non‑prérequis |
-| **I‑6** | Nom de travail du Ministre retiré partout ; le service s'appelle ProfilsActifs |
+| **I‑6** | Nom de travail du Ministre retiré partout ; le service s'appelle Compétences+ |
 | **I‑B** | Bandeau permanent dans l'espace candidat |
 
 ## Lundi 7 septembre 2026
@@ -41,7 +41,7 @@
 |---|---|
 | Retrait du champ `likes` du schéma `VideoStats` de la spécification OpenAPI. L'API ne le renvoyait plus ; la documentation le promettait encore (`swagger.yaml`) | I‑2 |
 | Retrait de la référence à un réseau social tiers dans la documentation de l'app profils, remplacée par la description du dispositif réellement en place (`profils/profiles/README.md`) | I‑6 |
-| Nom du paquet, description et URLs alignés sur ProfilsActifs ; suppression du suffixe de travail hérité de l'amorçage (`package.json`) | I‑6 |
+| Nom du paquet, description et URLs alignés sur Compétences+ ; suppression du suffixe de travail hérité de l'amorçage (`package.json`) | I‑6 |
 | Accroche du dépôt réécrite : le service est un outil de valorisation des compétences, pas un réseau social ; mention explicite de la non‑utilisation des données pour des droits ou allocations (`README.md`) | I‑1, I‑6 |
 | Branche de travail portant le nom d'un réseau social tiers renommée `feature/recruiter-profile-grid`. **Aucune branche n'est supprimée**, l'historique est conservé | I‑6 |
 | Suppression d'un répertoire de commandes en double (`profils/mainapp/managment/`, faute de frappe), code mort contenant une ancienne version du jeu de données de démonstration avec les réactions. Reste dans l'historique git | I‑2, I‑6 |
@@ -68,7 +68,7 @@ jeu de données ou un fichier de traduction :
 | `docs/certification-20-questions.md` | 2 | La note qui écrit que le badge n'ouvre aucun droit, et le critère qui exclut toute référence à un parcours d'indemnisation |
 | `README.md` | 1 | L'accroche qui énonce la non‑utilisation des données pour des droits ou allocations |
 | `templates/partials/_navbar.html` | 1 | Le bandeau lui‑même, texte validé |
-| `ProfilsActifsDiagram.png` | 1 | Faux positif : octets binaires d'une image |
+| `Compétences+Diagram.png` | 1 | Faux positif : octets binaires d'une image |
 
 Les neuf occurrences documentaires disent toutes la même chose — que ce lien
 n'existe pas. C'est le seul emploi restant de ce vocabulaire.

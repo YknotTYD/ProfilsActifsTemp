@@ -1,2 +1,2 @@
 def main() -> None:
-    print("Hello from profilsactifs!")
+    print("Hello from Compétences+!")
