@@ -21,7 +21,7 @@ from .http       import BadRequest
 from .models     import ProfileVideo
 from .permissions import ProfileAccessDenied
 from .search     import ProfileQuery
-from .visibility import can_view_profile
+from .visibility import can_view_profile, audience_of
 
 def _login_required(request):
     return None if request.user.is_authenticated else redirect("/login/")
@@ -32,8 +32,11 @@ def profile_page(request, username):
 
     profile = services.profile_by_username(username)
 
-    if profile is None or not can_view_profile(request.user, profile): # TODO: or profile.is_withdrawn
+    if profile is None or not can_view_profile(request.user, profile): # TODO: 
         return render(request, "404.html", status = 404)
+
+    if profile.is_withdrawn and audience_of(request.user, profile) != c.AUDIENCE_OWNER:
+        return render(request, "profiles/withdrawn.html", status = 404)
 
     viewer  = _viewer(request, profile)
     payload = serializers.public_profile(profile, viewer)
