@@ -347,6 +347,19 @@ def rejection_history_days() -> int:
     from django.conf import settings
     return int(getattr(settings, "REJECTION_HISTORY_DAYS", REJECTION_HISTORY_DAYS))
 
+
+# --------------------------------------------------------------------------- #
+# Journal de consultation (RGPD art. 15)
+# --------------------------------------------------------------------------- #
+
+#: libelle affiche quand un compte recruteur n'a pas renseigne son organisation.
+CONSULTATION_UNKNOWN_ORGANISATION = "Organisation non renseignee"
+
+#: deux consultations du meme profil par la meme organisation dans cette
+#: fenetre ne comptent que pour une. Une actualisation de page n'est pas une
+#: nouvelle consultation. Choix d'implementation, assume comme tel.
+CONSULTATION_DEDUP_MINUTES = 30
+
 VIDEO_SOURCE_LINK = "LINK"
 VIDEO_SOURCE_FILE = "FILE"
 

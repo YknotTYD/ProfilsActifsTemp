@@ -7,6 +7,7 @@ from .models                    import Role, VideoLink, VideoFile
 from django.utils               import timezone
 from . import constants
 from django.db import connections
+from django.db.models import Q
 from django.db.utils import OperationalError
 from profils.profiles           import constants as pc
 from profils.profiles.feed      import playback
@@ -43,6 +44,10 @@ def get_video_filepaths(request: HttpRequest) -> list[dict]:
     files = (
         VideoFile.objects
             .select_related("user", "user__professional_profile")
+            # retrait du catalogue (RGPD art. 21) : la grille recruteur est une
+            # liste filtree comme une autre, un profil retire n'y figure plus.
+            .filter(Q(user__professional_profile__isnull = True)
+                    | Q(user__professional_profile__withdrawn_at__isnull = True))
             .order_by("-id")
     )
 
@@ -77,6 +82,10 @@ def get_videos(request: HttpRequest) -> list[dict]:
     videos = list(
         VideoLink.objects
             .select_related("user", "user__professional_profile")
+            # retrait du catalogue (RGPD art. 21) : un profil retire ne figure
+            # plus dans la grille recruteur.
+            .filter(Q(user__professional_profile__isnull = True)
+                    | Q(user__professional_profile__withdrawn_at__isnull = True))
             .order_by("-id")
     )
 
@@ -168,6 +177,8 @@ def register(request: HttpRequest) -> HttpResponse:
         "error": request.GET.get("error"),
         "username": request.GET.get("username", ""),
         "birth_date": request.GET.get("birth_date", ""),
+        "is_recruiter": request.GET.get("is_recruiter", "0"),
+        "organisation": request.GET.get("organisation", ""),
         "max_birth_date": max_birth_date,
     })
 

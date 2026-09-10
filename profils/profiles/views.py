@@ -21,7 +21,7 @@ from .http       import BadRequest
 from .models     import ProfileVideo
 from .permissions import ProfileAccessDenied
 from .search     import ProfileQuery
-from .visibility import can_view_profile, audience_of
+from .visibility import can_view_profile
 
 def _login_required(request):
     return None if request.user.is_authenticated else redirect("/login/")
@@ -33,11 +33,13 @@ def profile_page(request, username):
 
     profile = services.profile_by_username(username)
 
-    if profile is None or not can_view_profile(request.user, profile): # TODO:
+    # Meme reponse dans les trois cas -- nom inexistant, profil prive, profil
+    # retire du catalogue (RGPD art. 21) : la page 404 neutre, sans nom ni
+    # date. `can_view_profile` porte deja la regle du retrait.
+    if profile is None or not can_view_profile(request.user, profile):
         return render(request, "404.html", status = 404)
 
-    if profile.is_withdrawn and audience_of(request.user, profile) != c.AUDIENCE_OWNER:
-        return render(request, "profiles/withdrawn.html", status = 404)
+    _record_consultation(request, profile)
 
     viewer  = _viewer(request, profile)
     payload = serializers.public_profile(profile, viewer)
@@ -184,6 +186,38 @@ def my_video_page(request):
         "current": current,
         "pending": pending,
     })
+
+def _record_consultation(request, profile):
+    """Journalise la consultation (RGPD art. 15), sans jamais faire echouer la page.
+
+    Un journal de transparence ne doit pas pouvoir empecher quelqu'un de
+    consulter un profil : si l'ecriture echoue, la page se rend quand meme. La
+    previsualisation par le proprietaire n'est pas une consultation.
+    """
+    if request.GET.get("preview"):
+        return
+    try:
+        services.record_consultation(profile, request.user)
+    except Exception:                       # pragma: no cover - defensif
+        pass
+
+
+def my_consultations_page(request):
+    """Journal de consultation de mon profil : `/profiles/me/consultations/`.
+
+    Droit d'acces (RGPD art. 15) : la personne voit quelle organisation a
+    consulte son profil et quand. Visible d'elle seule -- la vue lit toujours
+    le profil de l'utilisateur connecte, jamais un identifiant du client.
+    """
+    if response := _login_required(request):
+        return response
+
+    profile = services.get_profile(request.user)
+    return render(request, "profiles/consultations.html", {
+        "consultations": profile.consultations.all()[:200],
+        "total":         profile.consultations.count(),
+    })
+
 
 def my_profile_redirect(request):
     """`/profile/` renvoie l'utilisateur vers sa propre page.
