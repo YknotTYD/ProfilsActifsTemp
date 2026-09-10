@@ -1,8 +1,29 @@
 // Barre de navigation : menus déroulants + centre de notifications.
 (() => {
-  const menus = Array.from(document.querySelectorAll('.topbar-menu'));
-  if (menus.length === 0) return;
+  // --- Menu hamburger (petits ecrans) ----------------------------------
+  const burger = document.getElementById('topbar-burger');
+  const navLinks = document.getElementById('topbar-nav');
 
+  function setNav(open) {
+    if (!burger || !navLinks) return;
+    navLinks.classList.toggle('is-open', open);
+    burger.setAttribute('aria-expanded', String(open));
+    burger.setAttribute('aria-label', open ? 'Fermer le menu' : 'Ouvrir le menu');
+  }
+
+  if (burger && navLinks) {
+    burger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const opening = !navLinks.classList.contains('is-open');
+      closeAll(null);
+      setNav(opening);
+    });
+    // un lien choisi referme le panneau (la page suivante le rouvrirait sinon
+    // le temps de la navigation).
+    navLinks.addEventListener('click', () => setNav(false));
+  }
+
+  const menus = Array.from(document.querySelectorAll('.topbar-menu'));
   const toggles = menus.map((menu) => ({
     menu,
     btn: menu.querySelector('.topbar-menu-btn'),
@@ -42,46 +63,23 @@
 
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
-      if (panel.hidden) openPanel(entry);
-      else closeAll(null);
-    });
-
-    btn.addEventListener('keydown', (e) => {
-      if (panel.hidden && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
-        e.preventDefault();
-        openPanel(entry);
-      }
-    });
-
-    // Fleches / Debut / Fin pour parcourir les entrees, Tab referme le menu.
-    panel.addEventListener('keydown', (e) => {
-      const items = focusables(panel);
-      if (!items.length) return;
-      const i = items.indexOf(document.activeElement);
-      if (e.key === 'ArrowDown') {
-        e.preventDefault();
-        items[(i + 1) % items.length].focus();
-      } else if (e.key === 'ArrowUp') {
-        e.preventDefault();
-        items[(i - 1 + items.length) % items.length].focus();
-      } else if (e.key === 'Home') {
-        e.preventDefault();
-        items[0].focus();
-      } else if (e.key === 'End') {
-        e.preventDefault();
-        items[items.length - 1].focus();
-      } else if (e.key === 'Tab') {
-        closeAll(null);
-      }
+      const opening = panel.hidden;
+      setNav(false);
+      closeAll(opening ? panel : null);
+      panel.hidden = !opening;
+      btn.setAttribute('aria-expanded', String(opening));
+      if (opening && menu.dataset.menu === 'notif') openNotifications();
     });
   });
 
-  document.addEventListener('click', (e) => {
-    if (e.target.closest('.topbar-menu')) return;
+  document.addEventListener('click', () => {
     closeAll(null);
+    setNav(false);
   });
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') closeAll(null, true);
+    if (e.key !== 'Escape') return;
+    closeAll(null);
+    setNav(false);
   });
 
   // --- Centre de notifications -----------------------------------------

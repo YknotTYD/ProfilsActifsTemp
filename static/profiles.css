@@ -211,7 +211,15 @@ a:hover { color: var(--blue-mid); }
 
 .p-hero-actions {
     grid-column: 1 / -1; display: flex; gap: .5rem; flex-wrap: wrap;
+    align-items: center;
     margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--line);
+}
+
+/* Note d'accompagnement d'une action : elle prend toute la largeur pour
+   passer sous la rangee, sans jamais peser sur la hauteur des boutons. */
+.p-hero-note {
+    flex: 1 0 100%; margin: 0;
+    font-size: .82rem; line-height: 1.4; color: var(--muted);
 }
 
 /* --------------------------------------------------------------------- */
