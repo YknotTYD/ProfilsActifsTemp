@@ -1,0 +1,38 @@
+{% load static %}
+{% comment %}
+Metadonnees de tete : partage (og:*), description, icones.
+
+   Une page autonome passe son titre, et au besoin sa description :
+     {% include "partials/_meta.html" with og_title="Connexion - Compétences+" %}
+
+   Une page qui herite d'un gabarit de base surcharge le bloc `meta` :
+     {% block meta %}{% include "partials/_meta.html" with og_title="..." og_description="..." %}{% endblock %}
+
+   Sans argument on retombe sur le nom du service et l'accroche d'accueil :
+   aucune page ne part donc sans titre ni description.
+
+   og:url et og:image sont reconstruits en absolu depuis la requete. Les robots
+   des reseaux sociaux ne resolvent pas les chemins relatifs : une valeur du
+   type « /static/og.png » donne un apercu sans image.
+{% endcomment %}
+{% firstof og_title "Compétences+" as meta_title %}
+{% firstof og_description "Compétences+ identifie et valide les savoir-faire qui font la réussite professionnelle." as meta_description %}
+{% static 'og-competences-plus.png' as meta_image %}
+<meta name="description" content="{{ meta_description }}">
+<meta property="og:type" content="{% firstof og_type 'website' %}">
+<meta property="og:site_name" content="Compétences+">
+<meta property="og:locale" content="fr_FR">
+<meta property="og:title" content="{{ meta_title }}">
+<meta property="og:description" content="{{ meta_description }}">
+{% if request %}<meta property="og:url" content="{{ request.scheme }}://{{ request.get_host }}{{ request.path }}">
+<meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{{ meta_image }}">
+{% else %}<meta property="og:image" content="{{ meta_image }}">
+{% endif %}<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Compétences+">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{{ meta_title }}">
+<meta name="twitter:description" content="{{ meta_description }}">
+<link rel="icon" href="{% static 'favicon.svg' %}" type="image/svg+xml">
+<link rel="icon" href="{% static 'favicon-32.png' %}" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="{% static 'apple-touch-icon.png' %}">

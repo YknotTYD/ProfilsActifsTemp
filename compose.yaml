@@ -1,6 +1,6 @@
 services:
   web:
-    container_name: profilsactifs
+    container_name: competences-plus
     build: .
     volumes:
       - ./db.sqlite3:/app/db.sqlite3

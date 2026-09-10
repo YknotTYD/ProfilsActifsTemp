@@ -1,6 +1,6 @@
 ---
 name: Feature request
-about: Suggest an idea to improve profilsactifs
+about: Suggest an idea to improve Compétences+
 title: "[Feature Request] - FEATURE_TITLE"
 labels: "new feature"
 assignees: profilsactifs

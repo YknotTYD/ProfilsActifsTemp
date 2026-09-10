@@ -1,6 +1,10 @@
 {% extends "profiles/base.html" %}
 {% load profile_extras %}
 {% block title %}{{ p.profile.full_name }}{% endblock %}
+{% comment %}Un profil est la page la plus partagee du site : son apercu porte
+le nom du candidat et son accroche, pas le libelle generique du service.
+{% endcomment %}
+{% block meta %}{% firstof p.profile.headline p.profile.professional_field_label "Profil professionnel et savoir-faire validés sur Compétences+." as profile_desc %}{% include "partials/_meta.html" with og_title=p.profile.full_name|add:" — Compétences+" og_description=profile_desc og_type="profile" %}{% endblock %}
 
 {% block content %}
 

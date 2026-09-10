@@ -98,3 +98,35 @@ recalculer** ; sur un jeu de démonstration régénéré : 19, 17, 19, 25, **0
 épreuve ne dépasse le plafond).
 
 
+
+## Jeudi 10 septembre 2026 — le service prend le nom « Compétences+ »
+
+Le journal conserve les occurrences de l'ancien nom qui le précèdent : elles
+décrivent l'état d'alors, les réécrire effacerait la trace du changement.
+
+| Modification |
+|---|
+| Nom affiché remplacé sur toutes les pages : barre de navigation, pied de page, accueil, connexion, inscription, quiz, CGU, gabarits profils et questionnaires, pages d'erreur 400 / 403 / 404 / 500 (`templates/`) |
+| Adresse de contact alignée sur le nouveau nom (`templates/cgu.html`, `partials/_footer.html`) |
+| Mot-symbole « Compétences+ » : « Compétences » composé dans la Poppins déjà auto-hébergée par le site puis **converti en courbes**, le SVG ne dépendant ainsi d'aucune police installée. Le « + » n'est pas le glyphe de la police mais une croix géométrique dessinée, terminaisons arrondies, graisse un cran au-dessus des fûts, pour se lire comme un accent (`static/brand/logotype.svg`) |
+| Déclinaison monochrome à une seule encre, pilotable par `currentColor` (`static/brand/logotype-mono.svg`) |
+| Symbole carré : la croix est **évidée** dans la tuile plutôt que peinte en blanc. Le symbole reste donc lisible sur n'importe quel fond et supporte l'aplat monochrome de la barre de navigation (`static/brand/mark.svg`, `mark-mono.svg`, `static/logo.svg`) |
+| Favicon SVG, plus gras et coins moins ronds pour tenir à 16 px, avec ses déclinaisons matricielles ; l'icône iOS est à fond perdu, sans coins arrondis, le système appliquant son propre masque (`static/favicon.svg`, `favicon-32.png`, `apple-touch-icon.png`) |
+| Dans l'interface le mot-symbole reste du **texte** et non une image : « Compétences » suivi d'un `+` accentué en CSS — jaune sur la barre bleue, orange sur fond clair. Le nom reste sélectionnable, lisible par un lecteur d'écran et net à toute taille (`templates/partials/_navbar.html`, `_footer.html`, `static/src/input.css`) |
+| L'ancienne icône générique disparaît de la barre de navigation ; le salut au survol passe de l'image au « + » (`static/src/input.css`) |
+| Carte de partage 1200 × 630 : mot-symbole blanc sur le bleu de marque, « + » dans le jaune d'action, accroche du site (`static/og-competences-plus.png`) |
+| Métadonnées `og:*`, `twitter:*` et `description` regroupées dans un seul partiel, inclus par tous les gabarits qui portent un `<head>`. Aucune page ne part sans titre ni description : à défaut d'argument, on retombe sur le nom du service et l'accroche d'accueil (`templates/partials/_meta.html`) |
+| `og:url` et `og:image` reconstruits **en absolu** depuis la requête : les robots des réseaux sociaux ne résolvent pas les chemins relatifs, un `/static/og.png` donnerait un aperçu sans image (`templates/partials/_meta.html`) |
+| Bloc `meta` surchargeable dans les gabarits de base, et surcharge effective sur les trois pages réellement partageables : la fiche candidat porte le nom et l'accroche de la personne (`og:type` `profile`), la recherche et le catalogue leur propre libellé. Les pages authentifiées gardent le repli du service (`templates/profiles/base.html`, `profile.html`, `search.html`, `questionnaires/base.html`, `catalog.html`) |
+| Nom et description du paquet npm mis à jour ; les URLs `repository`, `bugs` et `homepage` sont laissées telles quelles, elles pointent le dépôt GitHub qui n'est pas renommé (`package.json`) |
+| Paquet Python renommé `competences-plus`, module `src/competences_plus/`, point d'entrée et description suivis. Le nom est repris dans `uv.lock` pour que le `uv sync --frozen` de l'image Docker continue de passer (`pyproject.toml`, `uv.lock`, `src/`) |
+| Nom du conteneur, du script de lancement et de l'artefact de compilation alignés (`compose.yaml`, `setup`, `.github/workflows/build.yml`) |
+| Titre du contrat OpenAPI, accroche du dépôt et documentation d'architecture (`swagger.yaml`, `README.md`, `docs/architecture.md`) |
+
+**Occurrences volontairement conservées** : les URLs GitHub (`package.json`,
+`.github/workflows/mirror.yml`) et les `assignees:` des gabarits d'issues, qui
+sont des identifiants de comptes et de dépôts, non des libellés d'interface ;
+et `ProfilsActifsDiagram.png`, dont l'image elle-même porte l'ancien nom et
+demande d'être régénérée avant d'être renommée.
+
+**Suite de tests** — 618 tests, aucun échec.

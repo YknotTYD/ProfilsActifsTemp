@@ -1,7 +1,7 @@
 [project]
-name = "profilsactifs"
+name = "competences-plus"
 version = "0.1.0"
-description = "Add your description here"
+description = "Compétences+ — outil de valorisation des compétences mettant en relation candidats et recruteurs"
 readme = "README.md"
 authors = [
     { email = "pierre.maciejewski@epitech.eu" }
@@ -16,7 +16,7 @@ dependencies = [
 ]
 
 [project.scripts]
-profilsactifs = "profilsactifs:main"
+competences-plus = "competences_plus:main"
 
 [build-system]
 requires = ["uv_build>=0.12.7,<0.13.0"]

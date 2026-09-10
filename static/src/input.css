@@ -178,8 +178,21 @@
   .topbar-brand:active {
     @apply text-white no-underline;
   }
-  .topbar-brand img {
-    filter: brightness(0) invert(1);
+
+  /* Le mot-symbole. « Competences » est compose dans la Poppins du site et le
+     « + » est traite comme un accent : un cran plus grand, pose sur la ligne
+     de base, dans la couleur d'action -- le jaune sur la barre bleue, l'orange
+     sur fond clair. Les fichiers de la marque (logotype, declinaison
+     monochrome, symbole carre) sont dans `static/brand/`. */
+  .brand-plus {
+    @apply text-secondary;
+    display: inline-block;
+    margin-left: 0.05em;
+    font-size: 1.15em;
+    line-height: 1;
+  }
+  .topbar-brand .brand-plus {
+    @apply text-cta;
   }
   .topbar-links {
     @apply flex flex-wrap items-center gap-x-1 gap-y-1;
@@ -812,11 +825,11 @@
   /* (le gabarit ne porte en ligne que le strict necessaire a la lecture) */
   /* ------------------------------------------------------------------ */
 
-  /* Le logo salue au passage. */
-  .topbar-brand img {
+  /* Le « + » salue au passage. */
+  .topbar-brand .brand-plus {
     transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1);
   }
-  .topbar-brand:hover img {
+  .topbar-brand:hover .brand-plus {
     animation: wiggle 0.6s ease-in-out;
   }
 

@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Profils{% endblock %} — ProfilsActifs</title>
+    <title>{% block title %}Profils{% endblock %} — Compétences+</title>
+    {% block meta %}{% include "partials/_meta.html" %}{% endblock %}
     <link rel="stylesheet" href="{% vstatic 'style.css' %}">
     <link rel="stylesheet" href="{% vstatic 'profiles.css' %}">
     <link rel="stylesheet" href="{% vstatic 'certifications.css' %}">

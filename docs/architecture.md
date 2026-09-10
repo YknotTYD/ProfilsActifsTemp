@@ -13,7 +13,7 @@ documents plus ciblés :
 
 ## 1. En une phrase
 
-**ProfilsActifs** est un réseau social de mise en relation entre demandeurs
+**Compétences+** est un réseau social de mise en relation entre demandeurs
 d'emploi et recruteurs : un candidat publie une vidéo de présentation et un
 profil professionnel structuré, un recruteur le trouve par la recherche ou la
 grille de profils, le contacte par messagerie, et des questionnaires versionnés

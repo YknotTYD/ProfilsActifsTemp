@@ -5,7 +5,8 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Connexion - ProfilsActifs</title>
+    <title>Connexion - Compétences+</title>
+    {% include "partials/_meta.html" with og_title="Connexion - Compétences+" %}
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link
       href="https://fonts.googleapis.com/css2?family=Spectral:wght@400;500;600;700&family=Spectral:ital@1&display=swap"
@@ -17,7 +18,7 @@
     {% include "partials/_navbar.html" %}
     <div class="auth-page">
       <div class="card">
-        <h1 class="card-title">Connexion à ProfilsActifs</h1>
+        <h1 class="card-title">Connexion à Compétences+</h1>
         <form method="post" action="/api/login/" class="grid gap-[14px]">
           {% csrf_token %}
           <div class="field">
