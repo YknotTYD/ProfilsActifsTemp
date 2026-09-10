@@ -31,6 +31,7 @@ from .models import (
     WorkExperienceSkill,
 )
 from .skills import resolve_skill, resolve_skill_reference
+from django.utils import timezone
 
 def _text(payload, key, *, maximum: int = 255, required: bool = False, default = "") -> str:
     if key not in payload or payload[key] is None:
@@ -739,3 +740,15 @@ def submit_video_file(profile, file, title, description=""):
     moderation.transition_video(video, c.VIDEO_PROCESSING, actor=c.ACTOR_OWNER, user=profile.user)
     process_video_file(video)
     return video
+
+def withdraw_profile(profile: ProfessionalProfile) -> ProfessionalProfile:
+    if profile.withdrawn_at is None:
+        profile.withdrawn_at = timezone.now()
+        profile.save(update_fields = ["withdrawn_at"])
+    return profile
+
+def restore_profile(profile: ProfessionalProfile) -> ProfessionalProfile:
+    if profile.withdrawn_at is not None:
+        profile.withdrawn_at = None
+        profile.save(update_fields = ["withdrawn_at"])
+    return profile

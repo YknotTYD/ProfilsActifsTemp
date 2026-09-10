@@ -9,12 +9,12 @@ from django.urls import path
 from . import api, views
 
 urlpatterns = [
-    path("profiles/",              views.search_page,        name = "p_search"),
-    path("profiles/edit/",         views.editor_page,        name = "p_editor"),
-    path("profiles/me/video/",     views.my_video_page,      name = "p_my_video"),
-    path("profile/",               views.my_profile_redirect, name = "p_me"),
-    path("profile/<str:username>/", views.profile_page,      name = "p_profile"),
-    path("profiles/admin/videos/", views.admin_videos_page,  name = "p_admin_videos"),
+    path("profiles/",               views.search_page,         name = "p_search"),
+    path("profiles/edit/",          views.editor_page,         name = "p_editor"),
+    path("profiles/me/video/",      views.my_video_page,       name = "p_my_video"),
+    path("profile/",                views.my_profile_redirect, name = "p_me"),
+    path("profile/<str:username>/", views.profile_page,        name = "p_profile"),
+    path("profiles/admin/videos/",  views.admin_videos_page,   name = "p_admin_videos"),
 
     path("api/profiles/meta/",   api.meta),
     path("api/skills/",          api.skills),
@@ -22,9 +22,10 @@ urlpatterns = [
 
     path("api/profiles/search/", api.search),
 
-    path("api/profiles/me/",          api.me),
-    path("api/profiles/me/privacy/",  api.me_privacy),
-    path("api/profiles/me/links/",    api.me_links),
+    path("api/profiles/me/",            api.me),
+    path("api/profiles/me/privacy/",    api.me_privacy),
+    path("api/profiles/me/links/",      api.me_links),
+    path("api/profiles/me/withdrawal/", api.me_withdrawal),
 
     path("api/profiles/me/skills/",                  api.me_skills),
     path("api/profiles/me/skills/reorder/",          api.me_skills_reorder),

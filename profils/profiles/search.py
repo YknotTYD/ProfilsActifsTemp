@@ -239,12 +239,14 @@ def base_queryset(viewer):
 
     return (
         ProfessionalProfile.objects
-        .filter(search_config__searchable = True, visibility__in = allowed)
-        .exclude(
+        .filter(
+            search_config__searchable = True,
+            visibility__in = allowed,
+            withdrawn_at__isnull = True
+        ).exclude(
             Q(user__is_staff = True) | Q(user__is_superuser = True)
             | Q(user__role__role__in = ("Recruiter", "Admin"))
-        )
-        .select_related("user", "search_config", "visibility_config")
+        ).select_related("user", "search_config", "visibility_config")
     )
 
 def apply_filters(queryset, query: ProfileQuery):
