@@ -113,6 +113,8 @@ def register(request: HttpRequest) -> HttpResponse:
         "error": request.GET.get("error"),
         "username": request.GET.get("username", ""),
         "birth_date": request.GET.get("birth_date", ""),
+        "is_recruiter": request.GET.get("is_recruiter", "0"),
+        "organisation": request.GET.get("organisation", ""),
         "max_birth_date": max_birth_date,
     })
 

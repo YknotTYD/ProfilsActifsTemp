@@ -1,0 +1,44 @@
+{% extends "profiles/base.html" %}
+{% block title %}Qui a consulte mon profil{% endblock %}
+
+{% comment %}
+Droit d'acces (RGPD art. 15). Page visible du seul proprietaire : la vue lit
+toujours le profil de l'utilisateur connecte.
+{% endcomment %}
+
+{% block content %}
+<div class="p-pagehead">
+    <h1>Qui a consulté mon profil</h1>
+    <p class="p-muted">Les consultations de votre profil par un compte recruteur, de la plus
+       récente à la plus ancienne. Vous êtes seul à voir cette page.</p>
+</div>
+
+<div class="p-callout">
+    <p><strong>Ce qui est enregistré :</strong> l'organisation et la date. Jamais le nom de la
+       personne qui consulte, ni son adresse IP, ni sa localisation.</p>
+    <p class="mt-2"><strong>Ce qui ne l'est pas :</strong> les consultations par des visiteurs non
+       connectés. Cette liste n'est donc pas un décompte exhaustif des visites de votre profil.</p>
+</div>
+
+{% if consultations %}
+<section class="p-panel">
+    <h2>Consultations <span class="p-count">{{ total }}</span></h2>
+    <ul class="p-consultations">
+        {% for row in consultations %}
+        <li>
+            <span class="p-consult-org">{{ row.organisation }}</span>
+            <span class="p-consult-date">{{ row.created_at|date:"j F Y" }} à {{ row.created_at|date:"H\hi" }}</span>
+        </li>
+        {% endfor %}
+    </ul>
+    {% if total > consultations|length %}
+    <p class="p-muted mt-3">Seules les {{ consultations|length }} consultations les plus récentes
+       sont affichées.</p>
+    {% endif %}
+</section>
+{% else %}
+<section class="p-panel">
+    <p class="p-empty">Aucun compte recruteur n'a encore consulté votre profil.</p>
+</section>
+{% endif %}
+{% endblock %}

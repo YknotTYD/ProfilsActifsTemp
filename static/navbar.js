@@ -59,6 +59,20 @@
     }
   }
 
+  const escape = (s) =>
+    String(s).replace(/[&<>"']/g, (ch) => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+    }[ch]));
+
+  function notifLabel(n) {
+    // Consultation de profil : on complete avec l'organisation (jamais la
+    // personne), portee dans le payload par le serveur.
+    if (n.type === 'PROFILE_CONSULTED' && n.payload && n.payload.organisation) {
+      return `${n.label} par ${escape(n.payload.organisation)}`;
+    }
+    return escape(n.label);
+  }
+
   function renderList(notifications) {
     if (!notifications || notifications.length === 0) {
       list.innerHTML = '<li class="notif-empty">Aucune notification pour le moment.</li>';
@@ -68,8 +82,8 @@
       .map(
         (n) => `
         <li>
-          <a href="${n.url || '#'}" class="notif-item ${n.read ? '' : 'is-unread'}" data-id="${n.id}">
-            <span class="notif-item-label">${n.label}</span>
+          <a href="${escape(n.url || '#')}" class="notif-item ${n.read ? '' : 'is-unread'}" data-id="${n.id}">
+            <span class="notif-item-label">${notifLabel(n)}</span>
             <span class="notif-item-date">${new Date(n.created_at).toLocaleString('fr-FR')}</span>
           </a>
         </li>`,

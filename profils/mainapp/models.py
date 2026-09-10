@@ -20,6 +20,12 @@ class Role(models.Model):
     role       = strings_to_choice_char_fields(constants.ROLES)
     birth_date = models.DateField(null = True, blank = True)
 
+    #: organisation d'un compte recruteur. C'est la seule identite reportee
+    #: dans le journal de consultation d'un candidat (RGPD art. 15) : on lui dit
+    #: quelle organisation a consulte son profil, jamais quelle personne
+    #: physique. Facultatif : a defaut, un libelle neutre est affiche.
+    organisation = models.CharField(max_length = 160, blank = True, default = "")
+
     def __str__(self) -> str:
         return self.role
 

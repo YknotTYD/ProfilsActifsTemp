@@ -6,6 +6,15 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Page introuvable — Compétences+</title>
+    {% comment %}
+      Sert aussi de reponse a un profil retire du catalogue ou prive : les
+      metadonnees restent neutres pour que l'apercu du lien en messagerie ne
+      revele ni nom ni inscription.
+    {% endcomment %}
+    <meta name="robots" content="noindex" />
+    <meta property="og:title" content="Page introuvable — Compétences+" />
+    <meta property="og:description" content="Cette page n'existe pas, ou plus." />
+    <meta name="description" content="Cette page n'existe pas, ou plus." />
     <link rel="stylesheet" href="{% vstatic 'style.css' %}" />
   <link rel="icon" type="image/x-icon" href="{% vstatic 'logo.svg' %}">
 </head>

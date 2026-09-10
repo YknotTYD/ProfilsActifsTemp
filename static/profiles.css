@@ -526,6 +526,16 @@ select { cursor: pointer; }
 }
 .p-callout.warn { background: var(--ocre-pale); border-color: var(--ocre-line); border-left-color: var(--ocre); }
 
+/* Journal de consultation (RGPD art. 15). */
+.p-consultations { list-style: none; margin: .5rem 0 0; padding: 0; }
+.p-consultations li {
+    display: flex; justify-content: space-between; align-items: baseline; gap: 1rem;
+    padding: .6rem 0; border-bottom: 1px solid var(--line);
+}
+.p-consultations li:last-child { border-bottom: 0; }
+.p-consult-org  { font-family: var(--font-title); font-weight: 600; color: var(--ink); }
+.p-consult-date { font-size: .85rem; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
 /* Editeur de profil : sidebar de navigation + panneau de contenu */
 .p-pagehead { margin-bottom: 1.25rem; }
 .p-pagehead h1 { margin-bottom: .25rem; }
