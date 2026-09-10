@@ -31,11 +31,12 @@ def _visible_video_filter(viewer) -> Q:
     allowed  = [value for value, _ in c.VISIBILITIES if audience >= rank(value)]
 
     return (
-        Q(status__in = c.VISIBLE_VIDEO_STATUSES)
-        & Q(visibility__in = allowed)
-        & Q(profile__visibility__in = allowed)
+          Q(status__in                                        = c.VISIBLE_VIDEO_STATUSES)
+        & Q(visibility__in                                    = allowed)
+        & Q(profile__visibility__in                           = allowed)
         & Q(profile__visibility_config__videos_visibility__in = allowed)
-        & Q(profile__search_config__appear_in_video_feed = True)
+        & Q(profile__search_config__appear_in_video_feed      = True)
+        & Q(profile__withdrawn_at__isnull                     = True)
     )
 
 def video_candidates(query, viewer = None):

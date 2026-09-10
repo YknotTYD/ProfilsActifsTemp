@@ -65,19 +65,13 @@ def get_video_filepaths(request: HttpRequest) -> list[dict]:
 def get_videos(request: HttpRequest) -> list[dict]:
     """Videos des candidats, mises en forme pour la grille recruteur/admin.
 
-    Moderation desactivee temporairement : toutes les videos sont affichees
-    quel que soit leur `status`.
-
-    La forme retournee est documentee en tete de
-    `templates/candidates_grid.html` : le gabarit ne connait ni `VideoLink`,
-    ni `VideoFile`, seulement des cartes de candidat. C'est ce qui permet aux
-    deux sources de cohabiter sans que la presentation ait a les distinguer.
-
-    `video_url` est l'adresse *brute* de la video : elle ne porte aucun
-    parametre de lecture automatique. La grille ne lit que sur clic (point
-    3.4), et c'est le navigateur qui ajoute `autoplay` a ce moment-la
-    (`static/candidates_grid.js`).
+    Lit directement `profiles.ProfileVideo` (pipeline unifie), en reutilisant
+    les regles de visibilite de `feed._visible_video_filter` et la logique de
+    lecture de `feed.playback` -- `dashboard_feed_items` n'existe plus dans
+    `feed.py`, ce module-ci en est desormais le seul point d'assemblage.
     """
+    from profils.profiles.feed import _visible_video_filter, playback
+    from profils.profiles.models import ProfileVideo
 
     videos = list(
         VideoLink.objects
@@ -90,33 +84,28 @@ def get_videos(request: HttpRequest) -> list[dict]:
     )
 
     items = []
-    for vid in videos:
-        mode, url = playback(pc.VIDEO_SOURCE_LINK, vid.url)
+    for video in videos:
+        mode, url = playback(video.source_type, video.file_url, video_id=video.id)
         items.append({
-            "id":         vid.id,
+            "id":         video.id,
             "video_url":  url,
             "video_mode": mode,
-            "poster_url": "",
-            "candidate":  _candidate(vid.user),
+            "poster_url": video.thumbnail_url,
+            "candidate": {
+                "name":        video.profile.full_name or video.profile.username,
+                "title":       video.profile.headline,
+                "description": video.profile.summary,
+                "avatar_url":  video.profile.photo_url,
+                "initial":     (video.profile.username or "?")[0].upper(),
+                "profile_url": f"/profile/{video.profile.username}/",
+            },
         })
+    return items
 
-    return items + get_video_filepaths(request)
 
 def candidate_grid(request: HttpRequest):
-    """Page courante de la grille de profils (points 3.2 et 3.4).
-
-    Vingt profils par page, choisie par `?page=`. `get_page` absorbe les
-    numeros absurdes -- un `?page=abc` ou un `?page=999` herite d'un vieux
-    lien rend la premiere ou la derniere page, jamais une erreur.
-
-    Les deux sources de videos n'ont pas de colonne d'ordre commune : elles
-    sont donc assemblees en memoire avant d'etre paginees. Le volume reste
-    celui d'une seule liste de videos, et seules les vingt de la page
-    demandee arrivent dans le gabarit.
-    """
-
+    """Page courante de la grille de profils (points 3.2 et 3.4)."""
     paginator = Paginator(get_videos(request), constants.CANDIDATE_GRID_PAGE_SIZE)
-
     return paginator.get_page(request.GET.get("page"))
 
 def _my_video_status(user):
