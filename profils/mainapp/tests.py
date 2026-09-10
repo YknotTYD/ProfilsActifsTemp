@@ -6,8 +6,10 @@ from django.test import Client, TestCase
 from profils.notifications import types as notification_types
 from profils.notifications.models import Notification
 
+from profils.profiles.tests.factories import add_video, make_profile
+
 from . import constants
-from .models import Role, VideoFile, VideoLink
+from .models import Role, VideoLink
 
 class NavbarConsistencyTests(TestCase):
     """La barre de navigation est la meme sur toutes les pages (context
@@ -92,9 +94,14 @@ class CandidateGridTests(TestCase):
         self.client.force_login(self.recruiter)
 
     def _make_videos(self, count):
-        owner = User.objects.create_user("candidat", None, None)
+        """`count` profils, chacun avec une video de presentation publiee.
+
+        La grille lit `profiles.ProfileVideo` via `_visible_video_filter`
+        (pipeline unifie) : un profil public et recherchable, avec une video
+        `PUBLISHED`, est exactement ce qu'elle affiche.
+        """
         for i in range(count):
-            VideoLink.objects.create(user = owner, url = f"https://youtu.be/video{i:03d}")
+            add_video(make_profile(f"candidat{i:03d}"), title = f"Video {i:03d}")
 
     def _cards(self, response):
         return response.content.decode().count("data-cgrid-player")
@@ -128,9 +135,6 @@ class CandidateGridTests(TestCase):
         n'existe qu'apres le clic, construit par `candidates_grid.js`.
         """
         self._make_videos(3)
-        VideoFile.objects.create(
-            user = self.recruiter, file = "videos/presentation.mp4",
-        )
 
         body = self.client.get("/").content.decode()
 
