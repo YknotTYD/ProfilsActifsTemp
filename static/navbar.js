@@ -30,15 +30,37 @@
     panel: menu.querySelector('.topbar-dropdown'),
   }));
 
-  function closeAll(except) {
+  // Elements focusables d'un panneau (RGAA 7.1 / 10.7 : les menus doivent
+  // etre entierement utilisables au clavier).
+  function focusables(panel) {
+    return Array.from(
+      panel.querySelectorAll('a[href], button:not([disabled])'),
+    );
+  }
+
+  // `restoreFocus` : quand on ferme un menu ouvert au clavier (Echap), le
+  // focus doit revenir sur le bouton qui l'a ouvert, jamais se perdre.
+  function closeAll(except, restoreFocus) {
     toggles.forEach(({ btn, panel }) => {
       if (panel === except) return;
+      if (!panel.hidden && restoreFocus) btn.focus();
       panel.hidden = true;
       btn.setAttribute('aria-expanded', 'false');
     });
   }
 
-  toggles.forEach(({ menu, btn, panel }) => {
+  function openPanel(entry) {
+    closeAll(entry.panel);
+    entry.panel.hidden = false;
+    entry.btn.setAttribute('aria-expanded', 'true');
+    if (entry.menu.dataset.menu === 'notif') openNotifications();
+    const items = focusables(entry.panel);
+    if (items.length) items[0].focus();
+  }
+
+  toggles.forEach((entry) => {
+    const { btn, panel } = entry;
+
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
       const opening = panel.hidden;
@@ -101,6 +123,7 @@
   }
 
   function renderList(notifications) {
+    list.setAttribute('aria-busy', 'false');
     if (!notifications || notifications.length === 0) {
       list.innerHTML = '<li class="notif-empty">Aucune notification pour le moment.</li>';
       return;

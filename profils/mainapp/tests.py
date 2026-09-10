@@ -154,3 +154,32 @@ class CandidateGridTests(TestCase):
         body = self.client.get("/").content.decode()
         self.assertNotIn("cgrid-list", body)
         self.assertIn("Aucune vidéo pour le moment", body)
+
+
+class AccessibilityTests(TestCase):
+    """Points RGAA structurels : lien d'evitement, landmark principal,
+    declaration d'accessibilite liee depuis le pied de page."""
+
+    PAGES = ("/", "/login/", "/register/", "/cgu/", "/accessibilite/")
+
+    def test_every_page_carries_a_skip_link_to_the_main_landmark(self):
+        for path in self.PAGES:
+            body = self.client.get(path).content.decode()
+            self.assertIn('class="skip-link" href="#main-content"', body, path)
+            self.assertIn('id="main-content"', body, path)
+
+    def test_authenticated_pages_also_carry_the_main_landmark(self):
+        user = User.objects.create_user("js", None, None)
+        Role.objects.create(user = user, role = "JobSeeker")
+        client = Client(); client.force_login(user)
+        for path in ("/", "/profiles/", "/questionnaires/", "/messages/", "/profile/"):
+            body = client.get(path, follow = True).content.decode()
+            self.assertIn('id="main-content"', body, path)
+
+    def test_accessibility_statement_is_reachable_and_linked_in_the_footer(self):
+        response = self.client.get("/accessibilite/")
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Déclaration d'accessibilité")
+        self.assertContains(response, "RGAA")
+        home = self.client.get("/").content.decode()
+        self.assertIn('href="/accessibilite/"', home)

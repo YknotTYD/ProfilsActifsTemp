@@ -1,0 +1,143 @@
+{% load static %}{% load versioned_static %}
+
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Déclaration d'accessibilité - Compétences+</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Spectral:wght@400;500;600;700&family=Spectral:ital@1&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="{% vstatic 'style.css' %}" />
+    <link rel="icon" type="image/x-icon" href="{% vstatic 'logo.svg' %}" />
+  </head>
+  <body>
+    {% include "partials/_navbar.html" %}
+
+    <main id="main-content" tabindex="-1" class="legal-page">
+      <h1 class="card-title" style="text-align: left; margin-top: 10px">
+        Déclaration d'accessibilité
+      </h1>
+      <p class="text-sm" style="color: #5f5f5f">
+        Établie le {% now "d/m/Y" %}.
+      </p>
+
+      <p>
+        Compétences+ s'engage à rendre son service accessible, conformément à
+        l'article 47 de la loi n° 2005-102 du 11 février 2005.
+      </p>
+      <p>
+        Cette déclaration d'accessibilité s'applique au site
+        <strong>Compétences+</strong>.
+      </p>
+
+      <h2>État de conformité</h2>
+      <p>
+        Compétences+ est <strong>non conforme</strong> avec le Référentiel
+        général d'amélioration de l'accessibilité (RGAA), version 4.1. Le site
+        est un démonstrateur technique&nbsp;: aucun audit de conformité RGAA
+        n'a encore été réalisé. Une première passe de mise en accessibilité a
+        toutefois été effectuée (structure sémantique, lien d'évitement,
+        navigation au clavier, contrastes, prise de focus visible).
+      </p>
+
+      <h2>Résultats des tests</h2>
+      <p>
+        Aucun audit RGAA complet n'a été mené à ce jour. Le taux de conformité
+        global n'est donc pas établi.
+      </p>
+
+      <h2>Contenus non accessibles</h2>
+
+      <h3>Non-conformités</h3>
+      <ul>
+        <li>
+          Les vidéos de présentation déposées par les candidats ne disposent
+          ni de sous-titres, ni de transcription textuelle, ni d'audiodescription
+          (critères RGAA 4.1, 4.3, 4.4). La plomberie technique
+          (balise <code>&lt;track&gt;</code>, lien de transcription) est en
+          place mais les contenus correspondants ne sont pas encore fournis.
+        </li>
+        <li>
+          Les vidéos intégrées depuis des plateformes tierces (YouTube, Vimeo)
+          embarquent l'interface de lecture de ces plateformes, dont
+          l'accessibilité n'est pas maîtrisée par Compétences+.
+        </li>
+        <li>
+          Le site n'a pas fait l'objet d'un test utilisateur avec des
+          technologies d'assistance.
+        </li>
+      </ul>
+
+      <h3>Dérogations pour charge disproportionnée</h3>
+      <p>Néant.</p>
+
+      <h3>Contenus non soumis à l'obligation d'accessibilité</h3>
+      <p>Néant.</p>
+
+      <h2>Établissement de cette déclaration</h2>
+      <p>
+        Cette déclaration a été établie le {% now "d/m/Y" %}. Elle s'appuie sur
+        une évaluation interne non exhaustive.
+      </p>
+      <p>Technologies utilisées pour la réalisation du site&nbsp;:</p>
+      <ul>
+        <li>HTML5</li>
+        <li>CSS3</li>
+        <li>JavaScript</li>
+      </ul>
+      <p>
+        Les vérifications ont été menées avec les navigateurs récents (Firefox,
+        Chromium) et le clavier seul.
+      </p>
+
+      <h2>Retour d'information et contact</h2>
+      <p>
+        Si vous n'arrivez pas à accéder à un contenu ou à un service, vous
+        pouvez nous contacter pour être orienté vers une alternative accessible
+        ou obtenir le contenu sous une autre forme&nbsp;:
+      </p>
+      <ul>
+        <li>
+          Par courriel&nbsp;:
+          <a href="mailto:contact@competences-plus.fr">contact@competences-plus.fr</a>
+        </li>
+      </ul>
+      <p>
+        Nous nous efforçons de répondre dans les meilleurs délais.
+      </p>
+
+      <h2>Voies de recours</h2>
+      <p>
+        Cette procédure est à utiliser dans le cas suivant&nbsp;: vous avez
+        signalé au responsable du site un défaut d'accessibilité qui vous
+        empêche d'accéder à un contenu ou à un service, et vous n'avez pas
+        obtenu de réponse satisfaisante.
+      </p>
+      <ul>
+        <li>
+          Écrire un message au
+          <a href="https://formulaire.defenseurdesdroits.fr/" rel="noopener noreferrer" target="_blank">Défenseur des droits</a>.
+        </li>
+        <li>
+          Contacter le
+          <a href="https://www.defenseurdesdroits.fr/saisir/delegues" rel="noopener noreferrer" target="_blank">délégué du Défenseur des droits</a>
+          de votre région.
+        </li>
+        <li>
+          Envoyer un courrier par la poste (gratuit, sans affranchissement)&nbsp;:
+          Défenseur des droits, Libre réponse 71120, 75342 Paris CEDEX 07.
+        </li>
+      </ul>
+
+      <div class="foot" style="text-align: left; margin-top: 40px">
+        <a href="/">← Retour à l'accueil</a>
+      </div>
+    </main>
+
+    {% include "partials/_footer.html" %}
+  </body>
+</html>

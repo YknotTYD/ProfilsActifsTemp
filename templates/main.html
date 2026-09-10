@@ -19,6 +19,7 @@
   <body>
     {% include "partials/_navbar.html" %}
 
+    <main id="main-content" tabindex="-1">
     {% if user.is_authenticated %}
     <div class="dashboard-page{% if grid.paginator.count %} dashboard-page--wide{% endif %}">
       <div class="dash-hero">
@@ -96,18 +97,40 @@
       </div>
     </div>
 
-    <p class="hero-proof-label text-center">
+    <p class="hero-proof-label text-center" id="temoignages-label">
       Ils recrutent déjà avec Compétences+
     </p>
-    <div class="testimonial-viewport">
-            <div class="testimonial-track">
-        {% include "partials/_testimonials.html" %}{% include "partials/_testimonials.html" %}
+    <div class="testimonial-region" role="group" aria-labelledby="temoignages-label" data-testimonials>
+      <button type="button" class="testimonial-toggle" data-testimonials-toggle aria-pressed="false">
+        Mettre le défilement en pause
+      </button>
+      <div class="testimonial-viewport">
+        <div class="testimonial-track">
+          {% include "partials/_testimonials.html" %}
+          <div aria-hidden="true" class="testimonial-track-clone">{% include "partials/_testimonials.html" %}</div>
+        </div>
       </div>
     </div>
     {% endif %}
+    </main>
 
     {% include "partials/_footer.html" %}
 
     <script src="{% vstatic 'candidates_grid.js' %}"></script>
+    <script>
+      // Bandeau de temoignages : bouton pause/lecture (RGAA 13.8).
+      (() => {
+        const region = document.querySelector('[data-testimonials]');
+        const btn = region && region.querySelector('[data-testimonials-toggle]');
+        if (!btn) return;
+        btn.addEventListener('click', () => {
+          const paused = region.classList.toggle('is-paused');
+          btn.setAttribute('aria-pressed', String(paused));
+          btn.textContent = paused
+            ? 'Relancer le défilement'
+            : 'Mettre le défilement en pause';
+        });
+      })();
+    </script>
   </body>
 </html>

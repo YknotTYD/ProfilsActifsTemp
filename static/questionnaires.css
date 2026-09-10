@@ -12,8 +12,8 @@
     --blue-pale:   #EDF1F7;
     --blue-line:   #C7D3E4;
 
-    --ocre:        #d9631a;   /* = --color-secondary du site */
-    --ocre-text:   #b8530f;   /* = --color-secondary-hover du site */
+    --ocre:        #c15410;   /* aligne sur --color-secondary du site */
+    --ocre-text:   #8f3f08;   /* aligne sur --color-secondary-hover, ~5.5:1 sur --ocre-pale (RGAA 3.2) */
     --ocre-pale:   #FDF1E7;
     --ocre-line:   #F0CBAA;
 
@@ -26,7 +26,7 @@
     --sunk:        #EEF1F5;
     --ink:         #262626;
     --muted:       #5A6577;
-    --faint:       #8792A3;
+    --faint:       #6B7688;
     --line:        #DFE4EC;
     --line-firm:   #C3CCD9;
 
@@ -636,3 +636,19 @@ select { cursor: pointer; }
 .q-question.q-missing > h3 .q-qnum { background: var(--ko-pale); color: var(--ko); }
 
 #q-finish-error { margin: 0; display: flex; gap: .5rem; align-items: center; flex-wrap: wrap; }
+
+/* --------------------------------------------------------------------- */
+/* Accessibilite : prise de focus visible (RGAA 10.7 / 12.13)             */
+/* --------------------------------------------------------------------- */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+summary:focus-visible,
+[tabindex]:focus-visible,
+.q-field:focus-within {
+    outline: 2px solid var(--blue);
+    outline-offset: 2px;
+}
+#main-content:focus { outline: none; }

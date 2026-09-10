@@ -13,7 +13,7 @@
 <body class="q-body">
     {% include "partials/_navbar.html" %}
 
-    <main class="q-main">
+    <main class="q-main" id="main-content" tabindex="-1">
         {% block crumbs %}{% endblock %}
         {% block content %}{% endblock %}
     </main>

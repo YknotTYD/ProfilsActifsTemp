@@ -155,6 +155,9 @@ def quiz(request: HttpRequest) -> HttpResponse:
 def cgu(request: HttpRequest) -> HttpResponse:
     return render(request, "cgu.html")
 
+def accessibilite(request: HttpRequest) -> HttpResponse:
+    return render(request, "accessibilite.html")
+
 def health(request: HttpRequest) -> JsonResponse:
 
     try:

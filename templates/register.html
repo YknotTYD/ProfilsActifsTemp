@@ -16,7 +16,7 @@
 </head>
   <body>
     {% include "partials/_navbar.html" %}
-    <div class="auth-page">
+    <main id="main-content" tabindex="-1" class="auth-page">
       <div class="card">
         <h1 class="card-title">Créer votre compte</h1>
         {% if error %}
@@ -123,7 +123,7 @@
           Vous avez déjà un compte ? <a href="/login/">Se connecter</a>
         </div>
       </div>
-    </div>
+    </main>
     {% include "partials/_footer.html" %}
     <script>
       (() => {
