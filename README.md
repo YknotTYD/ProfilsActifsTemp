@@ -79,11 +79,12 @@ non nul si l'ordre a bouge.
 
 ## Tech Stack
 
-**Front**: React
+**Front** : gabarits Django, Tailwind CSS 4 compilé en CLI, JavaScript vanilla
+(sans framework ni bundler)
 
-**Back**: Django
+**Back** : Django, API JSON maison (sans framework d'API)
 
-**Database**: Sqlite
+**Base de données** : SQLite
 
 
 ## Authors
