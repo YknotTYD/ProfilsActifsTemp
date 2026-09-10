@@ -1,8 +1,8 @@
-<section class="p-panel">
-    <h2>Visibilité dans le catalogue</h2>
-    <p id="withdrawal-status" class="p-muted"></p>
-    <button id="withdrawal-toggle" type="button" class="p-btn p-danger"></button>
-</section>
+{% comment %}Le retrait du catalogue tient dans la rangee d'actions : un
+bouton dont le libelle dit deja l'etat, et une ligne d'explication sous la
+rangee. Une carte avec titre etirerait toute la rangee a sa hauteur.{% endcomment %}
+<button id="withdrawal-toggle" type="button" class="p-btn p-danger"></button>
+<p id="withdrawal-status" class="p-hero-note"></p>
 
 <script>
 (() => {
