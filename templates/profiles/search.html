@@ -56,24 +56,24 @@
                 <input type="checkbox" id="f-available" {% if initial_query.available %}checked{% endif %}>
                 <span>En recherche uniquement</span>
             </label>
-            <div class="p-field">
-                <label class="p-label">Type de contrat</label>
+            <fieldset class="p-field">
+                <legend class="p-label">Type de contrat</legend>
                 {% for option in meta.contract_types %}
                 <label class="p-check">
                     <input type="checkbox" name="contract" value="{{ option.value }}">
                     <span>{{ option.label }}</span>
                 </label>
                 {% endfor %}
-            </div>
-            <div class="p-field">
-                <label class="p-label">Mode de travail</label>
+            </fieldset>
+            <fieldset class="p-field">
+                <legend class="p-label">Mode de travail</legend>
                 {% for option in meta.work_modes %}
                 <label class="p-check">
                     <input type="checkbox" name="work_mode" value="{{ option.value }}">
                     <span>{{ option.label }}</span>
                 </label>
                 {% endfor %}
-            </div>
+            </fieldset>
         </section>
 
         <section class="p-panel">

@@ -3,13 +3,15 @@
 @theme {
   --color-bg: #f5f4f2;
   --color-primary: #1b3a6b;
-  --color-secondary: #d9631a;
-  --color-secondary-hover: #b8530f;
+  /* Contrastes verifies sur fond blanc (RGAA 4.1 / WCAG 2.1 AA, min. 4.5:1
+     pour le texte courant, 3:1 pour les composants et le grand texte). */
+  --color-secondary: #b5510e;
+  --color-secondary-hover: #8f3f08;
   --color-cta: #f6d179;
   --color-cta-hover: #f0c65e;
   --color-text: #262626;
-  --color-link: #2e6ef5;
-  --color-link-hover: #1f52c2;
+  --color-link: #1f52c2;
+  --color-link-hover: #163d92;
 
   --font-title: 'Poppins', 'Helvetica Neue', Arial, sans-serif;
   --font-body: 'Poppins', 'Helvetica Neue', Arial, sans-serif;
@@ -159,6 +161,49 @@
   a:hover {
     @apply text-link-hover underline;
   }
+
+  /* Prise de focus visible sur tout element interactif (RGAA 10.7 / 12.13).
+     `:focus-visible` : l'anneau n'apparait qu'au clavier, pas au clic souris. */
+  :focus-visible {
+    outline: 2px solid var(--color-link);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+  /* Sur le fond bleu nuit de la barre de navigation, l'anneau bleu se perd :
+     on repasse en blanc -- sauf dans les menus deroulants, qui ont un fond
+     blanc et gardent donc l'anneau bleu. */
+  .topbar :focus-visible {
+    outline-color: #fff;
+  }
+  .topbar-dropdown :focus-visible {
+    outline-color: var(--color-link);
+  }
+
+  /* Lien d'evitement (RGAA 12.7) : premier element focusable de la page,
+     masque hors focus, revele au premier `Tab`. */
+  .skip-link {
+    position: absolute;
+    left: 8px;
+    top: -80px;
+    z-index: 200;
+    padding: 10px 18px;
+    background: #fff;
+    color: var(--color-primary);
+    font-family: var(--font-title);
+    font-weight: 700;
+    font-size: 14px;
+    border: 2px solid var(--color-primary);
+    border-radius: 6px;
+    text-decoration: none;
+    transition: top 0.15s ease;
+  }
+  .skip-link:focus {
+    top: 8px;
+  }
+  /* Cible du lien d'evitement : recoit le focus par programme, sans anneau. */
+  #main-content:focus {
+    outline: none;
+  }
 }
 
 @layer components {
@@ -239,7 +284,7 @@
     @apply px-3.5 py-2.5 font-title font-bold text-text text-sm border-b border-[#ececec];
   }
   .topbar-dropdown-tag {
-    @apply block px-3.5 pt-1.5 pb-2 text-[11px] font-title font-bold uppercase tracking-[0.05em] text-[#7a7a7a];
+    @apply block px-3.5 pt-1.5 pb-2 text-[11px] font-title font-bold uppercase tracking-[0.05em] text-[#5f5f5f];
   }
 
   /* Boutons */
@@ -256,7 +301,7 @@
     @apply bg-cta-hover;
   }
   .btn-ghost {
-    @apply bg-transparent border-0 p-0 cursor-pointer font-title font-bold text-sm tracking-[0.04em] text-[#7a7a7a] no-underline;
+    @apply bg-transparent border-0 p-0 cursor-pointer font-title font-bold text-sm tracking-[0.04em] text-[#5f5f5f] no-underline;
   }
   .btn-ghost:hover {
     @apply text-text;
@@ -288,10 +333,10 @@
     @apply w-full border border-[#d9d9d9] rounded px-4 pt-5 pb-2 text-[17px] text-text bg-white font-body focus:outline-none focus:border-2 focus:border-primary focus:px-[15px] focus:pt-[19px] focus:pb-[7px];
   }
   .field-label {
-    @apply pointer-events-none absolute left-4 right-4 top-[15px] truncate text-[17px] text-[#9b9b9b] transition-all duration-[120ms] ease-out peer-focus:-top-2 peer-focus:left-3 peer-focus:right-auto peer-focus:px-[5px] peer-focus:text-xs peer-focus:bg-white peer-focus:text-primary peer-[:not(:placeholder-shown)]:-top-2 peer-[:not(:placeholder-shown)]:left-3 peer-[:not(:placeholder-shown)]:right-auto peer-[:not(:placeholder-shown)]:px-[5px] peer-[:not(:placeholder-shown)]:text-xs peer-[:not(:placeholder-shown)]:bg-white peer-[:not(:placeholder-shown)]:text-primary;
+    @apply pointer-events-none absolute left-4 right-4 top-[15px] truncate text-[17px] text-[#5f5f5f] transition-all duration-[120ms] ease-out peer-focus:-top-2 peer-focus:left-3 peer-focus:right-auto peer-focus:px-[5px] peer-focus:text-xs peer-focus:bg-white peer-focus:text-primary peer-[:not(:placeholder-shown)]:-top-2 peer-[:not(:placeholder-shown)]:left-3 peer-[:not(:placeholder-shown)]:right-auto peer-[:not(:placeholder-shown)]:px-[5px] peer-[:not(:placeholder-shown)]:text-xs peer-[:not(:placeholder-shown)]:bg-white peer-[:not(:placeholder-shown)]:text-primary;
   }
   .field-select-label {
-    @apply block mb-1.5 text-sm text-[#7a7a7a];
+    @apply block mb-1.5 text-sm text-[#5f5f5f];
   }
   .field-select {
     @apply w-full border border-[#d9d9d9] rounded px-4 py-[15px] text-[17px] text-text bg-white font-body focus:outline-none focus:border-2 focus:border-primary;
@@ -329,10 +374,10 @@
     @apply w-auto px-8 py-4;
   }
   .hero-proof-label {
-    @apply mt-16 text-xs sm:text-sm font-title font-extrabold tracking-[0.08em] uppercase text-[#9b9b9b];
+    @apply mt-16 text-xs sm:text-sm font-title font-extrabold tracking-[0.08em] uppercase text-[#5f5f5f];
   }
   .testimonial-viewport {
-    @apply mt-6 w-full overflow-hidden;
+    @apply w-full overflow-hidden;
     mask-image: linear-gradient(
       to right,
       transparent,
@@ -348,11 +393,30 @@
       transparent
     );
   }
+  .testimonial-region {
+    @apply mt-6 flex flex-col items-center gap-2 w-full;
+  }
+  /* Le second jeu de cartes n'existe que pour la boucle visuelle : masque
+     aux technologies d'assistance, mais rendu comme des enfants directs de
+     la piste pour ne pas casser le calcul de translation (-50%). */
+  .testimonial-track-clone {
+    display: contents;
+  }
+  /* Commande de mise en pause (RGAA 13.8 : tout defilement automatique de
+     plus de 5 s doit pouvoir etre arrete). */
+  .testimonial-toggle {
+    @apply inline-flex items-center rounded-full border border-[#d9d9d9] bg-white px-3 py-1.5 text-xs font-title font-bold text-primary cursor-pointer;
+  }
+  .testimonial-toggle:hover {
+    @apply bg-[#f5f4f2];
+  }
   .testimonial-track {
     @apply flex items-start gap-4 w-max py-2;
     animation: testimonial-scroll 60s linear infinite;
   }
-  .testimonial-viewport:hover .testimonial-track {
+  .testimonial-viewport:hover .testimonial-track,
+  .testimonial-viewport:focus-within .testimonial-track,
+  .testimonial-region.is-paused .testimonial-track {
     animation-play-state: paused;
   }
   .testimonial-card {
@@ -436,7 +500,7 @@
     @apply font-title font-extrabold text-lg text-primary mb-1.5;
   }
   .dash-panel-desc {
-    @apply text-sm text-[#7a7a7a] mb-5;
+    @apply text-sm text-[#5f5f5f] mb-5;
   }
   .dash-form {
     @apply grid gap-[14px];
@@ -448,7 +512,7 @@
     @apply text-3xl;
   }
   .dash-empty p {
-    @apply text-sm text-[#7a7a7a] max-w-[36ch];
+    @apply text-sm text-[#5f5f5f] max-w-[36ch];
   }
 
   .dash-foot {
@@ -473,7 +537,7 @@
     @apply flex flex-wrap items-center justify-center sm:justify-end gap-x-6 gap-y-2 text-sm;
   }
   .site-footer-bottom {
-    @apply border-t border-[#ececec] py-5 text-center text-xs text-[#9b9b9b];
+    @apply border-t border-[#ececec] py-5 text-center text-xs text-[#5f5f5f];
   }
   .site-footer-disclaimer {
     @apply border-t border-[#ececec] py-3 text-center text-xs font-bold text-[#9a6700] bg-[#fff7e3];
@@ -486,9 +550,15 @@
   .legal-page h2 {
     @apply mt-8 mb-2 font-title font-extrabold text-primary text-lg;
   }
+  .legal-page h3 {
+    @apply mt-5 mb-1.5 font-title font-bold text-primary text-base;
+  }
   .legal-page p,
   .legal-page li {
     @apply text-[15px] leading-relaxed text-[#4a4a4a];
+  }
+  .legal-page code {
+    @apply px-1 py-0.5 rounded bg-[#eef1f5] text-[13px] font-mono;
   }
   .legal-page ul {
     @apply list-disc pl-5 mt-1 space-y-1;
@@ -511,10 +581,10 @@
     @apply block font-title font-bold text-[13px];
   }
   .notif-item-date {
-    @apply block mt-0.5 text-xs text-[#9b9b9b];
+    @apply block mt-0.5 text-xs text-[#5f5f5f];
   }
   .notif-empty {
-    @apply px-4 py-6 text-center text-sm text-[#9b9b9b];
+    @apply px-4 py-6 text-center text-sm text-[#5f5f5f];
   }
 
   /* Messagerie -- une seule fenetre de discussion (fil + barre de saisie),
@@ -638,7 +708,7 @@
     @apply font-title font-bold text-sm text-primary truncate;
   }
   .cgrid-title {
-    @apply text-xs text-[#7a7a7a] truncate;
+    @apply text-xs text-[#5f5f5f] truncate;
   }
   .cgrid-desc {
     @apply m-0 text-xs leading-relaxed text-[#4a4a4a] line-clamp-3;
@@ -660,7 +730,7 @@
     @apply border-[#f0f0f0] text-[#c4c4c4] cursor-default;
   }
   .cgrid-page-count {
-    @apply text-sm text-[#7a7a7a];
+    @apply text-sm text-[#5f5f5f];
   }
 
   .cgrid-play:focus-visible,

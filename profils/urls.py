@@ -41,6 +41,7 @@ urlpatterns = [
 
     path("quiz/",             views.quiz),
     path("cgu/",              views.cgu),
+    path("accessibilite/",    views.accessibilite),
     path("register/",         views.register),
     path("login/",            views.login),
     path("logout/",           views.logout),

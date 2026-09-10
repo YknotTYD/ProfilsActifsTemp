@@ -16,7 +16,7 @@
 </head>
   <body>
     {% include "partials/_navbar.html" %}
-    <div class="auth-page">
+    <main id="main-content" tabindex="-1" class="auth-page">
       <div class="card">
         <h1 class="card-title">Connexion à Compétences+</h1>
         <form method="post" action="/api/login/" class="grid gap-[14px]">
@@ -55,7 +55,7 @@
         </div>
         <div class="foot"><a href="/">Retour à l'accueil</a></div>
       </div>
-    </div>
+    </main>
     {% include "partials/_footer.html" %}
   </body>
 </html>

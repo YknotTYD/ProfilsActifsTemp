@@ -9,7 +9,21 @@
     allowfullscreen
   ></iframe>
   {% elif player.url %}
-  <video src="{{ player.url }}" controls playsinline preload="metadata"></video>
+  <video src="{{ player.url }}" controls playsinline preload="metadata">
+    {% comment %}
+      RGAA 4.1 : quand un fichier de sous-titres existe, il est branche ici.
+      Les videos deposees aujourd'hui n'en fournissent pas encore -- ecart
+      documente dans la declaration d'accessibilite (/accessibilite/).
+    {% endcomment %}
+    {% if player.captions_url %}
+    <track kind="captions" srclang="fr" label="Français" src="{{ player.captions_url }}" default />
+    {% endif %}
+  </video>
+  {% if player.transcript_url %}
+  <p class="p-video-transcript">
+    <a href="{{ player.transcript_url }}">Transcription textuelle de la vidéo</a>
+  </p>
+  {% endif %}
   {% else %}
   <p class="p-muted">Le lien de cette video est indisponible.</p>
   {% endif %}

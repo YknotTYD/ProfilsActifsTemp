@@ -64,8 +64,8 @@
         {% csrf_token %}
         <input type="hidden" name="action" value="resubmit">
         <div class="p-field">
-            <label>Nouveau lien (facultatif, pour corriger le probleme signale)</label>
-            <input type="url" name="file_url" placeholder="https://...">
+            <label for="resubmit-file-url">Nouveau lien (facultatif, pour corriger le probleme signale)</label>
+            <input id="resubmit-file-url" type="url" name="file_url" placeholder="https://...">
         </div>
         <button type="submit" class="p-btn p-primary" style="margin-top:.5rem">Re-soumettre</button>
     </form>
@@ -89,16 +89,16 @@
         {% csrf_token %}
         <input type="hidden" name="action" value="submit">
         <div class="p-field">
-            <label>Titre</label>
-            <input type="text" name="title" placeholder="Ma presentation" required>
+            <label for="video-link-title">Titre</label>
+            <input id="video-link-title" type="text" name="title" placeholder="Ma presentation" required>
         </div>
         <div class="p-field">
-            <label>Description</label>
-            <textarea name="description" placeholder="Description (facultatif)"></textarea>
+            <label for="video-link-description">Description</label>
+            <textarea id="video-link-description" name="description" placeholder="Description (facultatif)"></textarea>
         </div>
         <div class="p-field">
-            <label>Lien de la video</label>
-            <input type="url" name="file_url" placeholder="https://..." required>
+            <label for="video-link-url">Lien de la video</label>
+            <input id="video-link-url" type="url" name="file_url" placeholder="https://..." required>
         </div>
         <button type="submit" class="p-btn p-primary" style="margin-top:.5rem">Soumettre a la moderation</button>
     </form>
