@@ -68,7 +68,17 @@ def can_view_profile(viewer, profile) -> bool:
     """Le visiteur peut-il ouvrir cette page de profil ?"""
     if profile is None:
         return False
-    return audience_of(viewer, profile) >= rank(profile.visibility)
+
+    audience = audience_of(viewer, profile)
+
+    # Retrait du catalogue (RGPD art. 21) : la page n'est plus servie a
+    # personne, quel que soit le reglage de visibilite. Le proprietaire garde
+    # l'acces -- sans quoi il ne pourrait plus lever son propre retrait -- et
+    # la moderation aussi, qui en a besoin pour traiter un signalement.
+    if profile.withdrawn_at is not None and audience < c.AUDIENCE_OWNER:
+        return False
+
+    return audience >= rank(profile.visibility)
 
 
 def assert_can_view(viewer, profile):

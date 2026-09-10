@@ -19,6 +19,7 @@ l'API avant d'arriver ici.
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.core.validators import URLValidator
 from django.db              import IntegrityError, transaction
+from django.utils            import timezone
 from django.utils.dateparse import parse_date
 
 from profils.questionnaires.http import BadRequest
@@ -210,6 +211,70 @@ def set_contract_types(profile: ProfessionalProfile, codes) -> list[str]:
          for code in wanted if code not in existing]
     )
     return wanted
+
+
+def viewer_organisation(user) -> str:
+    """Organisation d'un compte recruteur, ou libelle neutre si absente."""
+    from profils.mainapp.models import Role
+
+    organisation = (
+        Role.objects.filter(user = user)
+            .exclude(organisation = "")
+            .values_list("organisation", flat = True)
+            .first()
+    )
+    return (organisation or c.CONSULTATION_UNKNOWN_ORGANISATION).strip()[:160]
+
+
+def record_consultation(profile: ProfessionalProfile, viewer) -> "ProfileConsultation | None":
+    """Journalise la consultation d'un profil par un compte recruteur.
+
+    Renvoie `None` quand il n'y a rien a journaliser -- et c'est le cas le plus
+    frequent : visiteur anonyme, proprietaire consultant sa propre page, ou
+    consultation deja comptee dans la fenetre de regroupement.
+
+    Le journal ne retient que l'organisation et l'instant. Aucune adresse IP,
+    aucune empreinte de navigateur, aucun identifiant de compte n'est ecrit --
+    voir `models/consultation.py`.
+    """
+    from datetime import timedelta
+
+    from .models import ProfileConsultation
+    from .permissions import is_recruiter, owns
+
+    if viewer is None or not getattr(viewer, "is_authenticated", False):
+        return None            # consultation anonyme : jamais enregistree
+    if owns(viewer, profile) or not is_recruiter(viewer):
+        return None
+
+    organisation = viewer_organisation(viewer)
+    since = timezone.now() - timedelta(minutes = c.CONSULTATION_DEDUP_MINUTES)
+    already = ProfileConsultation.objects.filter(
+        profile = profile, organisation = organisation, created_at__gte = since,
+    ).exists()
+    if already:
+        return None
+
+    return ProfileConsultation.objects.create(profile = profile, organisation = organisation)
+
+
+def set_catalogue_withdrawal(profile: ProfessionalProfile, withdrawn: bool) -> ProfessionalProfile:
+    """Retire le profil du catalogue, ou leve le retrait (RGPD art. 21).
+
+    Les deux sens sont ouverts au proprietaire et a lui seul : un droit
+    d'opposition qui ne se leve pas serait une sanction. Retirer deux fois de
+    suite ne repousse pas la date : c'est la date de la premiere opposition qui
+    fait foi tant qu'elle n'a pas ete levee.
+    """
+    if withdrawn and profile.withdrawn_at is None:
+        profile.withdrawn_at = timezone.now()
+    elif not withdrawn:
+        profile.withdrawn_at = None
+    else:
+        return profile
+
+    profile.save(update_fields = ["withdrawn_at", "updated_at"])
+    return profile
 
 
 @transaction.atomic

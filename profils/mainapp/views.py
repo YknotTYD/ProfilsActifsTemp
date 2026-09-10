@@ -87,6 +87,8 @@ def register(request: HttpRequest) -> HttpResponse:
         "error": request.GET.get("error"),
         "username": request.GET.get("username", ""),
         "birth_date": request.GET.get("birth_date", ""),
+        "is_recruiter": request.GET.get("is_recruiter", "0"),
+        "organisation": request.GET.get("organisation", ""),
         # date la plus recente acceptable : au-dela, l'utilisateur n'a pas
         # encore l'age minimum aujourd'hui — sert de borne au selecteur de
         # date cote navigateur, en plus du controle fait par l'API.

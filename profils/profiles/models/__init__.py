@@ -36,6 +36,7 @@ from .profile import (
     ProfileSearchSettings,
     ProfileVisibility,
 )
+from .consultation import ProfileConsultation
 from .skill import Skill, SkillAlias, SkillLink, UserSkill
 from .background import (
     Certification,
@@ -58,6 +59,7 @@ from .video import (
 
 __all__ = [
     "ProfessionalProfile",
+    "ProfileConsultation",
     "ProfileVisibility",
     "ProfileSearchSettings",
     "ProfileContractType",

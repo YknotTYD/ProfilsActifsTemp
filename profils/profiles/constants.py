@@ -435,6 +435,20 @@ DELETE_ACTORS = {ACTOR_OWNER, ACTOR_ADMIN}
 #: statuts pour lesquels un motif est obligatoire (section 1)
 REASON_REQUIRED_STATUSES = {VIDEO_REJECTED}
 
+#: Journal de consultation (RGPD art. 15).
+#:
+#: Libelle affiche quand un compte recruteur n'a pas renseigne son
+#: organisation : le candidat voit qu'une consultation a eu lieu sans qu'on
+#: invente une identite.
+CONSULTATION_UNKNOWN_ORGANISATION = "Organisation non renseignee"
+
+#: Deux consultations du meme profil par la meme organisation dans cette
+#: fenetre ne comptent que pour une. Une actualisation de page n'est pas une
+#: nouvelle consultation, et un journal noye sous les doublons ne renseigne
+#: plus personne. Choix d'implementation, a assumer comme tel.
+CONSULTATION_DEDUP_MINUTES = 30
+
+
 #: duree pendant laquelle un refus reste dans l'historique "vivant" de la
 #: console de moderation avant de basculer dans les archives. La ligne n'est
 #: jamais supprimee. Surchargeable par `settings.REJECTION_HISTORY_DAYS`.

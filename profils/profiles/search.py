@@ -243,6 +243,10 @@ def base_queryset(viewer):
     facon de garantir qu'aucun chemin de recherche ne l'oublie. Il n'y a
     volontairement pas de derogation pour les administrateurs.
 
+    Meme regle pour le retrait du catalogue (`withdrawn_at`, RGPD art. 21) :
+    filtre ici, sans derogation. Un profil retire ne ressort d'aucune
+    recherche, d'aucune liste filtree, pour personne.
+
     La recherche de candidats n'a de sens que pour des demandeurs d'emploi :
     un recruteur ou un administrateur qui se serait cree un profil (pour
     tester, ou parce que rien ne l'en empeche) n'a rien a faire dans les
@@ -259,7 +263,8 @@ def base_queryset(viewer):
 
     return (
         ProfessionalProfile.objects
-        .filter(search_config__searchable = True, visibility__in = allowed)
+        .filter(search_config__searchable = True, visibility__in = allowed,
+                withdrawn_at__isnull = True)
         .exclude(
             Q(user__is_staff = True) | Q(user__is_superuser = True)
             | Q(user__role__role__in = ("Recruiter", "Admin"))

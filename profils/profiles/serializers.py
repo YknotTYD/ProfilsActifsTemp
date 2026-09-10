@@ -296,6 +296,8 @@ def owner_profile(profile) -> dict:
         "profile_visibility": profile.visibility,
         "sections":           profile.visibility_settings().as_dict(),
         "search":             search_settings(profile),
+        "withdrawn":          profile.is_withdrawn,
+        "withdrawn_at":       _iso(profile.withdrawn_at),
     }
     return payload
 

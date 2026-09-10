@@ -77,6 +77,18 @@ class ProfessionalProfile(models.Model):
         max_length = 20, choices = c.VISIBILITIES, default = c.VISIBILITY_REGISTERED_USERS,
     )
 
+    #: retrait du catalogue -- droit d'opposition (RGPD art. 21).
+    #:
+    #: `None` = profil reference normalement ; une date = la personne s'est
+    #: retiree elle-meme, a cet instant. On garde la date plutot qu'un booleen :
+    #: elle documente quand l'opposition a ete exercee sans rien couter.
+    #:
+    #: Le retrait n'est PAS une suppression et n'est PAS un reglage de
+    #: visibilite : le compte reste entier, le proprietaire continue de voir et
+    #: de modifier son profil, et il leve son retrait quand il veut. Un droit
+    #: d'opposition qui ne se leve pas serait une sanction.
+    withdrawn_at = models.DateTimeField(null = True, blank = True)
+
     # -- valeur derivee, tenue a jour a l'ecriture (section 14) -------------- #
     total_experience_months = models.PositiveIntegerField(default = 0)
 
@@ -131,6 +143,11 @@ class ProfessionalProfile(models.Model):
     def full_name(self) -> str:
         name = f"{self.user.first_name} {self.user.last_name}".strip()
         return name or self.user.username
+
+    @property
+    def is_withdrawn(self) -> bool:
+        """La personne s'est retiree du catalogue (RGPD art. 21)."""
+        return self.withdrawn_at is not None
 
     @property
     def initials(self) -> str:

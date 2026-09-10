@@ -1,0 +1,28 @@
+{% extends "profiles/base.html" %}
+{% block title %}Profil indisponible{% endblock %}
+
+{% comment %}
+Metadonnees explicites : quand ce lien est colle dans une messagerie, l'apercu
+affiche cette phrase neutre au lieu d'un titre devine a partir du HTML. Il ne
+revele ni nom ni date.
+{% endcomment %}
+{% block head %}
+<meta property="og:title" content="Profil indisponible — ProfilsActifs">
+<meta property="og:description" content="Ce profil n'est plus disponible.">
+<meta name="description" content="Ce profil n'est plus disponible.">
+<meta name="robots" content="noindex">
+{% endblock %}
+
+{% comment %}
+Page servie a l'identique pour un profil retire du catalogue, un profil prive
+et un nom d'utilisateur inexistant. Aucun nom, aucune date, aucun motif : deux
+reponses identiques ne permettent pas de deduire qu'une personne etait inscrite.
+{% endcomment %}
+
+{% block content %}
+<div class="p-unavailable">
+    <h1>Ce profil n'est pas disponible.</h1>
+    <p class="p-muted">Le lien que vous avez suivi ne mene a aucun profil consultable.</p>
+    <p class="mt-3"><a href="/profiles/" class="p-btn p-primary">Rechercher des profils</a></p>
+</div>
+{% endblock %}

@@ -611,11 +611,56 @@
     async function renderPrivacy(root) {
         const settings = await QAPI.get('/api/profiles/me/privacy/');
         root.innerHTML = '';
+
+        function patch(payload) { return saved(QAPI.put('/api/profiles/me/privacy/', payload)); }
+
+        /* Retrait du catalogue -- droit d'opposition (RGPD art. 21).
+           Presente a part, en tete, et pas comme une case parmi d'autres :
+           c'est un droit, il se prend et se leve d'un seul geste. */
+        const withdrawal = qEl('div', { class: 'p-panel' });
+        root.appendChild(withdrawal);
+        withdrawal.appendChild(qEl('h2', { text: 'Retrait du catalogue' }));
+        const withdrawalBody = qEl('div');
+        withdrawal.appendChild(withdrawalBody);
+
+        async function toggleWithdrawal(next) {
+            await patch({ withdrawn: next });
+            settings.withdrawn = next;
+            paintWithdrawal();
+        }
+
+        function paintWithdrawal() {
+            withdrawalBody.innerHTML = '';
+            if (settings.withdrawn) {
+                withdrawalBody.appendChild(qEl('p', {},
+                    qEl('span', { class: 'p-badge p-warn', text: 'Profil retire du catalogue' })));
+                withdrawalBody.appendChild(qEl('p', { class: 'p-help', text:
+                    "Votre profil n'apparait plus dans le catalogue, ni dans les resultats de "
+                    + "recherche, ni dans le fil video. Le lien direct vers votre profil ne mene "
+                    + "plus a rien. Votre compte, vos donnees et votre video sont intacts." }));
+                withdrawalBody.appendChild(qEl('button', {
+                    class: 'p-btn p-primary', type: 'button',
+                    text: 'Revenir dans le catalogue',
+                    onclick: () => toggleWithdrawal(false),
+                }));
+            } else {
+                withdrawalBody.appendChild(qEl('p', { class: 'p-help', text:
+                    "Vous pouvez retirer votre profil du catalogue a tout moment, sans supprimer "
+                    + "votre compte. Il disparait alors des recherches, des listes et du fil "
+                    + "video, et le lien direct ne mene plus a rien. Vous pouvez revenir quand "
+                    + "vous le souhaitez." }));
+                withdrawalBody.appendChild(qEl('button', {
+                    class: 'p-btn p-danger', type: 'button',
+                    text: 'Retirer mon profil du catalogue',
+                    onclick: () => toggleWithdrawal(true),
+                }));
+            }
+        }
+        paintWithdrawal();
+
         const panel = qEl('div', { class: 'p-panel' });
         root.appendChild(panel);
         panel.appendChild(qEl('h2', { text: 'Confidentialite' }));
-
-        function patch(payload) { return saved(QAPI.put('/api/profiles/me/privacy/', payload)); }
 
         panel.appendChild(QForm.select('Visibilite du profil', settings.profile_visibility, choices('visibilities'),
             (value) => patch({ profile_visibility: value }),

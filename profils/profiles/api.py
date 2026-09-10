@@ -185,12 +185,18 @@ def me_privacy(request):
             services.update_visibility(profile, payload["sections"])
         if isinstance(payload.get("search"), dict):
             services.update_search_settings(profile, payload["search"])
+        if "withdrawn" in payload:
+            # droit d'opposition (RGPD art. 21) : la personne se retire du
+            # catalogue, ou leve son retrait, sans passer par personne.
+            services.set_catalogue_withdrawal(profile, bool(payload["withdrawn"]))
         profile.refresh_from_db()
 
     return ok({
         "profile_visibility": profile.visibility,
         "sections":           profile.visibility_settings().as_dict(),
         "search":             serializers.search_settings(profile),
+        "withdrawn":          profile.is_withdrawn,
+        "withdrawn_at":       profile.withdrawn_at.isoformat() if profile.withdrawn_at else None,
     })
 
 

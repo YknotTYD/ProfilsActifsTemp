@@ -13,7 +13,14 @@ la page ne la contient pas.
 
 {% block content %}
 
-
+{% if withdrawn and is_owner %}
+<div class="p-callout warn">
+    <p><strong>Votre profil est retiré du catalogue.</strong> Il n'apparaît plus dans les recherches,
+       les listes ni le fil vidéo, et le lien direct ne mène plus à rien. Vous seul voyez cette page.
+       Vous pouvez revenir dans le catalogue depuis <a href="/profiles/edit/">Modifier mon profil</a>,
+       onglet Confidentialité.</p>
+</div>
+{% endif %}
 
 <article class="p-hero">
     <div class="p-cover" data-cover="{{ p.profile.cover_color|default:'navy' }}" {% if p.profile.cover_url %}style="background-image:url('{{ p.profile.cover_url }}')"{% endif %}>
@@ -58,6 +65,7 @@ la page ne la contient pas.
             {% if is_owner %}
                 <a class="p-btn p-primary" href="/profiles/edit/">Modifier mon profil</a>
                 <a class="p-btn" href="/profile/{{ p.profile.username }}/?preview=public">Voir en visiteur</a>
+                <a class="p-btn" href="/profiles/me/consultations/">Qui a consulté mon profil</a>
             {% else %}
                 {% if can_message %}
                 <form method="post" action="/messages/start/">

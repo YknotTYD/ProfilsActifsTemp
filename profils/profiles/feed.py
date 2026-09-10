@@ -39,6 +39,9 @@ def _visible_video_filter(viewer) -> Q:
         & Q(profile__visibility__in = allowed)
         & Q(profile__visibility_config__videos_visibility__in = allowed)
         & Q(profile__search_config__appear_in_video_feed = True)
+        # retrait du catalogue (RGPD art. 21) : le feed est une liste filtree
+        # comme une autre, il suit la meme regle que la recherche.
+        & Q(profile__withdrawn_at__isnull = True)
     )
 
 

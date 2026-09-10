@@ -29,12 +29,42 @@ def _login_required(request):
     return None if request.user.is_authenticated else redirect("/login/")
 
 
+def _record_consultation(request, profile):
+    """Journalise la consultation (RGPD art. 15), sans jamais faire echouer la page.
+
+    Un journal de transparence ne doit pas pouvoir empecher quelqu'un de
+    consulter un profil : si l'ecriture echoue, la page se rend quand meme.
+    """
+    if request.GET.get("preview"):
+        return                              # previsualisation par le proprietaire
+    try:
+        services.record_consultation(profile, request.user)
+    except Exception:                       # pragma: no cover - defensif
+        pass
+
+
+def _profile_unavailable(request):
+    """Page sobre servie a la place d'un profil qu'on ne peut pas montrer.
+
+    Rendue a l'identique pour un profil retire du catalogue (RGPD art. 21), un
+    profil prive et un nom d'utilisateur qui n'a jamais existe : c'est ce qui
+    empeche de deduire, en comparant deux reponses, que telle personne etait
+    inscrite hier. Elle ne porte donc aucun nom, aucune date, aucun motif.
+
+    Statut 404 : pour un client HTTP, la ressource n'est pas disponible. Ce
+    n'est pas une page d'erreur technique pour autant -- c'est une phrase.
+    """
+    return render(request, "profiles/unavailable.html", status = 404)
+
+
 def profile_page(request, username):
     """Page publique d'un profil : `/profile/<username>/`."""
     profile = services.profile_by_username(username)
     if profile is None or not can_view_profile(request.user, profile):
         # meme reponse dans les deux cas : ne pas reveler qu'un profil existe
-        raise Http404
+        return _profile_unavailable(request)
+
+    _record_consultation(request, profile)
 
     viewer  = _viewer(request, profile)
     payload = serializers.public_profile(profile, viewer)
@@ -56,6 +86,7 @@ def profile_page(request, username):
         "live_video": live_video,
         "profile":    profile,
         "is_owner":   permissions.owns(request.user, profile),
+        "withdrawn":  profile.is_withdrawn,
         "preview":    request.GET.get("preview") or "",
         "levels":     dict(c.SKILL_LEVELS),
         "degrees":    dict(c.DEGREE_LEVELS),
@@ -195,6 +226,25 @@ def my_video_page(request):
     return render(request, "profiles/my_video.html", {
         "current": current,
         "pending": pending,
+    })
+
+
+def my_consultations_page(request):
+    """Journal de consultation de mon profil : `/profiles/me/consultations/`.
+
+    Droit d'acces (RGPD art. 15) : la personne voit qui a consulte son profil
+    et quand. Visible d'elle seule -- la vue lit toujours le profil de
+    l'utilisateur connecte, jamais un identifiant fourni par le client.
+    """
+    if response := _login_required(request):
+        return response
+
+    profile = services.get_profile(request.user)
+    rows = profile.consultations.all()[:200]
+
+    return render(request, "profiles/consultations.html", {
+        "consultations": rows,
+        "total":         profile.consultations.count(),
     })
 
 
