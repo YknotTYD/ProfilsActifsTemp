@@ -752,3 +752,62 @@ def restore_profile(profile: ProfessionalProfile) -> ProfessionalProfile:
         profile.withdrawn_at = None
         profile.save(update_fields = ["withdrawn_at"])
     return profile
+
+
+# --------------------------------------------------------------------------- #
+# Journal de consultation (RGPD art. 15)
+# --------------------------------------------------------------------------- #
+
+def viewer_organisation(user) -> str:
+    """Organisation d'un compte recruteur, ou libelle neutre si absente."""
+    from profils.mainapp.models import Role
+
+    organisation = (
+        Role.objects.filter(user = user)
+            .exclude(organisation = "")
+            .values_list("organisation", flat = True)
+            .first()
+    )
+    return (organisation or c.CONSULTATION_UNKNOWN_ORGANISATION).strip()[:160]
+
+
+def record_consultation(profile: ProfessionalProfile, viewer):
+    """Journalise la consultation d'un profil par un compte recruteur.
+
+    Renvoie `None` -- et c'est le cas le plus frequent -- pour un visiteur
+    anonyme, le proprietaire consultant sa propre page, un simple inscrit, ou
+    une consultation deja comptee dans la fenetre de regroupement.
+
+    Le journal ne retient que l'organisation et l'instant. Aucune adresse IP,
+    aucune empreinte de navigateur, aucun identifiant de compte -- voir
+    `models/consultation.py`.
+    """
+    from datetime import timedelta
+
+    from .models import ProfileConsultation
+    from .permissions import is_recruiter, owns
+
+    if viewer is None or not getattr(viewer, "is_authenticated", False):
+        return None                       # consultation anonyme : jamais enregistree
+    if owns(viewer, profile) or not is_recruiter(viewer):
+        return None
+
+    organisation = viewer_organisation(viewer)
+    since = timezone.now() - timedelta(minutes = c.CONSULTATION_DEDUP_MINUTES)
+    if profile.consultations.filter(organisation = organisation, created_at__gte = since).exists():
+        return None
+
+    row = ProfileConsultation.objects.create(profile = profile, organisation = organisation)
+
+    # Section 5 : notifier le proprietaire. Le meme regroupement (30 min par
+    # organisation) borne le nombre de notifications ; le contenu se limite a
+    # l'organisation -- jamais la personne physique -- comme le journal.
+    from profils.notifications import services as notifications
+    from profils.notifications import types as notification_types
+
+    notifications.notify(
+        profile.user, notification_types.PROFILE_CONSULTED,
+        target = row, url = "/profiles/me/consultations/",
+        organisation = organisation,
+    )
+    return row

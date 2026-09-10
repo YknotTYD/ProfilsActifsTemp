@@ -98,9 +98,22 @@
               required
               class="field-select"
             >
-              <option value="0">Demandeur d'emploi</option>
-              <option value="1">Recruteur</option>
+              <option value="0" {% if is_recruiter != "1" %}selected{% endif %}>Demandeur d'emploi</option>
+              <option value="1" {% if is_recruiter == "1" %}selected{% endif %}>Recruteur</option>
             </select>
+          </div>
+          <div class="field" id="reg-org-field" {% if is_recruiter != "1" %}hidden{% endif %}>
+            <input
+              id="reg-organisation"
+              name="organisation"
+              type="text"
+              value="{{ organisation }}"
+              placeholder=" "
+              class="peer field-input"
+            />
+            <label for="reg-organisation" class="field-label"
+              >Nom de votre organisation</label
+            >
           </div>
           <button type="submit" id="signup-submit" class="btn-primary mt-2">
             CRÉER MON COMPTE
@@ -112,5 +125,15 @@
       </div>
     </div>
     {% include "partials/_footer.html" %}
+    <script>
+      (() => {
+        const role = document.getElementById('reg-role');
+        const org  = document.getElementById('reg-org-field');
+        if (!role || !org) return;
+        const sync = () => { org.hidden = role.value !== '1'; };
+        role.addEventListener('change', sync);
+        sync();
+      })();
+    </script>
   </body>
 </html>

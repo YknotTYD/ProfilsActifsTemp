@@ -12,6 +12,7 @@ VIDEO_HIDDEN    = "VIDEO_HIDDEN"
 NEW_MESSAGE     = "NEW_MESSAGE"
 VIDEO_LIKED     = "VIDEO_LIKED"
 VIDEO_DISLIKED  = "VIDEO_DISLIKED"
+PROFILE_CONSULTED = "PROFILE_CONSULTED"
 
 LABELS = {
     VIDEO_APPROVED: "Votre vidéo a été validée",
@@ -20,6 +21,7 @@ LABELS = {
     NEW_MESSAGE:    "Nouveau message",
     VIDEO_LIKED:    "Votre vidéo a reçu un like",
     VIDEO_DISLIKED: "Votre vidéo a reçu un dislike",
+    PROFILE_CONSULTED: "Votre profil a été consulté",
 }
 
 def is_known(type_code: str) -> bool:
