@@ -181,11 +181,34 @@
   .topbar-brand img {
     filter: brightness(0) invert(1);
   }
+  /* Sous md, la nav se replie derriere le bouton hamburger et se deroule en
+     colonne sur toute la largeur, sous la barre. */
   .topbar-links {
-    @apply flex flex-wrap items-center gap-x-1 gap-y-1;
+    @apply flex flex-wrap items-center gap-x-1 gap-y-1
+      max-md:hidden max-md:order-last max-md:w-full max-md:flex-col
+      max-md:items-stretch max-md:gap-y-0 max-md:pt-2;
+  }
+  .topbar-links.is-open {
+    @apply max-md:flex;
+  }
+  .topbar-burger {
+    @apply md:hidden flex items-center justify-center rounded p-1.5 bg-transparent border-0 cursor-pointer text-white/85;
+  }
+  .topbar-burger:hover {
+    @apply bg-white/10 text-white;
+  }
+  .topbar-burger-close {
+    @apply hidden;
+  }
+  .topbar-burger[aria-expanded='true'] .topbar-burger-open {
+    @apply hidden;
+  }
+  .topbar-burger[aria-expanded='true'] .topbar-burger-close {
+    @apply block;
   }
   .topbar-link {
-    @apply rounded px-2.5 py-1.5 font-title font-semibold text-[13px] tracking-[0.02em] text-white/75 no-underline;
+    @apply rounded px-2.5 py-1.5 font-title font-semibold text-[13px] tracking-[0.02em] text-white/75 no-underline
+      max-md:py-2.5 max-md:text-sm;
   }
   .topbar-link:hover {
     @apply bg-white/10 text-white no-underline;

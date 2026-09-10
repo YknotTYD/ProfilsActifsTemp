@@ -14,6 +14,20 @@
   .topbar-brand{display:flex;align-items:center;gap:.5rem;font-weight:800;font-size:17px}
   .topbar-brand img{filter:brightness(0) invert(1)}
   .topbar-links{display:flex;flex-wrap:wrap;align-items:center;gap:.25rem}
+  .topbar-burger{display:none;align-items:center;justify-content:center;
+    padding:.375rem;border:0;border-radius:.25rem;background:transparent;
+    color:rgba(255,255,255,.85);cursor:pointer}
+  .topbar-burger:hover{background:rgba(255,255,255,.1);color:#fff}
+  .topbar-burger-close{display:none}
+  .topbar-burger[aria-expanded="true"] .topbar-burger-open{display:none}
+  .topbar-burger[aria-expanded="true"] .topbar-burger-close{display:block}
+  @media(max-width:767px){
+    .topbar-burger{display:flex}
+    .topbar-links{display:none;order:99;width:100%;flex-direction:column;
+      align-items:stretch;gap:0;padding-top:.5rem}
+    .topbar-links.is-open{display:flex}
+    .topbar-links .topbar-link{padding:.625rem .625rem;font-size:14px}
+  }
   .topbar-link{padding:.375rem .625rem;border-radius:.25rem;font-weight:600;
     font-size:13px;color:rgba(255,255,255,.75)}
   .topbar-link:hover{background:rgba(255,255,255,.1);color:#fff}
@@ -50,7 +64,7 @@
     <span>Compétences+</span>
   </a>
 
-  <nav class="topbar-links">
+  <nav id="topbar-nav" class="topbar-links">
     <a href="/profiles/" class="topbar-link">Rechercher</a>
     {% if nav.authenticated %}
     <a href="/profile/" class="topbar-link">Mon profil</a>
@@ -109,6 +123,11 @@
       <a href="/register/" class="btn-primary-sm topbar-cta">Créer mon profil</a>
     {% endif %}
   </div>
+  <button type="button" class="topbar-burger" id="topbar-burger"
+          aria-controls="topbar-nav" aria-expanded="false" aria-label="Ouvrir le menu">
+    <svg class="topbar-burger-open" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M3 6h18v2H3V6Zm0 5h18v2H3v-2Zm0 5h18v2H3v-2Z"/></svg>
+    <svg class="topbar-burger-close" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M6.4 5 12 10.6 17.6 5 19 6.4 13.4 12 19 17.6 17.6 19 12 13.4 6.4 19 5 17.6 10.6 12 5 6.4 6.4 5Z"/></svg>
+  </button>
 </header>
 
 <script src="{% static 'navbar.js' %}"></script>

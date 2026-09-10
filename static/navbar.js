@@ -1,8 +1,29 @@
 // Barre de navigation : menus déroulants + centre de notifications.
 (() => {
-  const menus = Array.from(document.querySelectorAll('.topbar-menu'));
-  if (menus.length === 0) return;
+  // --- Menu hamburger (petits ecrans) ----------------------------------
+  const burger = document.getElementById('topbar-burger');
+  const navLinks = document.getElementById('topbar-nav');
 
+  function setNav(open) {
+    if (!burger || !navLinks) return;
+    navLinks.classList.toggle('is-open', open);
+    burger.setAttribute('aria-expanded', String(open));
+    burger.setAttribute('aria-label', open ? 'Fermer le menu' : 'Ouvrir le menu');
+  }
+
+  if (burger && navLinks) {
+    burger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const opening = !navLinks.classList.contains('is-open');
+      closeAll(null);
+      setNav(opening);
+    });
+    // un lien choisi referme le panneau (la page suivante le rouvrirait sinon
+    // le temps de la navigation).
+    navLinks.addEventListener('click', () => setNav(false));
+  }
+
+  const menus = Array.from(document.querySelectorAll('.topbar-menu'));
   const toggles = menus.map((menu) => ({
     menu,
     btn: menu.querySelector('.topbar-menu-btn'),
@@ -21,6 +42,7 @@
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
       const opening = panel.hidden;
+      setNav(false);
       closeAll(opening ? panel : null);
       panel.hidden = !opening;
       btn.setAttribute('aria-expanded', String(opening));
@@ -28,9 +50,14 @@
     });
   });
 
-  document.addEventListener('click', () => closeAll(null));
+  document.addEventListener('click', () => {
+    closeAll(null);
+    setNav(false);
+  });
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') closeAll(null);
+    if (e.key !== 'Escape') return;
+    closeAll(null);
+    setNav(false);
   });
 
   // --- Centre de notifications -----------------------------------------
