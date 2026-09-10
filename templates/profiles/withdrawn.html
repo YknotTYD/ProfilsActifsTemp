@@ -1,0 +1,27 @@
+{% load static %}{% load versioned_static %}
+
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Page introuvable — ProfilsActifs</title>
+    <link rel="stylesheet" href="{% vstatic 'style.css' %}" />
+  </head>
+  <body>
+    {% include "partials/_navbar.html" %}
+
+    <div class="home-hero">
+      <span class="hero-badge">Erreur 404</span>
+      <h1 class="hero-title">Cet utilisateur à mis son compte en retrait.</h1>
+      <p class="hero-subtitle">
+      </p>
+
+      <div class="hero-cta-row">
+        <a href="/" class="btn-primary">RETOUR À L'ACCUEIL</a>
+      </div>
+    </div>
+
+    {% include "partials/_footer.html" %}
+  </body>
+</html>

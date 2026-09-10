@@ -47,6 +47,7 @@
             {% if is_owner %}
                 <a class="p-btn p-primary" href="/profiles/edit/">Modifier mon profil</a>
                 <a class="p-btn" href="/profile/{{ p.profile.username }}/?preview=public">Voir en visiteur</a>
+                {% include "profiles/_withdraw.html" %}
             {% else %}
                 {% if can_message %}
                 <form method="post" action="/messages/start/">
