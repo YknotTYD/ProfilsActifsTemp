@@ -22,6 +22,10 @@ from .mainapp       import api
 from django.conf import settings
 from django.conf.urls.static import static
 from django.views.generic import RedirectView
+from django.shortcuts import render
+
+def swagger_ui(request):
+    return render(request, 'swagger.html')
 
 # Le feed vertical a laisse des adresses derriere lui : elles ont circule par
 # mail et par lien partage, et doivent mener a la grille plutot qu'a une 404.
@@ -54,6 +58,7 @@ urlpatterns = [
     path("",                  include("profils.profiles.urls")),
     path("",                  include("profils.notifications.urls")),
     path("",                  include("profils.messaging.urls")),
+    path('api/docs/', swagger_ui, name='swagger-ui'),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root = settings.MEDIA_ROOT)
