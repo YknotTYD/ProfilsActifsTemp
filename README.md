@@ -106,6 +106,20 @@ La commande parcourt le catalogue deux fois, ecrit les deux releves
 d'identifiants et leur comparaison dans `pagination-proof/`, et sort en code
 non nul si l'ordre a bouge.
 
+## Documentation
+
+| Document | Contenu |
+|---|---|
+| [`docs/architecture.md`](docs/architecture.md) | le code du projet, brique par brique |
+| [`docs/deployment.md`](docs/deployment.md) | variables d'environnement, exploitation, état de préparation production |
+| [`docs/data-governance.md`](docs/data-governance.md) | données personnelles et accessibilité, état actuel |
+| [`docs/professional-profiles.md`](docs/professional-profiles.md) | la section profils, vue produit |
+| [`docs/classement-et-filtres.md`](docs/classement-et-filtres.md) | recherche et classement des profils |
+| [`docs/certification-20-questions.md`](docs/certification-20-questions.md) | le dispositif de certification |
+| [`docs/journal-des-modifications.md`](docs/journal-des-modifications.md) | historique des changements sensibles |
+| [`swagger.yaml`](swagger.yaml) | contrat OpenAPI de l'API profils |
+| [`CONTRIBUTING.md`](CONTRIBUTING.md) | flux de contribution |
+
 ## Tech Stack
 
 **Front** : gabarits Django, Tailwind CSS 4 compilé en CLI, JavaScript vanilla

@@ -8,6 +8,9 @@ documents plus ciblés :
 - [`profils/profiles/README.md`](../profils/profiles/README.md) — le module profils, vue technique
 - [`profils/questionnaires/README.md`](../profils/questionnaires/README.md) — le module questionnaires, vue technique
 - [`swagger.yaml`](../swagger.yaml) — le contrat OpenAPI de l'API profils
+- [`docs/deployment.md`](deployment.md) — configuration, exploitation, état de préparation production
+- [`docs/data-governance.md`](data-governance.md) — données personnelles et accessibilité, état actuel
+- [`CONTRIBUTING.md`](../CONTRIBUTING.md) — flux de contribution
 
 ---
 
