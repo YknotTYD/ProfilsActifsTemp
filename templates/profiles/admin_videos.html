@@ -9,7 +9,7 @@
        toute seule : c'est un choix explicite laisse a l'utilisateur.</p>
 </div>
 
-<nav class="p-mod-tabs">
+<nav class="p-mod-tabs" aria-label="Filtres de modération">
     <button type="button" class="p-mod-tab is-active" data-tab="queue">File d'attente</button>
     <button type="button" class="p-mod-tab" data-tab="rejected">Refus recents</button>
     <button type="button" class="p-mod-tab" data-tab="archived">Archives</button>
@@ -47,8 +47,9 @@
 
         <form class="p-mod-reject-form" hidden>
             <div class="p-field">
-                <label>Motif du refus (obligatoire)</label>
-                <textarea class="p-mod-reason" rows="2" required></textarea>
+                <label>Motif du refus (obligatoire)
+                    <textarea class="p-mod-reason" rows="2" required></textarea>
+                </label>
             </div>
             <div class="p-actions">
                 <button type="submit" class="p-btn p-danger small">Confirmer le refus</button>

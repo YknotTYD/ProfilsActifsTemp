@@ -3,7 +3,7 @@
 {% load versioned_static %}
 {% block title %}{{ questionnaire.title }}{% endblock %}
 {% block crumbs %}
-<nav class="q-crumbs">
+<nav class="q-crumbs" aria-label="Fil d'Ariane">
   <a href="/questionnaires/manage/">Administration</a> <span>/</span> {{ questionnaire.title }}
 </nav>
 {% endblock %}
@@ -21,7 +21,7 @@
 
   <div id="q-publish-panel"></div>
 
-  <nav class="q-tabs">
+  <nav class="q-tabs" aria-label="Sections de l'éditeur">
     <button class="q-tab q-tab-active" data-tab="questions">Questions</button>
     <button class="q-tab" data-tab="settings">Reglages</button>
     <button class="q-tab" data-tab="scoring">Notation</button>

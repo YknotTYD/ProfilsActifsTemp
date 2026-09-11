@@ -87,9 +87,9 @@ BADGES = [
 ]
 
 RECRUITERS = [
-    {"username": "julie.marchand",  "first_name": "Julie",  "last_name": "Marchand",  "birth_date": "1990-03-11"},
-    {"username": "paul.guerin",     "first_name": "Paul",   "last_name": "Guérin",    "birth_date": "1985-11-29"},
-    {"username": "sophie.lambert",  "first_name": "Sophie", "last_name": "Lambert",   "birth_date": "1992-06-05"},
+    {"username": "julie.marchand",  "first_name": "Julie",  "last_name": "Marchand",  "birth_date": "1990-03-11", "organisation": "Atelier Data"},
+    {"username": "paul.guerin",     "first_name": "Paul",   "last_name": "Guérin",    "birth_date": "1985-11-29", "organisation": "Studio Verane"},
+    {"username": "sophie.lambert",  "first_name": "Sophie", "last_name": "Lambert",   "birth_date": "1992-06-05", "organisation": "Cooperative Halbran"},
 ]
 
 ADMIN_ACCOUNT = {
@@ -596,7 +596,8 @@ class Command(BaseCommand):
                 data["username"], None, DEMO_PASSWORD,
                 first_name = data["first_name"], last_name = data["last_name"],
             )
-            Role.objects.create(user = user, role = "Recruiter", birth_date = data["birth_date"])
+            Role.objects.create(user = user, role = "Recruiter", birth_date = data["birth_date"],
+                                organisation = data.get("organisation", ""))
             users.append(user)
         return users
 

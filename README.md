@@ -8,6 +8,35 @@ Compétences+ n'est pas un réseau social : aucune donnée du service n'est
 utilisée pour déterminer des droits ou le montant d'allocations.
 
 
+## Configuration (`.env`)
+
+La configuration tient dans un fichier `.env` a la racine, non versionne.
+Il est indispensable : `profils/settings.py` y lit la cle secrete Django
+(`load_dotenv`), et `compose.yaml` l'injecte dans le conteneur (`env_file`).
+`.env.example` en donne la liste des variables.
+
+Generer un `.env` complet en une commande :
+
+```bash
+  python3 -c "import secrets; print('DJANGO_SECRET_KEY=' + secrets.token_urlsafe(50))" > .env
+```
+
+Si Django est deja installe, sa propre fonction fait le meme travail :
+
+```bash
+  python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
+```
+
+Variables reconnues :
+
+| Variable            | Obligatoire | Role                                                                  |
+|---------------------|-------------|-----------------------------------------------------------------------|
+| `DJANGO_SECRET_KEY` | oui         | Cle secrete Django : signature des sessions et des jetons CSRF        |
+| `PORT`              | non         | Port publie par `compose.yaml` (8080 par defaut), surcharge par `./setup run [port]` |
+
+Une cle par environnement : celle de production ne se partage pas et ne se
+commit pas. La changer invalide les sessions ouvertes et les liens signes.
+
 ## Installation
 
 ```bash
@@ -79,11 +108,12 @@ non nul si l'ordre a bouge.
 
 ## Tech Stack
 
-**Front**: React
+**Front** : gabarits Django, Tailwind CSS 4 compilé en CLI, JavaScript vanilla
+(sans framework ni bundler)
 
-**Back**: Django
+**Back** : Django, API JSON maison (sans framework d'API)
 
-**Database**: Sqlite
+**Base de données** : SQLite
 
 
 ## Authors

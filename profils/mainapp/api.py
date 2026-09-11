@@ -28,9 +28,11 @@ def _age_on(birth_date, today):
 
 def _register_error(message: str, request: HttpRequest):
     query = urlencode({
-        "error":      message,
-        "username":   request.POST.get("username", ""),
-        "birth_date": request.POST.get("birth_date", ""),
+        "error":        message,
+        "username":     request.POST.get("username", ""),
+        "birth_date":   request.POST.get("birth_date", ""),
+        "is_recruiter": request.POST.get("is_recruiter", "0"),
+        "organisation": request.POST.get("organisation", ""),
     })
     return redirect(f"/register/?{query}")
 
@@ -67,8 +69,12 @@ def register(request: HttpRequest) -> HttpResponse:
         request.POST["password"]
     )
 
-    role = "Recruiter" if request.POST["is_recruiter"] == "1" else "JobSeeker"
-    Role(user = user, role = role, birth_date = birth_date).save()
+    is_recruiter = request.POST["is_recruiter"] == "1"
+    role = "Recruiter" if is_recruiter else "JobSeeker"
+    # l'organisation ne sert qu'aux comptes recruteurs (journal de consultation,
+    # RGPD art. 15) ; un candidat n'en a pas.
+    organisation = request.POST.get("organisation", "").strip()[:160] if is_recruiter else ""
+    Role(user = user, role = role, birth_date = birth_date, organisation = organisation).save()
 
     auth_user = authenticate(request, username = request.POST["username"], password = request.POST["password"])
     login_(request, auth_user)

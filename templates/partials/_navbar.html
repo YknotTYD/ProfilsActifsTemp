@@ -14,15 +14,29 @@
   .topbar-brand{display:flex;align-items:center;gap:.5rem;font-weight:800;font-size:17px}
   .topbar-brand img{filter:brightness(0) invert(1)}
   .topbar-links{display:flex;flex-wrap:wrap;align-items:center;gap:.25rem}
+  .topbar-burger{display:none;align-items:center;justify-content:center;
+    padding:.375rem;border:0;border-radius:.25rem;background:transparent;
+    color:rgba(255,255,255,.85);cursor:pointer}
+  .topbar-burger:hover{background:rgba(255,255,255,.1);color:#fff}
+  .topbar-burger-close{display:none}
+  .topbar-burger[aria-expanded="true"] .topbar-burger-open{display:none}
+  .topbar-burger[aria-expanded="true"] .topbar-burger-close{display:block}
+  @media(max-width:767px){
+    .topbar-burger{display:flex}
+    .topbar-links{display:none;order:99;width:100%;flex-direction:column;
+      align-items:stretch;gap:0;padding-top:.5rem}
+    .topbar-links.is-open{display:flex}
+    .topbar-links .topbar-link{padding:.625rem .625rem;font-size:14px}
+  }
   .topbar-link{padding:.375rem .625rem;border-radius:.25rem;font-weight:600;
-    font-size:13px;color:rgba(255,255,255,.75)}
-  .topbar-link:hover{background:rgba(255,255,255,.1);color:#fff}
+    font-size:13px;color:#eef2f8}
+  .topbar-link:hover{background:rgba(255,255,255,.15);color:#fff}
   .topbar-actions{display:flex;align-items:center;gap:.375rem;margin-left:auto}
   .topbar-menu{position:relative}
   .topbar-menu-btn{display:flex;align-items:center;gap:.375rem;padding:.375rem .5rem;
-    border:0;border-radius:.25rem;background:transparent;color:rgba(255,255,255,.85);
+    border:0;border-radius:.25rem;background:transparent;color:#eef2f8;
     font:inherit;font-weight:600;font-size:13px;cursor:pointer}
-  .topbar-menu-btn:hover{background:rgba(255,255,255,.1);color:#fff}
+  .topbar-menu-btn:hover{background:rgba(255,255,255,.15);color:#fff}
   .topbar-avatar{display:flex;align-items:center;justify-content:center;flex:0 0 auto;
     width:1.5rem;height:1.5rem;border-radius:9999px;background:rgba(255,255,255,.2);
     font-size:11px;font-weight:700;text-transform:uppercase}
@@ -34,15 +48,21 @@
   .topbar a.topbar-cta{display:inline-block;padding:.5rem 1rem;border-radius:.25rem;
     background:#f6d179;color:#262626;font-weight:800;font-size:12px;letter-spacing:.04em}
   .topbar a.topbar-ghost{padding:.375rem .625rem;border-radius:.25rem;font-weight:700;
-    font-size:13px;color:rgba(255,255,255,.8)}
-  .topbar a.topbar-ghost:hover{background:rgba(255,255,255,.12);color:#fff}
+    font-size:13px;color:#eef2f8}
+  .topbar a.topbar-ghost:hover{background:rgba(255,255,255,.15);color:#fff}
   .topbar-dropdown{position:absolute;right:0;top:calc(100% + .4rem);min-width:13rem;
     display:flex;flex-direction:column;padding:.25rem 0;background:#fff;color:#262626;
     border:1px solid #d9e0ea;border-radius:.5rem;box-shadow:0 10px 25px rgba(0,0,0,.12);z-index:50}
   .topbar-dropdown a{display:block;padding:.5rem .875rem;color:#262626;font-size:14px}
   .topbar-dropdown a:hover{background:#f5f4f2}
   .topbar-dropdown[hidden]{display:none}
+  .skip-link{position:absolute;left:8px;top:-80px;z-index:200;padding:10px 18px;
+    background:#fff;color:#1b3a6b;font-family:"Poppins","Helvetica Neue",Arial,sans-serif;
+    font-weight:700;font-size:14px;border:2px solid #1b3a6b;border-radius:6px;
+    text-decoration:none;transition:top .15s ease}
+  .skip-link:focus{top:8px}
 </style>
+<a class="skip-link" href="#main-content">Aller au contenu principal</a>
 <p class="legal-banner">Aucune donnée de ce service n'est utilisée pour déterminer vos droits ni le montant de vos allocations.</p>
 <header class="topbar">
   <a href="/" class="topbar-brand">
@@ -50,7 +70,7 @@
     <span>Compétences+</span>
   </a>
 
-  <nav class="topbar-links">
+  <nav id="topbar-nav" class="topbar-links">
     <a href="/profiles/" class="topbar-link">Rechercher</a>
     {% if nav.authenticated %}
     <a href="/profile/" class="topbar-link">Mon profil</a>
@@ -64,12 +84,12 @@
 
       {% if nav.is_admin or nav.can_manage_questionnaires or nav.can_moderate_videos %}
       <div class="topbar-menu" data-menu="admin">
-        <button type="button" class="topbar-menu-btn" aria-expanded="false">
+        <button type="button" class="topbar-menu-btn" aria-expanded="false" aria-haspopup="true" aria-controls="topbar-menu-admin">
           <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M12 2 4 5v6c0 5 3.4 9.7 8 11 4.6-1.3 8-6 8-11V5l-8-3Zm0 6a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5Zm0 12c-1.7-.4-3.2-1.6-4.3-3.2.1-1.4 2.9-2.1 4.3-2.1s4.2.7 4.3 2.1C15.2 18.4 13.7 19.6 12 20Z"/></svg>
           Administration
           <svg class="topbar-caret" viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path fill="currentColor" d="m7 10 5 5 5-5H7Z"/></svg>
         </button>
-        <div class="topbar-dropdown" hidden>
+        <div class="topbar-dropdown" id="topbar-menu-admin" hidden>
           {% if nav.can_moderate_videos %}<a href="/profiles/admin/videos/">Modération vidéo</a>{% endif %}
           {% if nav.can_manage_questionnaires %}<a href="/questionnaires/manage/">Gestion des questionnaires</a>{% endif %}
           {% if nav.is_staff %}<a href="/admin/">Console Django</a>{% endif %}
@@ -78,25 +98,25 @@
       {% endif %}
 
       <div class="topbar-menu" data-menu="notif">
-        <button type="button" id="notif-bell" class="topbar-menu-btn topbar-icon-btn" aria-label="Notifications" aria-expanded="false">
+        <button type="button" id="notif-bell" class="topbar-menu-btn topbar-icon-btn" aria-label="Notifications" aria-expanded="false" aria-haspopup="true" aria-controls="notif-panel">
           <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22Zm7-5-1.5-1.6V11a5.5 5.5 0 0 0-4-5.3V5a1.5 1.5 0 0 0-3 0v.7A5.5 5.5 0 0 0 6.5 11v4.4L5 17v1h14v-1Z"/></svg>
           <span id="notif-badge" class="topbar-badge" hidden>0</span>
         </button>
         <div id="notif-panel" class="topbar-dropdown topbar-dropdown--wide" hidden>
           <div class="topbar-dropdown-head">Notifications</div>
-          <ul id="notif-list" class="notif-list">
+          <ul id="notif-list" class="notif-list" aria-live="polite" aria-busy="true">
             <li class="notif-empty">Chargement…</li>
           </ul>
         </div>
       </div>
 
       <div class="topbar-menu" data-menu="user">
-        <button type="button" class="topbar-menu-btn topbar-user-btn" aria-expanded="false">
-          <span class="topbar-avatar">{{ nav.username|slice:":1"|upper }}</span>
+        <button type="button" class="topbar-menu-btn topbar-user-btn" aria-expanded="false" aria-haspopup="true" aria-controls="topbar-menu-user">
+          <span class="topbar-avatar" aria-hidden="true">{{ nav.username|slice:":1"|upper }}</span>
           <span class="topbar-user-name">{{ nav.username }}</span>
           <svg class="topbar-caret" viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path fill="currentColor" d="m7 10 5 5 5-5H7Z"/></svg>
         </button>
-        <div class="topbar-dropdown" hidden>
+        <div class="topbar-dropdown" id="topbar-menu-user" hidden>
           {% if nav.role_label %}<span class="topbar-dropdown-tag">{{ nav.role_label }}</span>{% endif %}
           <a href="/profile/">Voir mon profil</a>
           <a href="/profiles/edit/">Modifier mon profil</a>
@@ -109,6 +129,11 @@
       <a href="/register/" class="btn-primary-sm topbar-cta">Créer mon profil</a>
     {% endif %}
   </div>
+  <button type="button" class="topbar-burger" id="topbar-burger"
+          aria-controls="topbar-nav" aria-expanded="false" aria-label="Ouvrir le menu">
+    <svg class="topbar-burger-open" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M3 6h18v2H3V6Zm0 5h18v2H3v-2Zm0 5h18v2H3v-2Z"/></svg>
+    <svg class="topbar-burger-close" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M6.4 5 12 10.6 17.6 5 19 6.4 13.4 12 19 17.6 17.6 19 12 13.4 6.4 19 5 17.6 10.6 12 5 6.4 6.4 5Z"/></svg>
+  </button>
 </header>
 
 <script src="{% static 'navbar.js' %}"></script>

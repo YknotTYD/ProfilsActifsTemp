@@ -17,11 +17,11 @@
   <body>
     {% include "partials/_navbar.html" %}
 
-    <div class="legal-page">
+    <main id="main-content" tabindex="-1" class="legal-page">
       <h1 class="card-title" style="text-align: left; margin-top: 10px">
         Conditions Générales d'Utilisation
       </h1>
-      <p class="text-sm" style="color: #9b9b9b">
+      <p class="text-sm" style="color: #5f5f5f">
         Dernière mise à jour : {% now "d/m/Y" %}
       </p>
 
@@ -87,7 +87,7 @@
       <div class="foot" style="text-align: left; margin-top: 40px">
         <a href="/">← Retour à l'accueil</a>
       </div>
-    </div>
+    </main>
 
     {% include "partials/_footer.html" %}
   </body>
